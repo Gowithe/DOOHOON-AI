@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOOHOON - AI Stock Summary</title>
+  <style>
+    body {
+      background: radial-gradient(circle at 20% 30%, rgba(218,165,32,0.1) 0%, transparent 60%), #0a0a0a;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 3em;
+      color: #ffd700;
+      letter-spacing: 5px;
+      margin-bottom: 10px;
+    }
+    p { color: #c9a136; }
+    input {
+      width: 50%;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #ffd700;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1.1em;
+      margin-top: 30px;
+    }
+    input::placeholder { color: rgba(255,255,255,0.5); }
+    button {
+      padding: 15px 35px;
+      background: linear-gradient(135deg, #ffd700, #daa520);
+      border: none;
+      border-radius: 10px;
+      color: black;
+      font-weight: bold;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #ffea70, #ffc107);
+      transform: translateY(-2px);
+    }
+    #result {
+      max-width: 800px;
+      margin: 40px auto;
+      text-align: left;
+      background: rgba(255,255,255,0.05);
+      padding: 30px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,215,0,0.3);
+      white-space: pre-line;
+      line-height: 1.8;
+      display: none;
+    }
+    footer {
+      color: #777;
+      margin-top: 80px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>DOOHOON</h1>
+  <p>AI ที่รู้จักหุ้นของคุณ 💡</p>
+
+  <div>
+    <input id="stockInput" type="text" placeholder="ใส่ชื่อหุ้น เช่น NVDA, AAPL, TSLA..." />
+    <button onclick="summarizeStock()">AI สรุปหุ้น</button>
+  </div>
+
+  <div id="result"></div>
+
+  <footer>© 2024 DOOHOON - AI Stock Summary Assistant</footer>
+
+  <script>
+  async function summarizeStock() {
+    const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
+    const resultDiv = document.getElementById('result');
+
+    if (!symbol) {
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '⚠️ กรุณาใส่ชื่อหุ้น เช่น NVDA, AAPL, TSLA';
+      return;
+    }
+
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `⏳ กำลังให้ AI สรุปข้อมูลหุ้น ${symbol}...`;
+
+    try {
+      const res = await fetch(`http://localhost/doohoon/ai_summarize.php?symbol=${symbol}`);
+      const data = await res.json();
+      
+      if (data.summary) {
+        resultDiv.innerHTML = `<h3>📊 ผลการสรุปหุ้น ${symbol}</h3><p>${data.summary.replace(/\n/g, '<br>')}</p>`;
+      } else if (data.error) {
+        resultDiv.innerHTML = `❌ ${data.error}`;
+      } else {
+        resultDiv.innerHTML = '❌ ไม่พบข้อมูลหรือเกิดข้อผิดพลาด';
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `❌ เกิดข้อผิดพลาด: ${err.message}`;
+    }
+  }
+  </script>
+</body>
+</html>
