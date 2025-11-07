@@ -6,8 +6,8 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
 // -------------------- 🔑 API KEYS --------------------
-$FINNHUB_API_KEY = "d46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0";
-$OPENAI_API_KEY  = "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";
+$OPENAI_API_KEY = getenv("OPENAI_API_KEY");
+$FINNHUB_API_KEY = getenv("FINNHUB_API_KEY");
 
 // -------------------- ⚙️ รับ symbol --------------------
 $input = trim($_GET['symbol'] ?? 'AAPL');
@@ -179,3 +179,4 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 echo $json;
 ?>
+
