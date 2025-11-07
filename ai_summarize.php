@@ -118,7 +118,7 @@ if (curl_errno($ch)) {
   curl_close($ch);
   exit;
 }
-curl_close($ch);
+curl_close($ch);file_put_contents("debug_log.txt", $response);
 $result = json_decode($response, true);
 
 // -------------------- ⚙️ ตรวจสอบ JSON --------------------
@@ -179,4 +179,5 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 echo $json;
 ?>
+
 
