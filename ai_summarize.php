@@ -122,7 +122,7 @@ $output = [
     <div style='padding:25px; border-radius:12px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,215,0,0.3);'>
       <h3 style='color:#ffd700;'>📈 สรุปหุ้น {$symbol}</h3>
       <p style='color:#ccc;'>ราคาปัจจุบัน: <strong style='color:#fff;'>{$currentPrice} USD</strong> 
-      (<span style='color:" . ($change >= 0 ? '#00ff88' : '#ff6b6b') . ";'>
+      <span style='color:" . ($change >= 0 ? '#00ff88' : '#ff6b6b') . ";'>
       " . ($change >= 0 ? '+' : '') . "{$change} USD, " . ($change >= 0 ? '+' : '') . "{$percent}%</span>)</p>
       <div style='white-space:pre-wrap; color:#f1f1f1; line-height:1.8;'>{$aiContent}</div>
     </div>
@@ -134,3 +134,4 @@ $output = [
 
 echo json_encode($output, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 ?>
+
