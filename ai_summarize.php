@@ -1,60 +1,76 @@
 <?php
-// -------------------- 🧠 DEBUG MODE --------------------
+// ==============================================
+// 🧠 DOOHOON-AI — PHP DEBUG + API READY 2025
+// ==============================================
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
-// -------------------- 🔑 API KEYS --------------------
+// ----------------------------------------------
+// 🔑 API KEYS (from Render Environment)
+// ----------------------------------------------
 $OPENAI_API_KEY = getenv("OPENAI_API_KEY");
 $FINNHUB_API_KEY = getenv("FINNHUB_API_KEY");
 
-// ตรวจสอบว่ามีคีย์จริงไหม
+// Debug Log File
+$log_file = __DIR__ . '/debug_log.txt';
+function debug_log($message) {
+    global $log_file;
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND);
+}
+
+// ----------------------------------------------
+// 🧩 ตรวจสอบ Environment Variable
+// ----------------------------------------------
 if (!$OPENAI_API_KEY) {
-    echo json_encode(["error" => "❌ OPENAI_API_KEY not found (Render Environment Variables missing)"], JSON_UNESCAPED_UNICODE);
+    debug_log("❌ Missing OPENAI_API_KEY");
+    echo json_encode(["error" => "Missing OPENAI_API_KEY in environment."], JSON_UNESCAPED_UNICODE);
     exit;
 }
 if (!$FINNHUB_API_KEY) {
-    echo json_encode(["error" => "❌ FINNHUB_API_KEY not found"], JSON_UNESCAPED_UNICODE);
+    debug_log("❌ Missing FINNHUB_API_KEY");
+    echo json_encode(["error" => "Missing FINNHUB_API_KEY in environment."], JSON_UNESCAPED_UNICODE);
     exit;
 }
+debug_log("✅ Environment variables loaded successfully");
 
-// -------------------- ⚙️ รับ symbol --------------------
-$input = trim($_GET['symbol'] ?? 'AAPL');
-$symbol = strtoupper($input);
+// ----------------------------------------------
+// ⚙️ รับ symbol จากผู้ใช้
+// ----------------------------------------------
+$symbol = strtoupper(trim($_GET['symbol'] ?? 'AAPL'));
+debug_log("🔍 Symbol received: $symbol");
 
-// -------------------- ✅ ตรวจสอบชื่อบริษัท / Symbol --------------------
-if (!preg_match('/^[A-Z]{1,6}$/', $symbol)) {
-    $searchUrl = "https://finnhub.io/api/v1/search?q={$symbol}&token={$FINNHUB_API_KEY}";
-    $searchRes = @file_get_contents($searchUrl);
-    $searchJson = json_decode($searchRes, true);
-    if (!empty($searchJson['result'][0]['symbol'])) {
-        $symbol = strtoupper($searchJson['result'][0]['symbol']);
-    }
-}
-
-// -------------------- 💰 ดึงราคาหุ้น --------------------
+// ----------------------------------------------
+// 💰 ดึงราคาหุ้นจาก Finnhub
+// ----------------------------------------------
 $finnhubUrl = "https://finnhub.io/api/v1/quote?symbol={$symbol}&token={$FINNHUB_API_KEY}";
 $finnhubResponse = @file_get_contents($finnhubUrl);
 
 if (!$finnhubResponse) {
-    echo json_encode(["error" => "❌ ไม่สามารถเชื่อมต่อ Finnhub API ได้"], JSON_UNESCAPED_UNICODE);
+    debug_log("❌ Finnhub request failed for $symbol");
+    echo json_encode(["error" => "ไม่สามารถเชื่อมต่อ Finnhub API ได้"], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 $finnhubData = json_decode($finnhubResponse, true);
 $currentPrice = $finnhubData['c'] ?? null;
-$change = $finnhubData['d'] ?? null;
-$percent = $finnhubData['dp'] ?? null;
+$change = $finnhubData['d'] ?? 0;
+$percent = $finnhubData['dp'] ?? 0;
 
 if (!$currentPrice) {
-    echo json_encode(["error" => "❌ ไม่พบข้อมูลราคาหุ้นนี้ กรุณาตรวจสอบสัญลักษณ์อีกครั้ง"], JSON_UNESCAPED_UNICODE);
+    debug_log("❌ No stock data found for $symbol");
+    echo json_encode(["error" => "ไม่พบข้อมูลราคาหุ้น กรุณาตรวจสอบสัญลักษณ์"], JSON_UNESCAPED_UNICODE);
     exit;
 }
+debug_log("✅ Stock data fetched: {$currentPrice} USD");
 
-// -------------------- 🗞️ ดึงข่าวล่าสุด (ย้อนหลัง 7 วัน) --------------------
+// ----------------------------------------------
+// 🗞️ ดึงข่าวย้อนหลัง 7 วัน
+// ----------------------------------------------
 $from = date('Y-m-d', strtotime('-7 days'));
-$to   = date('Y-m-d');
+$to = date('Y-m-d');
 $newsUrl = "https://finnhub.io/api/v1/company-news?symbol={$symbol}&from={$from}&to={$to}&token={$FINNHUB_API_KEY}";
 $newsResponse = @file_get_contents($newsUrl);
 $newsData = json_decode($newsResponse, true);
@@ -64,13 +80,11 @@ if (!empty($newsData)) {
     $count = 0;
     foreach ($newsData as $news) {
         $headline = $news['headline'] ?? '';
-        $summary  = $news['summary'] ?? '';
-        $source   = $news['source'] ?? '';
-        $url      = $news['url'] ?? '';
-        $date     = date('Y-m-d', $news['datetime'] ?? time());
-
+        $url = $news['url'] ?? '';
+        $source = $news['source'] ?? '';
+        $date = date('Y-m-d', $news['datetime'] ?? time());
         if ($headline) {
-            $latestNews .= "🗞️ [{$date}] {$headline} ({$source}) - {$summary}\n";
+            $latestNews .= "🗞️ [{$date}] {$headline} ({$source})\n";
             if ($url) $latestNews .= "🔗 {$url}\n\n";
             $count++;
         }
@@ -79,112 +93,92 @@ if (!empty($newsData)) {
 } else {
     $latestNews = "ไม่มีข่าวสำคัญในช่วง 7 วันที่ผ่านมา";
 }
+debug_log("✅ News summary prepared");
 
-// -------------------- 🤖 Prompt สำหรับ OpenAI --------------------
+// ----------------------------------------------
+// 🧠 สร้าง Prompt สำหรับ AI
+// ----------------------------------------------
 $prompt = "
 คุณคือผู้เชี่ยวชาญด้านการลงทุน
-โปรดวิเคราะห์หุ้น {$symbol} โดยใช้ข้อมูลต่อไปนี้:
+วิเคราะห์หุ้น {$symbol} จากข้อมูลนี้:
 
 ราคาปัจจุบัน: {$currentPrice} USD (เปลี่ยนแปลง {$change} USD / {$percent}%)
 ข่าวล่าสุด:
 {$latestNews}
 
-สรุปใน 9 หัวข้อ (ภาษาไทยอย่างมืออาชีพ):
+กรุณาสรุปเป็นภาษาไทยแบบมืออาชีพ:
 1. ข้อมูลบริษัท
-2. โปรเจกต์น่าจับตามอง
-3. แนวโน้ม (ระยะสั้น / กลาง / ยาว)
+2. โปรเจกต์ที่น่าจับตา
+3. แนวโน้มระยะสั้น-กลาง-ยาว
 4. ความเสี่ยง
-5. ราคาปัจจุบัน
-6. ราคาแนวรับ (โดยประมาณ)
-7. ราคาเป้าหมาย (โดยประมาณ)
-8. คำแนะนำ (ซื้อ / ถือ / ขาย พร้อมเหตุผล)
-9. สรุปข่าวล่าสุดที่มีผลต่อแนวโน้ม
+5. ราคาเป้าหมาย
+6. แนวรับ/แนวต้านโดยประมาณ
+7. ความเห็นจากข่าว
+8. คำแนะนำ (ซื้อ/ถือ/ขาย พร้อมเหตุผล)
+9. สรุปภาพรวม
 ";
 
-// -------------------- 🔗 เตรียมข้อมูลส่ง OpenAI --------------------
+// ----------------------------------------------
+// 🤖 เรียก OpenAI API (รองรับ proj-key)
+// ----------------------------------------------
+$openai_url = "https://api.openai.com/v1/chat/completions";
 $data = [
     "model" => "gpt-4o-mini",
     "messages" => [
-        ["role" => "system", "content" => "คุณคือนักวิเคราะห์หลักทรัพย์มืออาชีพ ให้ข้อมูลเชิงลึกและเป็นกลาง"],
+        ["role" => "system", "content" => "คุณคือนักวิเคราะห์หลักทรัพย์มืออาชีพ"],
         ["role" => "user", "content" => $prompt]
     ],
     "temperature" => 0.8,
-    "max_tokens" => 1800
+    "max_tokens" => 1500
 ];
 
-// -------------------- 📡 เรียก OpenAI API --------------------
-$ch = curl_init("https://api.openai.com/v1/chat/completions");
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPHEADER => [
-        "Content-Type: application/json",
-        "Authorization: Bearer $OPENAI_API_KEY"
-    ],
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => json_encode($data, JSON_UNESCAPED_UNICODE),
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_TIMEOUT => 30
-]);
+$headers = [
+    "Content-Type: application/json",
+    "Authorization: Bearer $OPENAI_API_KEY",
+    "OpenAI-Organization: org-default",
+    "OpenAI-Project: default"
+];
+
+$ch = curl_init($openai_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
 $response = curl_exec($ch);
-$errorMsg = curl_error($ch);
+if (curl_errno($ch)) {
+    $error = curl_error($ch);
+    debug_log("❌ cURL Error: $error");
+    echo json_encode(["error" => "cURL Error: $error"], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 curl_close($ch);
 
-// -------------------- 🧾 LOG บันทึกดีบั๊ก --------------------
-file_put_contents("debug_log.txt", "==== " . date("Y-m-d H:i:s") . " ====\n" . ($response ?: $errorMsg) . "\n\n", FILE_APPEND);
-
-// -------------------- ⚙️ ตรวจสอบข้อผิดพลาด --------------------
-if ($errorMsg) {
-    echo json_encode(["error" => "cURL Error: " . $errorMsg], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
+// ----------------------------------------------
+// 📦 ตรวจสอบผลลัพธ์จาก AI
+// ----------------------------------------------
 $result = json_decode($response, true);
-if (!$result) {
-    echo json_encode(["error" => "OpenAI ส่งข้อมูลไม่ถูกต้อง", "raw" => $response], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-if (isset($result["error"]["message"])) {
-    echo json_encode(["error" => "OpenAI Error: " . $result["error"]["message"], "raw" => $result], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
 if (!isset($result["choices"][0]["message"]["content"])) {
-    echo json_encode(["error" => "ไม่สามารถดึงข้อความจาก AI ได้", "raw" => $result], JSON_UNESCAPED_UNICODE);
+    debug_log("❌ Invalid AI response: " . substr($response, 0, 200));
+    echo json_encode(["error" => "ไม่สามารถดึงข้อมูลจาก AI ได้", "raw" => $response], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// -------------------- 🎨 แสดงผลแบบสวยงาม --------------------
 $aiContent = $result["choices"][0]["message"]["content"];
+debug_log("✅ AI response received successfully");
 
-$output = [
-    "summary" => "
-    <div style='padding:25px; border-radius:12px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,215,0,0.3);'>
-      <h3 style='color:#ffd700; margin-bottom:8px;'>📈 สรุปหุ้น {$symbol}</h3>
-      <p style='color:#ccc; margin-bottom:15px; font-size:1.05em;'>
-        ราคาปัจจุบัน: <strong style='color:#fff;'>{$currentPrice} USD</strong>
-        <span style='color:#999;'> (</span>
-        <span style='color:" . ($change >= 0 ? '#00ff88' : '#ff6b6b') . ";'>
-          " . ($change >= 0 ? '+' : '') . "{$change} USD, " . ($change >= 0 ? '+' : '') . "{$percent}% 
-        </span>
-        <span style='color:#999;'>)</span>
-      </p>
-      <div style='color:#f1f1f1; line-height:1.8; font-size:1.05em;'>".nl2br($aiContent)."</div>
-    </div>
+// ----------------------------------------------
+// 🎨 แสดงผล
+// ----------------------------------------------
+echo json_encode([
+    "symbol" => $symbol,
+    "price" => $currentPrice,
+    "change" => $change,
+    "percent" => $percent,
+    "summary" => nl2br($aiContent)
+], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
-    <div style='margin-top:20px; background:rgba(255,215,0,0.08); padding:15px; border-radius:10px; border:1px solid rgba(255,215,0,0.2); color:#bbb; font-size:0.9em;'>
-      ⚠️ <strong>หมายเหตุ:</strong> ข้อมูลนี้จัดทำโดย AI เพื่อใช้ประกอบการตัดสินใจเท่านั้น 
-      ผู้ลงทุนควรตรวจสอบข้อมูลล่าสุดก่อนการลงทุนจริง
-    </div>"
-];
+debug_log("✅ Response sent successfully");
 
-// -------------------- 🧩 ส่งออกเป็น JSON --------------------
-$json = json_encode($output, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE | JSON_PRETTY_PRINT);
-if (json_last_error() !== JSON_ERROR_NONE) {
-    echo json_encode(["error" => "JSON encoding failed", "details" => json_last_error_msg()], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-echo $json;
 ?>
