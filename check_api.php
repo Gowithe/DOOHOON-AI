@@ -2,11 +2,13 @@
 // =====================================
 // 🔍 DOOHOON-AI API STATUS CHECKER
 // =====================================
-header('Content-Type: text/html; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-
-$OPENAI_API_KEY = getenv("OPENAI_API_KEY");
-$FINNHUB_API_KEY = getenv("FINNHUB_API_KEY");
+$headers = [
+  "Content-Type: application/json",
+  "Authorization: Bearer $OPENAI_API_KEY",
+  "OpenAI-Project: $OPENAI_PROJECT_ID",
+  "OpenAI-Organization: $OPENAI_ORG_ID"
+];
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 echo "<body style='background:#0d0d0d; color:#eee; font-family:Segoe UI, sans-serif; padding:30px;'>";
 echo "<h1 style='color:#ffd700;'>🔎 DOOHOON AI - API Connection Check</h1>";
@@ -95,3 +97,4 @@ echo "<hr style='border-color:#555; margin-top:40px;'>";
 echo "<p style='color:#888;'>© 2024 DOOHOON-AI | Status check page</p>";
 echo "</body>";
 ?>
+
