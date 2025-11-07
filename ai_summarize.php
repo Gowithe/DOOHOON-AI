@@ -47,14 +47,40 @@ debug_log("🔍 Symbol received: $symbol");
 // ----------------------------------------------
 $finnhubUrl = "https://finnhub.io/api/v1/quote?symbol={$symbol}&token={$FINNHUB_API_KEY}";
 $finnhubResponse = @file_get_contents($finnhubUrl);
+// -------------------- 💰 ดึงราคาหุ้นจาก Finnhub --------------------
+$finnhubUrl = "https://finnhub.io/api/v1/quote?symbol={$symbol}&token={$FINNHUB_API_KEY}";
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $finnhubUrl);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+$finnhubResponse = curl_exec($ch);
+
+if (curl_errno($ch)) {
+    debug_log("❌ Finnhub cURL Error: " . curl_error($ch));
+    echo json_encode(["error" => "ไม่สามารถเชื่อมต่อ Finnhub API ได้ (cURL error)"], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+curl_close($ch);
 
 if (!$finnhubResponse) {
-    debug_log("❌ Finnhub request failed for $symbol");
+    debug_log("❌ Empty response from Finnhub for $symbol");
     echo json_encode(["error" => "ไม่สามารถเชื่อมต่อ Finnhub API ได้"], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 $finnhubData = json_decode($finnhubResponse, true);
+$currentPrice = $finnhubData['c'] ?? null;
+$change = $finnhubData['d'] ?? 0;
+$percent = $finnhubData['dp'] ?? 0;
+
+if (!$currentPrice) {
+    debug_log("❌ Invalid Finnhub data: $finnhubResponse");
+    echo json_encode(["error" => "ไม่พบข้อมูลราคาหุ้น กรุณาตรวจสอบสัญลักษณ์อีกครั้ง"], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+debug_log("✅ Stock data fetched: {$currentPrice} USD");
+
 $currentPrice = $finnhubData['c'] ?? null;
 $change = $finnhubData['d'] ?? 0;
 $percent = $finnhubData['dp'] ?? 0;
@@ -182,3 +208,4 @@ echo json_encode([
 debug_log("✅ Response sent successfully");
 
 ?>
+
