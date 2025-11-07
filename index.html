@@ -93,7 +93,7 @@
     resultDiv.innerHTML = `⏳ กำลังให้ AI สรุปข้อมูลหุ้น ${symbol}...`;
 
     try {
-      const res = await fetch(`http://localhost/doohoon/ai_summarize.php?symbol=${symbol}`);
+      const res = await fetch(`ai_summarize.php?symbol=${symbol}`);
       const data = await res.json();
       
       if (data.summary) {
@@ -110,3 +110,4 @@
   </script>
 </body>
 </html>
+
