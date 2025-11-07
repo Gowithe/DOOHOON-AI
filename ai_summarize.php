@@ -123,7 +123,7 @@ $output = [
       <h3 style='color:#ffd700;'>📈 สรุปหุ้น {$symbol}</h3>
       <p style='color:#ccc;'>ราคาปัจจุบัน: <strong style='color:#fff;'>{$currentPrice} USD</strong> 
       <span style='color:" . ($change >= 0 ? '#00ff88' : '#ff6b6b') . ";'>
-      " . ($change >= 0 ? '+' : '') . "{$change} USD, " . ($change >= 0 ? '+' : '') . "{$percent}%</span>)</p>
+      " . ($change >= 0 ? '+' : '') . "{$change} USD, " . ($change >= 0 ? '+' : '') . "{$percent}%</span></p>
       <div style='white-space:pre-wrap; color:#f1f1f1; line-height:1.8;'>{$aiContent}</div>
     </div>
     <div style='margin-top:20px; background:rgba(255,215,0,0.08); padding:15px; border-radius:10px; border:1px solid rgba(255,215,0,0.2); color:#bbb; font-size:0.9em;'>
@@ -134,4 +134,5 @@ $output = [
 
 echo json_encode($output, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 ?>
+
 
