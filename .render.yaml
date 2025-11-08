@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: doohoon-linebot
+    env: docker
+    plan: free
+    branch: main
+    rootDir: .
+    buildCommand: ""
+    startCommand: "php -S 0.0.0.0:10000 -t /var/www/html"
+    envVars:
+      - key: PORT
+        value: 10000
