@@ -1,17 +1,17 @@
 # ===============================
-# ✅ PHP + Render Web Server
+# ✅ DOOHOON LINE BOT - PHP SERVER
 # ===============================
 
 FROM php:8.2-cli
 
-# ตั้ง working directory (Render จะรันจากตรงนี้)
+# ตั้ง working directory
 WORKDIR /var/www/html
 
-# คัดลอกไฟล์ทั้งหมดใน repo ไปไว้ใน container
+# คัดลอกไฟล์ทั้งหมดใน repo เข้าไปใน container
 COPY . /var/www/html
 
-# เปิดพอร์ตที่ Render ใช้
+# เปิดพอร์ต 10000 (Render ใช้พอร์ตนี้)
 EXPOSE 10000
 
-# ✅ สั่งให้ PHP รัน server โดยใช้โฟลเดอร์นี้เป็น web root
-CMD ["php", "-S", "0.0.0.0:10000", "-t", "/var/www/html"]
+# ✅ สั่งให้ PHP รันเซิร์ฟเวอร์ โดยใช้โฟลเดอร์ปัจจุบันเป็น root
+CMD ["php", "-S", "0.0.0.0:10000", "-t", "."]
