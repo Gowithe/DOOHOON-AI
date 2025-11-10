@@ -428,8 +428,11 @@
       
       <div class="input-grid">
         <div class="input-group full-width">
-          <label>📈 ชื่อหุ้น <span class="label-hint">(หรือกรอกเอง)</span></label>
-          <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="KO">
+          <label>📈 ชื่อหุ้น <span class="label-hint">(พิมพ์แล้วกด Enter หรือปุ่มค้นหา)</span></label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="KO" onkeypress="if(event.key==='Enter') fetchStockData()" style="flex: 1;">
+            <button onclick="fetchStockData()" style="padding: 15px 30px; width: auto; font-size: 0.9em;">🔍 ค้นหา</button>
+          </div>
         </div>
         
         <div class="input-group">
@@ -541,7 +544,68 @@
   </div>
 
   <script>
+    const FINNHUB_API_KEY = 'd46nnthr01qgc9etmndgd46nnthr01qgc9etmne0';
     let growthChart = null;
+
+    // ฟังก์ชันดึงข้อมูลหุ้นจาก API
+    async function fetchStockData() {
+      const symbol = document.getElementById('stockSymbol').value.trim().toUpperCase();
+      
+      if (!symbol) {
+        alert('⚠️ กรุณาใส่ชื่อหุ้น');
+        return;
+      }
+
+      // แสดง Loading
+      const searchBtn = event.target;
+      const originalText = searchBtn.innerHTML;
+      searchBtn.innerHTML = '⏳ กำลังค้นหา...';
+      searchBtn.disabled = true;
+
+      try {
+        console.log('🔍 กำลังดึงข้อมูล:', symbol);
+
+        // ดึงข้อมูลจาก Finnhub
+        const [metricsResponse, profileResponse] = await Promise.all([
+          fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_API_KEY}`),
+          fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`)
+        ]);
+
+        const metrics = await metricsResponse.json();
+        const profile = await profileResponse.json();
+
+        console.log('📊 ข้อมูลที่ได้:', { metrics, profile });
+
+        // ตรวจสอบว่ามีข้อมูลหรือไม่
+        if (!profile.name) {
+          throw new Error('ไม่พบข้อมูลหุ้นนี้ กรุณาตรวจสอบสัญลักษณ์');
+        }
+
+        // คำนวณผลตอบแทนเฉลี่ยจาก 52 week high/low
+        const week52High = metrics.metric?.['52WeekHigh'] || 0;
+        const week52Low = metrics.metric?.['52WeekLow'] || 0;
+        const avgReturn = week52High > 0 && week52Low > 0 
+          ? ((week52High - week52Low) / week52Low * 100).toFixed(1)
+          : 12; // default 12% ถ้าไม่มีข้อมูล
+
+        // ดึง Dividend Yield
+        const dividendYield = metrics.metric?.dividendYieldIndicatedAnnual || 0;
+
+        // อัพเดตค่าในฟอร์ม
+        document.getElementById('annualReturn').value = Math.min(parseFloat(avgReturn), 50); // จำกัดไม่เกิน 50%
+        document.getElementById('dividendYield').value = dividendYield.toFixed(2);
+
+        // แสดงข้อความยืนยัน
+        alert(`✅ พบข้อมูลหุ้น ${symbol}\n\n${profile.name}\n\nผลตอบแทนโดยประมาณ: ${Math.min(parseFloat(avgReturn), 50)}%\nปันผล: ${dividendYield.toFixed(2)}%\n\nกรุณากรอกข้อมูลที่เหลือแล้วกดคำนวณ`);
+
+      } catch (error) {
+        console.error('❌ Error:', error);
+        alert('❌ ' + error.message);
+      } finally {
+        searchBtn.innerHTML = originalText;
+        searchBtn.disabled = false;
+      }
+    }
 
     function selectStock(symbol, name, returnRate, dividend) {
       document.getElementById('stockSymbol').value = symbol;
