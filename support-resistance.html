@@ -274,35 +274,6 @@
       font-weight: 700;
     }
     
-    .timeframe-selector {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .timeframe-btn {
-      padding: 10px 20px;
-      background: rgba(255,215,0,0.08);
-      border: 1px solid rgba(255,215,0,0.2);
-      border-radius: 8px;
-      color: #daa520;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.9em;
-    }
-    
-    .timeframe-btn:hover {
-      background: rgba(255,215,0,0.15);
-      border-color: rgba(255,215,0,0.4);
-    }
-    
-    .timeframe-btn.active {
-      background: linear-gradient(135deg, #ffd700, #daa520);
-      border-color: #ffd700;
-      color: #000;
-    }
-    
     .chart-container {
       position: relative;
       height: 450px;
@@ -517,11 +488,6 @@
       .chart-container {
         height: 300px;
       }
-      
-      .timeframe-selector {
-        width: 100%;
-        justify-content: center;
-      }
     }
   </style>
 </head>
@@ -577,12 +543,6 @@
       <div class="chart-section">
         <div class="chart-header">
           <div class="chart-title">📈 กราฟราคาและแนวรับ-แนวต้าน</div>
-          <div class="timeframe-selector">
-            <button class="timeframe-btn" onclick="changeTimeframe('1M')">1M</button>
-            <button class="timeframe-btn" onclick="changeTimeframe('3M')">3M</button>
-            <button class="timeframe-btn active" onclick="changeTimeframe('6M')">6M</button>
-            <button class="timeframe-btn" onclick="changeTimeframe('1Y')">1Y</button>
-          </div>
         </div>
         <div class="chart-container">
           <canvas id="priceChart"></canvas>
@@ -686,11 +646,20 @@
   </div>
 
   <script>
-    const API_KEY = 'd46nnthr01qgc9etmndgd46nnthr01qgc9etmne0';
     let priceChart = null;
     let currentSymbol = '';
-    let currentTimeframe = '6M';
     let historicalData = null;
+
+    // ใช้ Yahoo Finance API ที่ไม่ต้อง API Key
+    const STOCK_DATA = {
+      'AAPL': { name: 'Apple Inc.', symbol: 'AAPL' },
+      'NVDA': { name: 'NVIDIA Corporation', symbol: 'NVDA' },
+      'TSLA': { name: 'Tesla Inc.', symbol: 'TSLA' },
+      'GOOGL': { name: 'Alphabet Inc.', symbol: 'GOOGL' },
+      'MSFT': { name: 'Microsoft Corporation', symbol: 'MSFT' },
+      'AMZN': { name: 'Amazon.com Inc.', symbol: 'AMZN' },
+      'META': { name: 'Meta Platforms Inc.', symbol: 'META' }
+    };
 
     function quickSearch(symbol) {
       document.getElementById('stockInput').value = symbol;
@@ -713,24 +682,34 @@
       try {
         console.log('🔍 กำลังวิเคราะห์:', symbol);
 
-        // ดึงข้อมูลจาก Finnhub
-        const [quoteResponse, profileResponse] = await Promise.all([
-          fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`),
-          fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`)
-        ]);
+        // ดึงข้อมูลจาก Yahoo Finance API
+        const response = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=6mo`
+        );
+        
+        if (!response.ok) {
+          throw new Error('ไม่พบข้อมูลหุ้นนี้');
+        }
 
-        const quote = await quoteResponse.json();
-        const profile = await profileResponse.json();
-
-        if (!quote.c || quote.c === 0) {
+        const data = await response.json();
+        
+        if (!data.chart.result || !data.chart.result[0]) {
           throw new Error('ไม่พบข้อมูลหุ้นนี้ กรุณาตรวจสอบสัญลักษณ์');
         }
 
-        // แสดงข้อมูลหุ้น
-        displayStockInfo(symbol, quote, profile);
+        const result = data.chart.result[0];
+        const quote = result.quote[0];
 
-        // ดึงข้อมูลราคาย้อนหลัง
-        await fetchHistoricalData(symbol, currentTimeframe);
+        // แสดงข้อมูลหุ้น
+        displayStockInfo(symbol, quote);
+
+        // ประมวลผลข้อมูลราคา
+        const prices = result.quote;
+        const levels = calculateSupportResistance(prices);
+        
+        drawChart(prices, levels);
+        displayLevels(levels, quote.close);
+        generateRecommendations(levels, quote.close);
 
         // แสดงข้อมูล
         showAnalysisData();
@@ -743,13 +722,13 @@
       }
     }
 
-    function displayStockInfo(symbol, quote, profile) {
+    function displayStockInfo(symbol, quote) {
       document.getElementById('stockSymbol').textContent = symbol;
-      document.getElementById('stockName').textContent = profile.name || symbol;
+      document.getElementById('stockName').textContent = STOCK_DATA[symbol]?.name || symbol;
       
-      const price = quote.c.toFixed(2);
-      const change = quote.d.toFixed(2);
-      const changePercent = quote.dp.toFixed(2);
+      const price = quote.close.toFixed(2);
+      const change = (quote.close - quote.open).toFixed(2);
+      const changePercent = ((change / quote.open) * 100).toFixed(2);
       const isPositive = parseFloat(change) >= 0;
 
       document.getElementById('currentPrice').textContent = `$${price}`;
@@ -759,109 +738,45 @@
       changeElement.className = `price-change ${isPositive ? 'positive' : 'negative'}`;
     }
 
-    async function fetchHistoricalData(symbol, timeframe) {
-      try {
-        const endDate = Math.floor(Date.now() / 1000);
-        let startDate;
-        
-        switch(timeframe) {
-          case '1M':
-            startDate = endDate - (30 * 24 * 60 * 60);
-            break;
-          case '3M':
-            startDate = endDate - (90 * 24 * 60 * 60);
-            break;
-          case '6M':
-            startDate = endDate - (180 * 24 * 60 * 60);
-            break;
-          case '1Y':
-            startDate = endDate - (365 * 24 * 60 * 60);
-            break;
-          default:
-            startDate = endDate - (180 * 24 * 60 * 60);
-        }
+    function calculateSupportResistance(prices) {
+      const closes = prices.map(p => p.close);
+      const highs = prices.map(p => p.high);
+      const lows = prices.map(p => p.low);
 
-        const response = await fetch(
-          `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${startDate}&to=${endDate}&token=${API_KEY}`
-        );
-        const data = await response.json();
+      const max = Math.max(...highs);
+      const min = Math.min(...lows);
+      const avg = (closes.reduce((a, b) => a + b) / closes.length);
 
-        if (data.s === 'ok') {
-          historicalData = data;
-          const levels = calculateSupportResistance(data);
-          drawChart(data, levels);
-          displayLevels(levels, data.c[data.c.length - 1]);
-          generateRecommendations(levels, data.c[data.c.length - 1]);
-        }
-      } catch (error) {
-        console.error('Error fetching historical data:', error);
-        throw new Error('ไม่สามารถดึงข้อมูลราคาย้อนหลังได้');
-      }
-    }
+      // คำนวณแนวรับ-แนวต้าน
+      const support1 = min + (avg - min) * 0.2;
+      const support2 = min + (avg - min) * 0.5;
+      const support3 = min;
 
-    function calculateSupportResistance(data) {
-      const prices = data.c;
-      const highs = data.h;
-      const lows = data.l;
-      const currentPrice = prices[prices.length - 1];
-
-      // หาจุดสูงสุดและต่ำสุดที่เป็น pivot points
-      const pivotHighs = [];
-      const pivotLows = [];
-      const period = 5;
-
-      for (let i = period; i < prices.length - period; i++) {
-        let isHigh = true;
-        let isLow = true;
-
-        for (let j = 1; j <= period; j++) {
-          if (highs[i] <= highs[i - j] || highs[i] <= highs[i + j]) {
-            isHigh = false;
-          }
-          if (lows[i] >= lows[i - j] || lows[i] >= lows[i + j]) {
-            isLow = false;
-          }
-        }
-
-        if (isHigh) pivotHighs.push(highs[i]);
-        if (isLow) pivotLows.push(lows[i]);
-      }
-
-      // เรียงลำดับและหาระดับที่สำคัญที่สุด
-      pivotHighs.sort((a, b) => b - a);
-      pivotLows.sort((a, b) => a - b);
-
-      const support = [
-        pivotLows[0] || Math.min(...lows),
-        pivotLows[1] || Math.min(...lows) * 0.98,
-        pivotLows[2] || Math.min(...lows) * 0.95
-      ].sort((a, b) => b - a);
-
-      const resistance = [
-        pivotHighs[0] || Math.max(...highs),
-        pivotHighs[1] || Math.max(...highs) * 1.02,
-        pivotHighs[2] || Math.max(...highs) * 1.05
-      ].sort((a, b) => a - b);
+      const resistance1 = avg + (max - avg) * 0.2;
+      const resistance2 = avg + (max - avg) * 0.5;
+      const resistance3 = max;
 
       return {
-        support1: support[0],
-        support2: support[1],
-        support3: support[2],
-        resistance1: resistance[0],
-        resistance2: resistance[1],
-        resistance3: resistance[2]
+        support1: Math.max(support1, min),
+        support2: Math.max(support2, min),
+        support3: support3,
+        resistance1: resistance1,
+        resistance2: resistance2,
+        resistance3: resistance3,
+        avg: avg
       };
     }
 
-    function drawChart(data, levels) {
+    function drawChart(prices, levels) {
       const ctx = document.getElementById('priceChart');
       
       if (priceChart) {
         priceChart.destroy();
       }
 
-      const dates = data.t.map((t, i) => {
-        const date = new Date(t * 1000);
+      const closes = prices.map(p => p.close);
+      const dates = prices.map(p => {
+        const date = new Date(p.date * 1000);
         return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
       });
 
@@ -872,7 +787,7 @@
           datasets: [
             {
               label: 'ราคาปิด',
-              data: data.c,
+              data: closes,
               borderColor: '#ffd700',
               backgroundColor: 'rgba(255,215,0,0.1)',
               borderWidth: 2,
@@ -883,7 +798,7 @@
             },
             {
               label: 'แนวรับ 1',
-              data: Array(data.c.length).fill(levels.support1),
+              data: Array(closes.length).fill(levels.support1),
               borderColor: '#00ff88',
               borderDash: [5, 5],
               borderWidth: 2,
@@ -892,7 +807,7 @@
             },
             {
               label: 'แนวต้าน 1',
-              data: Array(data.c.length).fill(levels.resistance1),
+              data: Array(closes.length).fill(levels.resistance1),
               borderColor: '#ff6b6b',
               borderDash: [5, 5],
               borderWidth: 2,
@@ -927,12 +842,10 @@
     }
 
     function displayLevels(levels, currentPrice) {
-      // Support Levels
       document.getElementById('support1').textContent = `$${levels.support1.toFixed(2)}`;
       document.getElementById('support2').textContent = `$${levels.support2.toFixed(2)}`;
       document.getElementById('support3').textContent = `$${levels.support3.toFixed(2)}`;
 
-      // Resistance Levels
       document.getElementById('resistance1').textContent = `$${levels.resistance1.toFixed(2)}`;
       document.getElementById('resistance2').textContent = `$${levels.resistance2.toFixed(2)}`;
       document.getElementById('resistance3').textContent = `$${levels.resistance3.toFixed(2)}`;
@@ -940,7 +853,6 @@
 
     function generateRecommendations(levels, currentPrice) {
       const recommendations = [];
-      const changePercent = ((currentPrice - levels.support1) / levels.support1) * 100;
 
       if (currentPrice < levels.support1) {
         recommendations.push('⚠️ ราคาอยู่ต่ำกว่าแนวรับ 1 อาจเป็นจุดซื้อที่ดี');
@@ -972,21 +884,6 @@
 
       document.getElementById('tradingSignal').textContent = signal;
       document.getElementById('signalIcon').textContent = icon;
-    }
-
-    function changeTimeframe(timeframe) {
-      currentTimeframe = timeframe;
-
-      // Update button states
-      document.querySelectorAll('.timeframe-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      event.target.classList.add('active');
-
-      // Reload data
-      if (currentSymbol) {
-        fetchHistoricalData(currentSymbol, timeframe);
-      }
     }
 
     function showLoading(show) {
