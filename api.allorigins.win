@@ -1,0 +1,12 @@
+// ใส่ API Key ของคุณลงไป
+const FINNHUB_API_KEY = 'd46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0';
+
+// ใช้ CORS proxy หลีกเลี่ยง CORS error
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
+// ดึงข้อมูล 3 อย่าง: Quote + Profile + Candle
+const [quoteRes, profileRes, candleRes] = await Promise.all([
+  fetch(CORS_PROXY + encodeURIComponent(quoteUrl)),
+  fetch(CORS_PROXY + encodeURIComponent(profileUrl)),
+  fetch(CORS_PROXY + encodeURIComponent(candleUrl))
+]);
