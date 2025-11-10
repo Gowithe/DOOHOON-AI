@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOOHOON - คำนวณผลตอบแทนหุ้นระยะยาว</title>
+  <title>DOOHOON - ผลตอบแทนหุ้นระยะยาว</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
@@ -429,7 +429,7 @@
       <div class="input-grid">
         <div class="input-group full-width">
           <label>📈 ชื่อหุ้น <span class="label-hint">(หรือกรอกเอง)</span></label>
-          <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="AAPL">
+          <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="KO">
         </div>
         
         <div class="input-group">
@@ -466,7 +466,7 @@
       
       <div class="result-main">
         <div class="result-stock-info">
-          การลงทุนในหุ้น <span class="result-stock-symbol" id="resultStockSymbol">AAPL</span>
+          การลงทุนในหุ้น <span class="result-stock-symbol" id="resultStockSymbol">KO</span>
         </div>
         <div class="result-label">มูลค่ารวมที่คาดว่าจะได้รับ</div>
         <div class="result-price">
@@ -501,7 +501,7 @@
         <h3>📋 รายละเอียดการลงทุน</h3>
         <div class="breakdown-item">
           <span class="breakdown-label">หุ้นที่เลือก:</span>
-          <span class="breakdown-value" id="detailStock">AAPL</span>
+          <span class="breakdown-value" id="detailStock">KO</span>
         </div>
         <div class="breakdown-item">
           <span class="breakdown-label">เงินลงทุนเริ่มต้น:</span>
@@ -542,24 +542,17 @@
 
   <script>
     let growthChart = null;
-    let selectedStockData = {};
 
     function selectStock(symbol, name, returnRate, dividend) {
-      // อัพเดตค่า input
       document.getElementById('stockSymbol').value = symbol;
       document.getElementById('annualReturn').value = returnRate;
       document.getElementById('dividendYield').value = dividend;
       
-      // เก็บข้อมูล
-      selectedStockData = { symbol, name, returnRate, dividend };
-      
-      // Highlight ปุ่มที่เลือก
       document.querySelectorAll('.stock-preset').forEach(el => el.classList.remove('active'));
       event.currentTarget.classList.add('active');
     }
 
     function calculate() {
-      // รับค่าจาก input
       const stockSymbol = document.getElementById('stockSymbol').value.trim() || 'Stock';
       const initialInvestment = parseFloat(document.getElementById('initialInvestment').value) || 0;
       const annualReturn = parseFloat(document.getElementById('annualReturn').value) || 0;
@@ -567,13 +560,11 @@
       const years = parseFloat(document.getElementById('years').value) || 0;
       const monthlyInvestment = parseFloat(document.getElementById('monthlyInvestment').value) || 0;
 
-      // ตรวจสอบข้อมูล
       if (initialInvestment <= 0 || years <= 0) {
         alert('⚠️ กรุณากรอกเงินลงทุนและระยะเวลา');
         return;
       }
 
-      // คำนวณผลตอบแทน
       const monthlyReturn = annualReturn / 100 / 12;
       const monthlyDividend = dividendYield / 100 / 12;
       const totalMonths = years * 12;
@@ -584,21 +575,14 @@
       
       const yearlyData = [{ year: 0, invested: initialInvestment, value: initialInvestment }];
       
-      // คำนวณทีละเดือน
       for (let month = 1; month <= totalMonths; month++) {
-        // เพิ่มเงินลงทุนรายเดือน
         portfolioValue += monthlyInvestment;
         totalInvested += monthlyInvestment;
-        
-        // คำนวณผลตอบแทนจากราคาหุ้น
         portfolioValue *= (1 + monthlyReturn);
-        
-        // คำนวณปันผล
         const dividendAmount = portfolioValue * monthlyDividend;
         portfolioValue += dividendAmount;
         totalDividends += dividendAmount;
         
-        // เก็บข้อมูลรายปี
         if (month % 12 === 0) {
           yearlyData.push({
             year: month / 12,
@@ -611,7 +595,6 @@
       const capitalGain = portfolioValue - totalInvested - totalDividends;
       const multiplier = (portfolioValue / totalInvested).toFixed(2);
 
-      // แสดงผลลัพธ์
       document.getElementById('resultStockSymbol').textContent = stockSymbol;
       document.getElementById('finalAmount').textContent = portfolioValue.toLocaleString(undefined, {
         minimumFractionDigits: 0,
@@ -635,7 +618,6 @@
         maximumFractionDigits: 0
       });
 
-      // รายละเอียด
       document.getElementById('detailStock').textContent = stockSymbol;
       document.getElementById('detailInitial').textContent = '฿' + initialInvestment.toLocaleString();
       document.getElementById('detailMonthly').textContent = '฿' + monthlyInvestment.toLocaleString();
@@ -647,10 +629,8 @@
         maximumFractionDigits: 0
       });
 
-      // สร้างกราฟ
       drawChart(yearlyData);
 
-      // แสดงผลลัพธ์
       const resultDiv = document.getElementById('result');
       resultDiv.style.display = 'block';
       resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -661,12 +641,10 @@
       const investedData = yearlyData.map(d => d.invested);
       const valueData = yearlyData.map(d => d.value);
 
-      // ลบกราฟเก่า
       if (growthChart) {
         growthChart.destroy();
       }
 
-      // สร้างกราฟใหม่
       const ctx = document.getElementById('growthChart').getContext('2d');
       growthChart = new Chart(ctx, {
         type: 'line',
@@ -729,4 +707,37 @@
               },
               ticks: {
                 color: '#888',
-                font:
+                font: {
+                  family: 'Poppins'
+                }
+              }
+            },
+            y: {
+              grid: {
+                color: 'rgba(255, 215, 0, 0.1)'
+              },
+              ticks: {
+                color: '#888',
+                font: {
+                  family: 'Poppins'
+                },
+                callback: function(value) {
+                  return '฿' + value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        calculate();
+      }
+    });
+
+    window.addEventListener('load', calculate);
+  </script>
+</body>
+</html>
