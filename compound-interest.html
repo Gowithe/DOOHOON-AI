@@ -1,317 +1,743 @@
-<script>
-  let growthChart = null;
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOOHOON - ผลตอบแทนหุ้นระยะยาว</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      background: radial-gradient(circle at 30% 20%, rgba(255,215,0,0.12), transparent 65%), 
+                  radial-gradient(circle at 80% 80%, rgba(218,165,32,0.08), transparent 60%),
+                  #0a0a0a;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      color: #ffd700;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    .subtitle {
+      color: #c9a136;
+      font-size: 1.1em;
+    }
+    
+    .card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .preset-stocks {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .stock-preset {
+      background: rgba(255,215,0,0.08);
+      border: 2px solid rgba(255,215,0,0.2);
+      padding: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    
+    .stock-preset:hover {
+      background: rgba(255,215,0,0.15);
+      border-color: rgba(255,215,0,0.4);
+      transform: translateY(-3px);
+    }
+    
+    .stock-preset.active {
+      background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(218,165,32,0.2));
+      border-color: #ffd700;
+    }
+    
+    .stock-symbol {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 5px;
+    }
+    
+    .stock-name {
+      font-size: 0.85em;
+      color: #c9a136;
+      margin-bottom: 8px;
+    }
+    
+    .stock-dividend {
+      font-size: 0.9em;
+      color: #00ff88;
+      font-weight: 600;
+    }
+    
+    .stock-dividend.none {
+      color: #888;
+    }
+    
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
+      margin: 25px 0;
+    }
+    
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    .input-group.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    label {
+      display: block;
+      color: #daa520;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+    
+    .label-hint {
+      color: #888;
+      font-size: 0.85em;
+      font-weight: 400;
+      margin-left: 5px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 15px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.1em;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #ffd700;
+      box-shadow: 0 0 15px rgba(255,215,0,0.3);
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #ffd700, #daa520);
+      color: #000;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255,215,0,0.5);
+    }
+    
+    .result {
+      display: none;
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid #ffd700;
+      border-radius: 20px;
+      padding: 30px;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .result h2 {
+      color: #ffd700;
+      font-size: 1.8em;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    
+    .result-main {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 25px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+    }
+    
+    .result-stock-info {
+      color: #c9a136;
+      font-size: 1.1em;
+      margin-bottom: 15px;
+    }
+    
+    .result-stock-symbol {
+      font-size: 1.5em;
+      color: #ffd700;
+      font-weight: 700;
+    }
+    
+    .result-label {
+      color: #c9a136;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    
+    .result-price {
+      font-size: 3.5em;
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.5);
+      line-height: 1.2;
+    }
+    
+    .result-price .currency {
+      font-size: 0.5em;
+      color: #ffd700;
+    }
+    
+    .result-multiplier {
+      margin-top: 15px;
+      font-size: 1.2em;
+      color: #00ff88;
+    }
+    
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .result-item {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,215,0,0.2);
+      text-align: center;
+    }
+    
+    .result-item-label {
+      color: #c9a136;
+      font-size: 0.85em;
+      margin-bottom: 8px;
+    }
+    
+    .result-item-value {
+      color: #fff;
+      font-size: 1.3em;
+      font-weight: 700;
+    }
+    
+    .profit {
+      color: #00ff88;
+    }
+    
+    .chart-container {
+      margin: 25px 0;
+      background: rgba(0,0,0,0.3);
+      padding: 20px;
+      border-radius: 15px;
+    }
+    
+    canvas {
+      max-height: 350px;
+    }
+    
+    .breakdown {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .breakdown h3 {
+      color: #ffd700;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+    
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,215,0,0.1);
+    }
+    
+    .breakdown-item:last-child {
+      border-bottom: none;
+    }
+    
+    .breakdown-label {
+      color: #ddd;
+    }
+    
+    .breakdown-value {
+      color: #fff;
+      font-weight: 600;
+    }
+    
+    .tip-box {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .tip-box strong {
+      color: #ffd700;
+    }
+    
+    .tip-box p {
+      color: #ddd;
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+      
+      .preset-stocks {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .input-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .result-price {
+        font-size: 2.5em;
+      }
+      
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 คำนวณผลตอบแทนหุ้นระยะยาว</h1>
+      <p class="subtitle">Stock Investment Calculator with Dividend Reinvestment</p>
+    </div>
+    
+    <div class="card">
+      <h3 style="color: #ffd700; margin-bottom: 15px; text-align: center;">🎯 เลือกหุ้นยอดนิยม</h3>
+      <div class="preset-stocks">
+        <div class="stock-preset" onclick="selectStock('AAPL', 'Apple Inc.', 12, 0.5)">
+          <div class="stock-symbol">AAPL</div>
+          <div class="stock-name">Apple</div>
+          <div class="stock-dividend">ปันผล 0.5%</div>
+        </div>
+        <div class="stock-preset" onclick="selectStock('NVDA', 'NVIDIA Corp.', 25, 0.03)">
+          <div class="stock-symbol">NVDA</div>
+          <div class="stock-name">NVIDIA</div>
+          <div class="stock-dividend">ปันผล 0.03%</div>
+        </div>
+        <div class="stock-preset" onclick="selectStock('TSLA', 'Tesla Inc.', 20, 0)">
+          <div class="stock-symbol">TSLA</div>
+          <div class="stock-name">Tesla</div>
+          <div class="stock-dividend none">ไม่มีปันผล</div>
+        </div>
+        <div class="stock-preset" onclick="selectStock('GOOGL', 'Alphabet Inc.', 15, 0)">
+          <div class="stock-symbol">GOOGL</div>
+          <div class="stock-name">Google</div>
+          <div class="stock-dividend none">ไม่มีปันผล</div>
+        </div>
+        <div class="stock-preset" onclick="selectStock('MSFT', 'Microsoft Corp.', 12, 0.8)">
+          <div class="stock-symbol">MSFT</div>
+          <div class="stock-name">Microsoft</div>
+          <div class="stock-dividend">ปันผล 0.8%</div>
+        </div>
+        <div class="stock-preset" onclick="selectStock('KO', 'Coca-Cola', 8, 3.0)">
+          <div class="stock-symbol">KO</div>
+          <div class="stock-name">Coca-Cola</div>
+          <div class="stock-dividend">ปันผล 3.0%</div>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="input-grid">
+        <div class="input-group full-width">
+          <label>📈 ชื่อหุ้น <span class="label-hint">(หรือกรอกเอง)</span></label>
+          <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="KO">
+        </div>
+        
+        <div class="input-group">
+          <label>💰 เงินลงทุนเริ่มต้น <span class="label-hint">(บาท)</span></label>
+          <input type="number" id="initialInvestment" placeholder="เช่น 100000" min="0" step="10000" value="100000">
+        </div>
+        
+        <div class="input-group">
+          <label>📈 ผลตอบแทนเฉลี่ย <span class="label-hint">(%/ปี)</span></label>
+          <input type="number" id="annualReturn" placeholder="เช่น 12" min="-50" max="100" step="0.1" value="12">
+        </div>
+        
+        <div class="input-group">
+          <label>💵 ปันผล <span class="label-hint">(% Dividend Yield)</span></label>
+          <input type="number" id="dividendYield" placeholder="เช่น 0.5" min="0" max="10" step="0.1" value="0.5">
+        </div>
+        
+        <div class="input-group">
+          <label>⏱️ ระยะเวลาถือครอง <span class="label-hint">(ปี)</span></label>
+          <input type="number" id="years" placeholder="เช่น 30" min="1" max="50" value="30">
+        </div>
+        
+        <div class="input-group full-width">
+          <label>💵 ลงทุนเพิ่มต่อเดือน <span class="label-hint">(บาท) - ถ้าไม่มีใส่ 0</span></label>
+          <input type="number" id="monthlyInvestment" placeholder="เช่น 5000" min="0" step="1000" value="0">
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" onclick="calculate()">🧮 คำนวณผลตอบแทน</button>
+    </div>
 
-  // ====== 1) พรีเซ็ตพื้นฐาน (ใช้เมื่อไม่เรียก API) ======
-  const PRESET_MAP = {
-    AAPL: { returnRate: 12, dividend: 0.5 },
-    NVDA: { returnRate: 25, dividend: 0.03 },
-    TSLA: { returnRate: 20, dividend: 0 },
-    GOOGL:{ returnRate: 15, dividend: 0 },
-    MSFT: { returnRate: 12, dividend: 0.8 },
-    KO:   { returnRate: 8,  dividend: 3.0 },
-  };
+    <div class="result" id="result">
+      <h2>📊 ผลการคำนวณ</h2>
+      
+      <div class="result-main">
+        <div class="result-stock-info">
+          การลงทุนในหุ้น <span class="result-stock-symbol" id="resultStockSymbol">KO</span>
+        </div>
+        <div class="result-label">มูลค่ารวมที่คาดว่าจะได้รับ</div>
+        <div class="result-price">
+          <span class="currency">฿</span>
+          <span id="finalAmount">0</span>
+        </div>
+        <div class="result-multiplier" id="multiplier">
+          เงินเพิ่มขึ้น <strong>0x</strong>
+        </div>
+      </div>
+      
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-item-label">เงินลงทุนรวม</div>
+          <div class="result-item-value" id="totalInvested">฿0</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">กำไรจากราคาหุ้น</div>
+          <div class="result-item-value profit" id="capitalGain">฿0</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">ปันผลสะสม</div>
+          <div class="result-item-value profit" id="totalDividends">฿0</div>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="growthChart"></canvas>
+      </div>
+      
+      <div class="breakdown">
+        <h3>📋 รายละเอียดการลงทุน</h3>
+        <div class="breakdown-item">
+          <span class="breakdown-label">หุ้นที่เลือก:</span>
+          <span class="breakdown-value" id="detailStock">KO</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">เงินลงทุนเริ่มต้น:</span>
+          <span class="breakdown-value" id="detailInitial">฿0</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">ลงทุนเพิ่มต่อเดือน:</span>
+          <span class="breakdown-value" id="detailMonthly">฿0</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">ผลตอบแทนเฉลี่ยต่อปี:</span>
+          <span class="breakdown-value" id="detailReturn">0%</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">Dividend Yield:</span>
+          <span class="breakdown-value" id="detailDividend">0%</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">ระยะเวลาถือครอง:</span>
+          <span class="breakdown-value" id="detailYears">0 ปี</span>
+        </div>
+        <div class="breakdown-item" style="border-top: 2px solid rgba(255,215,0,0.3); margin-top: 10px; padding-top: 15px;">
+          <span class="breakdown-label"><strong>มูลค่ารวมทั้งหมด:</strong></span>
+          <span class="breakdown-value" style="color: #ffd700; font-size: 1.2em;" id="detailFinal">฿0</span>
+        </div>
+      </div>
+      
+      <div class="tip-box">
+        <strong>💡 ความหมายของตัวเลข:</strong>
+        <p>
+          <strong>กำไรจากราคาหุ้น:</strong> กำไรจากการเพิ่มขึ้นของราคาหุ้น (Capital Gain)<br>
+          <strong>ปันผลสะสม:</strong> เงินปันผลที่ได้รับทุกปีและนำไปซื้อหุ้นเพิ่ม (Dividend Reinvestment)<br>
+          <strong>หมายเหตุ:</strong> ตัวเลขนี้เป็นการคำนวณโดยประมาณ สมมติว่าผลตอบแทนคงที่ ซึ่งในความเป็นจริงราคาหุ้นมีความผันผวน
+        </p>
+      </div>
+    </div>
+  </div>
 
-  // ====== 2) ตั้งค่าการใช้ API (ถ้าไม่มีคีย์ ใช้ false ไว้ก่อน) ======
-  const USE_API = false; // ตั้ง true ถ้าคุณมีคีย์
-  const API = {
-    // ตัวอย่าง Alpha Vantage (ฟรี แต่มี rate limit)
-    ALPHA_VANTAGE_KEY: 'YOUR_ALPHA_VANTAGE_KEY',
-    // ตัวอย่าง Finnhub (เร็วและครบกว่า)
-    FINNHUB_KEY: 'YOUR_FINNHUB_KEY'
-  };
+  <script>
+    let growthChart = null;
 
-  // ====== 3) debounce กันยิง API ถี่เกินไป ======
-  function debounce(fn, delay = 500) {
-    let t = null;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), delay);
-    };
-  }
+    function selectStock(symbol, name, returnRate, dividend) {
+      document.getElementById('stockSymbol').value = symbol;
+      document.getElementById('annualReturn').value = returnRate;
+      document.getElementById('dividendYield').value = dividend;
+      
+      document.querySelectorAll('.stock-preset').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
 
-  // ====== 4) ดึงข้อมูลจาก API (ตัวอย่าง 2 เจ้าดัง) ======
-  async function fetchStockData(symbol) {
-    const sym = symbol.toUpperCase();
+    function calculate() {
+      const stockSymbol = document.getElementById('stockSymbol').value.trim() || 'Stock';
+      const initialInvestment = parseFloat(document.getElementById('initialInvestment').value) || 0;
+      const annualReturn = parseFloat(document.getElementById('annualReturn').value) || 0;
+      const dividendYield = parseFloat(document.getElementById('dividendYield').value) || 0;
+      const years = parseFloat(document.getElementById('years').value) || 0;
+      const monthlyInvestment = parseFloat(document.getElementById('monthlyInvestment').value) || 0;
 
-    // ตัวอย่าง Finnhub: ปันผลย้อนหลัง (สำหรับคำนวณ yield คร่าว ๆ)
-    // และ quote ปัจจุบัน (ไม่ได้ใช้ตรง ๆ ในหน้านี้ แต่เผื่อขยายต่อ)
-    // หมายเหตุ: เบราว์เซอร์อาจติด CORS ต้องใช้ผ่าน proxy/Server ของคุณ
-    async function tryFinnhub() {
-      const base = 'https://finnhub.io/api/v1';
-      const divUrl = `${base}/stock/dividend?symbol=${sym}&from=2019-01-01&to=2030-01-01&token=${API.FINNHUB_KEY}`;
-      const quoteUrl = `${base}/quote?symbol=${sym}&token=${API.FINNHUB_KEY}`;
+      if (initialInvestment <= 0 || years <= 0) {
+        alert('⚠️ กรุณากรอกเงินลงทุนและระยะเวลา');
+        return;
+      }
 
-      const [divRes, quoteRes] = await Promise.all([
-        fetch(divUrl), fetch(quoteUrl)
-      ]);
-      if (!divRes.ok || !quoteRes.ok) throw new Error('Finnhub error');
-
-      const divs = await divRes.json();
-      const quote = await quoteRes.json();
-
-      // คำนวณ dividend yield แบบคร่าว ๆ: รวมปันผล 1 ปีล่าสุด / ราคาปัจจุบัน
-      let last12m = 0;
-      const now = new Date();
-      const cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-      if (Array.isArray(divs)) {
-        for (const d of divs) {
-          if (d.payDate && new Date(d.payDate) >= cutoff) {
-            last12m += (d.amount || 0);
-          }
+      const monthlyReturn = annualReturn / 100 / 12;
+      const monthlyDividend = dividendYield / 100 / 12;
+      const totalMonths = years * 12;
+      
+      let portfolioValue = initialInvestment;
+      let totalInvested = initialInvestment;
+      let totalDividends = 0;
+      
+      const yearlyData = [{ year: 0, invested: initialInvestment, value: initialInvestment }];
+      
+      for (let month = 1; month <= totalMonths; month++) {
+        portfolioValue += monthlyInvestment;
+        totalInvested += monthlyInvestment;
+        portfolioValue *= (1 + monthlyReturn);
+        const dividendAmount = portfolioValue * monthlyDividend;
+        portfolioValue += dividendAmount;
+        totalDividends += dividendAmount;
+        
+        if (month % 12 === 0) {
+          yearlyData.push({
+            year: month / 12,
+            invested: totalInvested,
+            value: portfolioValue
+          });
         }
       }
-      const price = quote.c || 0;
-      const dividendYield = price > 0 ? (last12m / price) * 100 : 0;
+      
+      const capitalGain = portfolioValue - totalInvested - totalDividends;
+      const multiplier = (portfolioValue / totalInvested).toFixed(2);
 
-      // “ผลตอบแทนเฉลี่ยต่อปี” ไม่มีจาก API ตรง ๆ — ให้ตั้งสมมติฐานหรือดึงจาก backtest ของคุณเอง
-      // ที่นี่ขอใส่ค่ากลาง 10% เป็นตัวอย่าง
-      return {
-        returnRate: 10,
-        dividend: Number.isFinite(dividendYield) ? +(dividendYield.toFixed(2)) : 0
-      };
+      document.getElementById('resultStockSymbol').textContent = stockSymbol;
+      document.getElementById('finalAmount').textContent = portfolioValue.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      
+      document.getElementById('multiplier').innerHTML = `เงินเพิ่มขึ้น <strong>${multiplier}x</strong>`;
+      
+      document.getElementById('totalInvested').textContent = '฿' + totalInvested.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      
+      document.getElementById('capitalGain').textContent = '฿' + capitalGain.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      
+      document.getElementById('totalDividends').textContent = '฿' + totalDividends.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+
+      document.getElementById('detailStock').textContent = stockSymbol;
+      document.getElementById('detailInitial').textContent = '฿' + initialInvestment.toLocaleString();
+      document.getElementById('detailMonthly').textContent = '฿' + monthlyInvestment.toLocaleString();
+      document.getElementById('detailReturn').textContent = annualReturn + '%';
+      document.getElementById('detailDividend').textContent = dividendYield + '%';
+      document.getElementById('detailYears').textContent = years + ' ปี';
+      document.getElementById('detailFinal').textContent = '฿' + portfolioValue.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+
+      drawChart(yearlyData);
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // ตัวอย่าง Alpha Vantage: ไม่มี yield ตรง ๆ เช่นกัน
-    async function tryAlphaVantage() {
-      const base = 'https://www.alphavantage.co/query';
-      const url = `${base}?function=OVERVIEW&symbol=${sym}&apikey=${API.ALPHA_VANTAGE_KEY}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('AlphaVantage error');
-      const data = await res.json();
+    function drawChart(yearlyData) {
+      const labels = yearlyData.map(d => 'ปีที่ ' + d.year);
+      const investedData = yearlyData.map(d => d.invested);
+      const valueData = yearlyData.map(d => d.value);
 
-      // Alpha Vantage มีฟิลด์ DividendYield เป็นอัตราส่วน (เช่น 0.008 -> 0.8%)
-      const rawYield = parseFloat(data.DividendYield || '0');
-      const dividendPct = isNaN(rawYield) ? 0 : rawYield * 100;
-
-      return {
-        returnRate: 10, // สมมติ
-        dividend: +(dividendPct.toFixed(2))
-      };
-    }
-
-    // ลอง Finnhub ก่อน ถ้าพังค่อยลอง Alpha Vantage
-    if (API.FINNHUB_KEY && API.FINNHUB_KEY !== 'YOUR_FINNHUB_KEY') {
-      try { return await tryFinnhub(); } catch {}
-    }
-    if (API.ALPHA_VANTAGE_KEY && API.ALPHA_VANTAGE_KEY !== 'YOUR_ALPHA_VANTAGE_KEY') {
-      try { return await tryAlphaVantage(); } catch {}
-    }
-
-    // ถ้าไม่มีคีย์ หรือเรียกไม่ได้ ให้ fallback พรีเซ็ต
-    if (PRESET_MAP[sym]) return PRESET_MAP[sym];
-
-    // fallback สุดท้าย: สมมติฐานกลาง ๆ
-    return { returnRate: 10, dividend: 1.0 };
-  }
-
-  // ====== 5) อัปเดตค่าผลตอบแทน/ปันผลเมื่อผู้ใช้ "พิมพ์" สัญลักษณ์ ======
-  const onSymbolInput = debounce(async () => {
-    const input = document.getElementById('stockSymbol');
-    const sym = (input.value || '').trim().toUpperCase();
-    if (!sym) return;
-
-    // ล้างไฮไลต์ปุ่มพรีเซ็ต
-    document.querySelectorAll('.stock-preset').forEach(el => el.classList.remove('active'));
-
-    // ถ้ามีพรีเซ็ต ก็เติมให้ทันที (เร็ว)
-    if (PRESET_MAP[sym]) {
-      document.getElementById('annualReturn').value = PRESET_MAP[sym].returnRate;
-      document.getElementById('dividendYield').value = PRESET_MAP[sym].dividend;
-      return;
-    }
-
-    // ถ้าเปิดโหมด API — ลองดึงจริง
-    if (USE_API) {
-      try {
-        const data = await fetchStockData(sym);
-        document.getElementById('annualReturn').value = data.returnRate;
-        document.getElementById('dividendYield').value = data.dividend;
-      } catch (e) {
-        // ถ้าดึงไม่ได้ ให้คงค่าที่ผู้ใช้ใส่ไว้/สมมติ
-        console.warn('Fetch API failed, keep manual inputs.', e);
+      if (growthChart) {
+        growthChart.destroy();
       }
-    }
-  }, 500);
 
-  // bind กับ input ช่องสัญลักษณ์
-  window.addEventListener('load', () => {
-    document.getElementById('stockSymbol').addEventListener('input', onSymbolInput);
-  });
-
-  // ====== 6) ปุ่มพรีเซ็ต (แก้ให้รับ event) ======
-  function selectStock(symbol, name, returnRate, dividend, ev) {
-    document.getElementById('stockSymbol').value = symbol;
-    document.getElementById('annualReturn').value = returnRate;
-    document.getElementById('dividendYield').value = dividend;
-
-    document.querySelectorAll('.stock-preset').forEach(el => el.classList.remove('active'));
-    if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
-  }
-
-  // ====== 7) ฟังก์ชันคำนวณ (คงของเดิม) ======
-  function calculate() {
-    const stockSymbol = document.getElementById('stockSymbol').value.trim() || 'Stock';
-    const initialInvestment = parseFloat(document.getElementById('initialInvestment').value) || 0;
-    const annualReturn = parseFloat(document.getElementById('annualReturn').value) || 0;
-    const dividendYield = parseFloat(document.getElementById('dividendYield').value) || 0;
-    const years = parseFloat(document.getElementById('years').value) || 0;
-    const monthlyInvestment = parseFloat(document.getElementById('monthlyInvestment').value) || 0;
-
-    if (initialInvestment <= 0 || years <= 0) {
-      alert('⚠️ กรุณากรอกเงินลงทุนและระยะเวลา');
-      return;
-    }
-
-    const monthlyReturn = annualReturn / 100 / 12;
-    const monthlyDividend = dividendYield / 100 / 12;
-    const totalMonths = years * 12;
-
-    let portfolioValue = initialInvestment;
-    let totalInvested = initialInvestment;
-    let totalDividends = 0;
-
-    const yearlyData = [{ year: 0, invested: initialInvestment, value: initialInvestment }];
-
-    for (let month = 1; month <= totalMonths; month++) {
-      portfolioValue += monthlyInvestment;
-      totalInvested += monthlyInvestment;
-
-      portfolioValue *= (1 + monthlyReturn);
-
-      const dividendAmount = portfolioValue * monthlyDividend;
-      portfolioValue += dividendAmount;
-      totalDividends += dividendAmount;
-
-      if (month % 12 === 0) {
-        yearlyData.push({
-          year: month / 12,
-          invested: totalInvested,
-          value: portfolioValue
-        });
-      }
-    }
-
-    const capitalGain = portfolioValue - totalInvested - totalDividends;
-    const multiplier = (portfolioValue / totalInvested).toFixed(2);
-
-    document.getElementById('resultStockSymbol').textContent = stockSymbol;
-    document.getElementById('finalAmount').textContent = portfolioValue.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-    document.getElementById('multiplier').innerHTML = `เงินเพิ่มขึ้น <strong>${multiplier}x</strong>`;
-
-    document.getElementById('totalInvested').textContent = '฿' + totalInvested.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-    document.getElementById('capitalGain').textContent = '฿' + capitalGain.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-    document.getElementById('totalDividends').textContent = '฿' + totalDividends.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-
-    document.getElementById('detailStock').textContent = stockSymbol;
-    document.getElementById('detailInitial').textContent = '฿' + initialInvestment.toLocaleString();
-    document.getElementById('detailMonthly').textContent = '฿' + monthlyInvestment.toLocaleString();
-    document.getElementById('detailReturn').textContent = annualReturn + '%';
-    document.getElementById('detailDividend').textContent = dividendYield + '%';
-    document.getElementById('detailYears').textContent = years + ' ปี';
-    document.getElementById('detailFinal').textContent = '฿' + portfolioValue.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-
-    drawChart(yearlyData);
-
-    const resultDiv = document.getElementById('result');
-    resultDiv.style.display = 'block';
-    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function drawChart(yearlyData) {
-    const labels = yearlyData.map(d => 'ปีที่ ' + d.year);
-    const investedData = yearlyData.map(d => d.invested);
-    const valueData = yearlyData.map(d => d.value);
-
-    if (growthChart) growthChart.destroy();
-
-    const ctx = document.getElementById('growthChart').getContext('2d');
-    growthChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: 'เงินลงทุนสะสม',
-            data: investedData,
-            borderColor: '#daa520',
-            backgroundColor: 'rgba(218, 165, 32, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4
-          },
-          {
-            label: 'มูลค่าพอร์ตรวมปันผล',
-            data: valueData,
-            borderColor: '#ffd700',
-            backgroundColor: 'rgba(255, 215, 0, 0.2)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            labels: {
-              color: '#fff',
-              font: { size: 12, family: 'Poppins' }
+      const ctx = document.getElementById('growthChart').getContext('2d');
+      growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'เงินลงทุนสะสม',
+              data: investedData,
+              borderColor: '#daa520',
+              backgroundColor: 'rgba(218, 165, 32, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'มูลค่าพอร์ตรวมปันผล',
+              data: valueData,
+              borderColor: '#ffd700',
+              backgroundColor: 'rgba(255, 215, 0, 0.2)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff',
+                font: {
+                  size: 12,
+                  family: 'Poppins'
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#ffd700',
+              bodyColor: '#fff',
+              borderColor: '#ffd700',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ฿' + context.parsed.y.toLocaleString(undefined, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  });
+                }
+              }
             }
           },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleColor: '#ffd700',
-            bodyColor: '#fff',
-            borderColor: '#ffd700',
-            borderWidth: 1,
-            callbacks: {
-              label: function(context) {
-                return context.dataset.label + ': ฿' + context.parsed.y.toLocaleString(undefined, {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                });
+          scales: {
+            x: {
+              grid: {
+                color: 'rgba(255, 215, 0, 0.1)'
+              },
+              ticks: {
+                color: '#888',
+                font: {
+                  family: 'Poppins'
+                }
+              }
+            },
+            y: {
+              grid: {
+                color: 'rgba(255, 215, 0, 0.1)'
+              },
+              ticks: {
+                color: '#888',
+                font: {
+                  family: 'Poppins'
+                },
+                callback: function(value) {
+                  return '฿' + value.toLocaleString();
+                }
               }
             }
           }
-        },
-        scales: {
-          x: {
-            grid: { color: 'rgba(255, 215, 0, 0.1)' },
-            ticks: { color: '#888', font: { family: 'Poppins' } }
-          },
-          y: {
-            grid: { color: 'rgba(255, 215, 0, 0.1)' },
-            ticks: {
-              color: '#888',
-              font: { family: 'Poppins' },
-              callback: v => '฿' + v.toLocaleString()
-            }
-          }
         }
+      });
+    }
+
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        calculate();
       }
     });
-  }
 
-  document.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') calculate();
-  });
-
-  window.addEventListener('load', calculate);
-</script>
+    window.addEventListener('load', calculate);
+  </script>
+</body>
+</html>
