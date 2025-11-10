@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOOHOON - ข้อมูลพื้นฐานหุ้น</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      background: radial-gradient(circle at 30% 20%, rgba(255,215,0,0.12), transparent 65%), 
+                  radial-gradient(circle at 80% 80%, rgba(218,165,32,0.08), transparent 60%),
+                  #0a0a0a;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      color: #ffd700;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    .subtitle {
+      color: #c9a136;
+      font-size: 1.1em;
+    }
+    
+    .search-section {
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    
+    .search-wrapper {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 16px;
+      padding: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .search-wrapper:focus-within {
+      border-color: rgba(255,215,0,0.5);
+      box-shadow: 0 8px 40px rgba(255,215,0,0.2);
+    }
+    
+    input {
+      flex: 1;
+      padding: 18px 24px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 1.1em;
+      font-family: 'Poppins', sans-serif;
+      outline: none;
+      font-weight: 500;
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    
+    button {
+      padding: 18px 36px;
+      background: linear-gradient(135deg, #ffd700, #daa520);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-weight: 700;
+      font-size: 1.05em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, #ffec7f, #ffb400);
+      box-shadow: 0 6px 25px rgba(255,215,0,0.5);
+    }
+
+    .quick-picks {
+      margin-top: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 0.95em;
+    }
+    
+    .quick-picks span {
+      display: inline-block;
+      margin: 5px 8px;
+      padding: 8px 16px;
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 8px;
+      color: #daa520;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    
+    .quick-picks span:hover {
+      background: rgba(255,215,0,0.15);
+      border-color: rgba(255,215,0,0.4);
+      color: #ffd700;
+      transform: translateY(-2px);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      font-size: 1.3em;
+      color: #ffd700;
+      display: none;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,215,0,0.2);
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error {
+      max-width: 600px;
+      margin: 40px auto;
+      background: rgba(255,50,50,0.1);
+      border: 2px solid rgba(255,50,50,0.3);
+      border-radius: 15px;
+      padding: 24px;
+      color: #ff6b6b;
+      display: none;
+      text-align: center;
+      font-size: 1.1em;
+    }
+    
+    .stock-data {
+      display: none;
+      animation: fadeIn 0.6s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stock-header {
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 20px;
+      padding: 35px;
+      margin-bottom: 30px;
+    }
+    
+    .company-info {
+      margin-bottom: 25px;
+    }
+    
+    .stock-symbol {
+      font-size: 2.5em;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .company-name {
+      font-size: 1.4em;
+      color: #c9a136;
+      margin-bottom: 15px;
+    }
+    
+    .company-meta {
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap;
+      color: #aaa;
+      font-size: 0.95em;
+    }
+    
+    .company-meta span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .price-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+    
+    .price-card {
+      background: rgba(0,0,0,0.3);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,215,0,0.2);
+    }
+    
+    .price-label {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 8px;
+    }
+    
+    .price-value {
+      font-size: 2em;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .price-change {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    
+    .positive {
+      color: #00ff88;
+    }
+    
+    .negative {
+      color: #ff6b6b;
+    }
+    
+    .fundamentals-section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      color: #ffd700;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(255,215,0,0.3);
+    }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .metric-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 25px;
+      transition: all 0.3s;
+    }
+    
+    .metric-card:hover {
+      border-color: rgba(255,215,0,0.4);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(255,215,0,0.15);
+    }
+    
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+    }
+    
+    .metric-label {
+      color: #daa520;
+      font-size: 0.95em;
+      font-weight: 600;
+    }
+    
+    .metric-info {
+      cursor: help;
+      color: #888;
+      font-size: 0.85em;
+      background: rgba(255,215,0,0.1);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+    
+    .metric-value {
+      font-size: 2.2em;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    
+    .metric-desc {
+      font-size: 0.85em;
+      color: #aaa;
+      line-height: 1.5;
+    }
+    
+    .rating-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    
+    .rating-excellent {
+      background: rgba(0,255,136,0.15);
+      color: #00ff88;
+      border: 1px solid rgba(0,255,136,0.3);
+    }
+    
+    .rating-good {
+      background: rgba(255,215,0,0.15);
+      color: #ffd700;
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+    
+    .rating-fair {
+      background: rgba(255,165,0,0.15);
+      color: #ffa500;
+      border: 1px solid rgba(255,165,0,0.3);
+    }
+    
+    .rating-poor {
+      background: rgba(255,68,68,0.15);
+      color: #ff6b6b;
+      border: 1px solid rgba(255,68,68,0.3);
+    }
+    
+    .financial-table {
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 25px;
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th {
+      background: rgba(255,215,0,0.1);
+      color: #ffd700;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid rgba(255,215,0,0.3);
+    }
+    
+    td {
+      padding: 15px;
+      border-bottom: 1px solid rgba(255,215,0,0.1);
+      color: #ddd;
+    }
+    
+    tr:hover {
+      background: rgba(255,215,0,0.05);
+    }
+    
+    .tip-box {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    
+    .tip-box strong {
+      color: #ffd700;
+    }
+    
+    .tip-box p {
+      color: #ddd;
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+      
+      .search-wrapper {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .price-section {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 ข้อมูลพื้นฐานหุ้น</h1>
+      <p class="subtitle">Stock Fundamental Data & Analysis</p>
+    </div>
+
+    <div class="search-section">
+      <div class="search-wrapper">
+        <input 
+          type="text" 
+          id="stockInput" 
+          placeholder="พิมพ์ชื่อหุ้น เช่น AAPL, NVDA, TSLA..." 
+          onkeypress="if(event.key==='Enter') searchStock()"
+        />
+        <button onclick="searchStock()">ค้นหา</button>
+      </div>
+      <div class="quick-picks">
+        ลองค้นหา: 
+        <span onclick="quickSearch('AAPL')">AAPL</span>
+        <span onclick="quickSearch('NVDA')">NVDA</span>
+        <span onclick="quickSearch('TSLA')">TSLA</span>
+        <span onclick="quickSearch('GOOGL')">GOOGL</span>
+        <span onclick="quickSearch('MSFT')">MSFT</span>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div>กำลังดึงข้อมูลหุ้น...</div>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="stock-data" id="stockData">
+      <!-- Stock Header -->
+      <div class="stock-header">
+        <div class="company-info">
+          <div class="stock-symbol" id="stockSymbol">AAPL</div>
+          <div class="company-name" id="companyName">Apple Inc.</div>
+          <div class="company-meta">
+            <span>🏢 <span id="industry">Technology</span></span>
+            <span>🌍 <span id="country">United States</span></span>
+            <span>💼 <span id="exchange">NASDAQ</span></span>
+          </div>
+        </div>
+        
+        <div class="price-section">
+          <div class="price-card">
+            <div class="price-label">ราคาปัจจุบัน</div>
+            <div class="price-value" id="currentPrice">$0.00</div>
+            <div class="price-change" id="priceChange">+0.00 (0.00%)</div>
+          </div>
+          <div class="price-card">
+            <div class="price-label">52 Week High</div>
+            <div class="price-value" id="weekHigh">$0.00</div>
+          </div>
+          <div class="price-card">
+            <div class="price-label">52 Week Low</div>
+            <div class="price-value" id="weekLow">$0.00</div>
+          </div>
+          <div class="price-card">
+            <div class="price-label">Market Cap</div>
+            <div class="price-value" id="marketCap">$0.00B</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Valuation Metrics -->
+      <div class="fundamentals-section">
+        <h2 class="section-title">📈 อัตราส่วนการประเมินมูลค่า (Valuation Ratios)</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">P/E Ratio</span>
+              <span class="metric-info" title="ราคาหุ้น ÷ กำไรต่อหุ้น">?</span>
+            </div>
+            <div class="metric-value" id="peRatio">-</div>
+            <div class="metric-desc">Price to Earnings<br>ควรอยู่ระหว่าง 10-25 เท่า</div>
+            <div class="rating-badge" id="peRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">P/B Ratio</span>
+              <span class="metric-info" title="ราคาหุ้น ÷ มูลค่าทางบัญชี">?</span>
+            </div>
+            <div class="metric-value" id="pbRatio">-</div>
+            <div class="metric-desc">Price to Book Value<br>< 3 = ราคาสมเหตุสมผล</div>
+            <div class="rating-badge" id="pbRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">EPS</span>
+              <span class="metric-info" title="กำไรต่อหุ้น">?</span>
+            </div>
+            <div class="metric-value" id="eps">-</div>
+            <div class="metric-desc">Earnings Per Share<br>ยิ่งสูงยิ่งดี</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Dividend Yield</span>
+              <span class="metric-info" title="% ผลตอบแทนจากปันผล">?</span>
+            </div>
+            <div class="metric-value" id="dividendYield">-%</div>
+            <div class="metric-desc">เงินปันผลตอบแทน<br>> 3% = ดีมาก</div>
+            <div class="rating-badge" id="divRating">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profitability Metrics -->
+      <div class="fundamentals-section">
+        <h2 class="section-title">💰 อัตราส่วนความสามารถในการทำกำไร (Profitability)</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">ROE</span>
+              <span class="metric-info" title="ผลตอบแทนต่อส่วนของผู้ถือหุ้น">?</span>
+            </div>
+            <div class="metric-value" id="roe">-%</div>
+            <div class="metric-desc">Return on Equity<br>> 15% = ดีเยี่ยม</div>
+            <div class="rating-badge" id="roeRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">ROA</span>
+              <span class="metric-info" title="ผลตอบแทนต่อสินทรัพย์">?</span>
+            </div>
+            <div class="metric-value" id="roa">-%</div>
+            <div class="metric-desc">Return on Assets<br>> 5% = ดี</div>
+            <div class="rating-badge" id="roaRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Profit Margin</span>
+              <span class="metric-info" title="อัตรากำไรสุทธิ">?</span>
+            </div>
+            <div class="metric-value" id="profitMargin">-%</div>
+            <div class="metric-desc">อัตรากำไรสุทธิ<br>> 10% = ดี</div>
+            <div class="rating-badge" id="marginRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Revenue (TTM)</span>
+              <span class="metric-info" title="รายได้รวม 12 เดือนล่าสุด">?</span>
+            </div>
+            <div class="metric-value" id="revenue">$0B</div>
+            <div class="metric-desc">รายได้รวม<br>Trailing Twelve Months</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Health -->
+      <div class="fundamentals-section">
+        <h2 class="section-title">🏥 สุขภาพทางการเงิน (Financial Health)</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">D/E Ratio</span>
+              <span class="metric-info" title="หนี้สิน ÷ ส่วนของผู้ถือหุ้น">?</span>
+            </div>
+            <div class="metric-value" id="deRatio">-</div>
+            <div class="metric-desc">Debt to Equity<br>< 1 = ปลอดภัย</div>
+            <div class="rating-badge" id="deRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Current Ratio</span>
+              <span class="metric-info" title="สินทรัพย์หมุนเวียน ÷ หนี้สินหมุนเวียน">?</span>
+            </div>
+            <div class="metric-value" id="currentRatio">-</div>
+            <div class="metric-desc">สภาพคล่อง<br>> 1.5 = ดี</div>
+            <div class="rating-badge" id="crRating">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Debt</span>
+              <span class="metric-info" title="หนี้สินรวม">?</span>
+            </div>
+            <div class="metric-value" id="totalDebt">$0B</div>
+            <div class="metric-desc">หนี้สินรวมทั้งหมด<br>ยิ่งต่ำยิ่งดี</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Cash & Cash Equiv.</span>
+              <span class="metric-info" title="เงินสดและรายการเทียบเท่าเงินสด">?</span>
+            </div>
+            <div class="metric-value" id="cash">$0B</div>
+            <div class="metric-desc">เงินสดในมือ<br>ยิ่งสูงยิ่งดี</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Summary Table -->
+      <div class="fundamentals-section">
+        <h2 class="section-title">📋 สรุปข้อมูลทางการเงิน</h2>
+        <div class="financial-table">
+          <table>
+            <thead>
+              <tr>
+                <th>รายการ</th>
+                <th>มูลค่า</th>
+                <th>หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody id="financialSummary">
+              <tr>
+                <td>Beta</td>
+                <td id="beta">-</td>
+                <td>ความผันผวนเทียบกับตลาด</td>
+              </tr>
+              <tr>
+                <td>Shares Outstanding</td>
+                <td id="sharesOut">-</td>
+                <td>จำนวนหุ้นทั้งหมด</td>
+              </tr>
+              <tr>
+                <td>Float Shares</td>
+                <td id="floatShares">-</td>
+                <td>หุ้นที่ซื้อขายได้</td>
+              </tr>
+              <tr>
+                <td>IPO Date</td>
+                <td id="ipoDate">-</td>
+                <td>วันที่เข้าตลาด</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 คำแนะนำการใช้งาน:</strong>
+        <p>
+          ข้อมูลเหล่านี้เป็นเพียง<strong>"จุดเริ่มต้น"</strong>ในการวิเคราะห์หุ้น ควรดูร่วมกับ:<br>
+          • แนวโน้มการเติบโตของรายได้-กำไร (3-5 ปี)<br>
+          • การแข่งขันในอุตสาหกรรม<br>
+          • คุณภาพของผู้บริหาร<br>
+          • ข่าวสารและปัจจัยพื้นฐานของธุรกิจ<br><br>
+          <strong>⚠️ หมายเหตุ:</strong> ข้อมูลนี้เป็นข้อมูลอดีตและปัจจุบัน ไม่ได้การันตีผลตอบแทนในอนาคต
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'd46nnthr01qgc9etmndgd46nnthr01qgc9etmne0';
+
+    function quickSearch(symbol) {
+      document.getElementById('stockInput').value = symbol;
+      searchStock();
+    }
+
+    async function searchStock() {
+      const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
+      
+      if (!symbol) {
+        showError('⚠️ กรุณาใส่สัญลักษณ์หุ้น');
+        return;
+      }
+
+      showLoading(true);
+      hideError();
+      hideStockData();
+
+      try {
+        console.log('🔍 กำลังดึงข้อมูล:', symbol);
+
+        // ดึงข้อมูลจาก Finnhub API
+        const [quoteResponse, profileResponse, metricsResponse] = await Promise.all([
+          fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`),
+          fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`),
+          fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${API_KEY}`)
+        ]);
+
+        const quote = await quoteResponse.json();
+        const profile = await profileResponse.json();
+        const metrics = await metricsResponse.json();
+
+        console.log('📊 ข้อมูลที่ได้:', { quote, profile, metrics });
+
+        if (!quote.c || quote.c === 0) {
+          throw new Error('ไม่พบข้อมูลหุ้นนี้ กรุณาตรวจสอบสัญลักษณ์');
+        }
+
+        displayStockData(symbol, quote, profile, metrics);
+
+      } catch (error) {
+        console.error('❌ Error:', error);
+        showError('❌ ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function displayStockData(symbol, quote, profile, metrics) {
+      // Company Info
+      document.getElementById('stockSymbol').textContent = symbol;
+      document.getElementById('companyName').text
