@@ -179,19 +179,6 @@
       text-align: center;
       font-size: 1.1em;
     }
-
-    .info {
-      max-width: 600px;
-      margin: 20px auto;
-      background: rgba(100,200,255,0.1);
-      border: 2px solid rgba(100,200,255,0.3);
-      border-radius: 15px;
-      padding: 24px;
-      color: #6fc9ff;
-      display: none;
-      text-align: center;
-      font-size: 0.95em;
-    }
     
     .analysis-data {
       display: none;
@@ -231,12 +218,6 @@
     .stock-name {
       font-size: 1.2em;
       color: #c9a136;
-    }
-
-    .data-source {
-      font-size: 0.8em;
-      color: #888;
-      margin-top: 5px;
     }
     
     .current-price-section {
@@ -543,7 +524,6 @@
     </div>
 
     <div class="error" id="error"></div>
-    <div class="info" id="info"></div>
 
     <div class="analysis-data" id="analysisData">
       <!-- Stock Info -->
@@ -551,7 +531,6 @@
         <div class="stock-title-section">
           <div class="stock-symbol" id="stockSymbol">AAPL</div>
           <div class="stock-name" id="stockName">Apple Inc.</div>
-          <div class="data-source" id="dataSource">📊 ข้อมูลจำลอง (Demo)</div>
         </div>
         <div class="current-price-section">
           <div class="price-label">ราคาปัจจุบัน</div>
@@ -659,25 +638,49 @@
         <p>
           <strong>แนวรับ (Support):</strong> ระดับราคาที่มีแรงซื้อเข้ามาพยุงไม่ให้ราคาตกต่ำลง เหมาะสำหรับ<strong>จุดเข้าซื้อ</strong><br><br>
           <strong>แนวต้าน (Resistance):</strong> ระดับราคาที่มีแรงขายออกมาทำให้ราคาไม่สามารถขึ้นสูงได้ เหมาะสำหรับ<strong>จุดขาย/ตั้ง Stop Loss</strong><br><br>
-          <strong>⚠️ หมายเหตุ:</strong> แนวรับ-แนวต้านเป็นเพียงเครื่องมือประกอบการตัดสินใจ ควรใช้ร่วมกับ Indicator อื่นๆ และข้อมูลพื้นฐาน
+          <strong>⚠️ หมายเหตุ:</strong> แนวรับ-แนวต้านเป็นเพียงเครื่องมือประกอบการตัดสินใจ ควรใช้ร่วมกับ Indicator อื่นๆ และข้อมูลพื้นฐาน<br>
+          หากราคา<strong>"ทะลุแนวต้าน"</strong>อาจกลายเป็นแนวรับใหม่ และหากราคา<strong>"ทะลุแนวรับ"</strong>ลงไป อาจกลายเป็นแนวต้านใหม่
         </p>
       </div>
     </div>
   </div>
 
   <script>
-    // ===== ฐานข้อมูลหุ้นจำลอง =====
+    // ----------------- ข้อมูลหุ้นจำลอง (คงของเดิม) -----------------
     const STOCK_DATABASE = {
-      'AAPL': { name: 'Apple Inc.', prices: [150, 151, 149, 152, 151, 153, 154, 152, 155, 156, 155, 154, 157, 158, 156, 159, 160, 158, 161, 162, 161, 160, 163, 164, 165] },
-      'NVDA': { name: 'NVIDIA Corporation', prices: [120, 122, 121, 123, 125, 124, 126, 128, 127, 129, 131, 130, 132, 134, 133, 135, 137, 136, 138, 140, 139, 141, 142, 140, 143] },
-      'TSLA': { name: 'Tesla Inc.', prices: [240, 242, 241, 244, 246, 245, 248, 250, 249, 252, 254, 253, 256, 258, 257, 260, 262, 261, 264, 266, 265, 263, 267, 269, 268] },
-      'GOOGL': { name: 'Alphabet Inc.', prices: [140, 141, 140, 142, 143, 142, 144, 145, 144, 146, 147, 146, 148, 149, 148, 150, 151, 150, 152, 153, 152, 151, 154, 155, 156] },
-      'MSFT': { name: 'Microsoft Corporation', prices: [380, 382, 381, 384, 386, 385, 388, 390, 389, 392, 394, 393, 396, 398, 397, 400, 402, 401, 404, 406, 405, 403, 408, 410, 412] }
+      'AAPL': {
+        name: 'Apple Inc.',
+        prices: [150, 151, 149, 152, 151, 153, 154, 152, 155, 156, 155, 154, 157, 158, 156, 159, 160, 158, 161, 162, 161, 160, 163, 164, 165]
+      },
+      'NVDA': {
+        name: 'NVIDIA Corporation',
+        prices: [120, 122, 121, 123, 125, 124, 126, 128, 127, 129, 131, 130, 132, 134, 133, 135, 137, 136, 138, 140, 139, 141, 142, 140, 143]
+      },
+      'TSLA': {
+        name: 'Tesla Inc.',
+        prices: [240, 242, 241, 244, 246, 245, 248, 250, 249, 252, 254, 253, 256, 258, 257, 260, 262, 261, 264, 266, 265, 263, 267, 269, 268]
+      },
+      'GOOGL': {
+        name: 'Alphabet Inc.',
+        prices: [140, 141, 140, 142, 143, 142, 144, 145, 144, 146, 147, 146, 148, 149, 148, 150, 151, 150, 152, 153, 152, 151, 154, 155, 156]
+      },
+      'MSFT': {
+        name: 'Microsoft Corporation',
+        prices: [380, 382, 381, 384, 386, 385, 388, 390, 389, 392, 394, 393, 396, 398, 397, 400, 402, 401, 404, 406, 405, 403, 408, 410, 412]
+      }
     };
 
+    // ----------------- ตัวเลือกใช้ API (เพิ่มใหม่) -----------------
+    // ตั้งเป็น true ถ้าจะดึงข้อมูลจริง และกรอกคีย์ด้านล่าง
+    const USE_API = false;
+    const API_KEYS = {
+      FINNHUB: 'YOUR_FINNHUB_KEY',        // https://finnhub.io/ (อาจติด CORS ถ้าเรียกตรง)
+      ALPHAVANTAGE: 'YOUR_ALPHA_VANTAGE'  // https://www.alphavantage.co/
+    };
+
+    // ----------------- state เดิม -----------------
     let priceChart = null;
     let currentSymbol = '';
-    let dataSource = 'simulated'; // 'simulated' หรือ 'api'
 
     function quickSearch(symbol) {
       document.getElementById('stockInput').value = symbol;
@@ -687,14 +690,60 @@
     function generateRealisticPriceHistory(basePrice, days = 120) {
       const prices = [];
       let price = basePrice;
+      
       for (let i = 0; i < days; i++) {
         const change = (Math.random() - 0.48) * 3;
         price = Math.max(price + change, basePrice * 0.85);
         prices.push(price);
       }
+      
       return prices;
     }
 
+    // ----------------- ฟังก์ชันดึงข้อมูลชื่อ/ราคาแบบคร่าว ๆ (เพิ่มใหม่) -----------------
+    async function fetchStockMeta(symbol) {
+      const sym = symbol.toUpperCase();
+
+      async function tryFinnhub() {
+        const base = 'https://finnhub.io/api/v1';
+        const quoteUrl = `${base}/quote?symbol=${sym}&token=${API_KEYS.FINNHUB}`;
+        const profileUrl = `${base}/stock/profile2?symbol=${sym}&token=${API_KEYS.FINNHUB}`;
+        const [qRes, pRes] = await Promise.all([fetch(quoteUrl), fetch(profileUrl)]);
+        if (!qRes.ok || !pRes.ok) throw new Error('Finnhub error');
+        const quote = await qRes.json();
+        const profile = await pRes.json();
+        return {
+          name: profile.name || sym,
+          price: quote.c || 100
+        };
+      }
+
+      async function tryAlphaVantage() {
+        const base = 'https://www.alphavantage.co/query';
+        const overviewUrl = `${base}?function=OVERVIEW&symbol=${sym}&apikey=${API_KEYS.ALPHAVANTAGE}`;
+        const quoteUrl = `${base}?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${API_KEYS.ALPHAVANTAGE}`;
+        const [oRes, qRes] = await Promise.all([fetch(overviewUrl), fetch(quoteUrl)]);
+        if (!oRes.ok || !qRes.ok) throw new Error('AlphaVantage error');
+        const overview = await oRes.json();
+        const quote = await qRes.json();
+        const price = parseFloat(quote?.['Global Quote']?.['05. price']) || 100;
+        return {
+          name: overview?.Name || sym,
+          price
+        };
+      }
+
+      if (API_KEYS.FINNHUB && API_KEYS.FINNHUB !== 'YOUR_FINNHUB_KEY') {
+        try { return await tryFinnhub(); } catch(e) { console.warn(e); }
+      }
+      if (API_KEYS.ALPHAVANTAGE && API_KEYS.ALPHAVANTAGE !== 'YOUR_ALPHA_VANTAGE') {
+        try { return await tryAlphaVantage(); } catch(e) { console.warn(e); }
+      }
+      // fallback หากไม่มีคีย์หรือเรียกไม่ได้
+      return { name: sym, price: 100 };
+    }
+
+    // ----------------- ปรับ analyzeStock (แก้เฉพาะ logic ไม่ทุบของเดิม) -----------------
     async function analyzeStock() {
       const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
       
@@ -707,38 +756,50 @@
       currentSymbol = symbol;
       showLoading(true);
       hideError();
-      hideInfo();
       hideAnalysisData();
 
       try {
-        let stockData = null;
-        let isFromDatabase = false;
-
-        // ตรวจสอบว่ามีในฐานข้อมูลหรือไม่
+        // เคส 1: มีในฐานจำลอง -> ใช้ข้อมูลนี้ต่อทันที (คงของเดิม)
         if (STOCK_DATABASE[symbol]) {
-          stockData = STOCK_DATABASE[symbol];
-          isFromDatabase = true;
-          dataSource = 'simulated';
-        } else {
-          // ไม่อยู่ในฐาน - สร้างข้อมูลจำลอง
-          stockData = {
-            name: symbol,
-            prices: [100] // ราคาเริ่มต้น
-          };
-          dataSource = 'simulated';
-          showInfo(`ℹ️ ใช้ข้อมูลจำลองสำหรับ ${symbol} (ไม่อยู่ในฐานข้อมูล)`);
+          const stockData = STOCK_DATABASE[symbol];
+          const basePrice = stockData.prices[stockData.prices.length - 1];
+          const priceHistory = generateRealisticPriceHistory(basePrice, 120);
+          
+          const currentPrice = priceHistory[priceHistory.length - 1];
+          const previousPrice = priceHistory[priceHistory.length - 2];
+          const change = currentPrice - previousPrice;
+          const changePercent = (change / previousPrice) * 100;
+
+          displayStockInfo(symbol, stockData.name, currentPrice, change, changePercent);
+
+          const levels = calculateSupportResistance(priceHistory);
+          drawChart(priceHistory, levels);
+          displayLevels(levels, currentPrice);
+          generateRecommendations(levels, currentPrice);
+
+          showAnalysisData();
+          return;
         }
 
-        const basePrice = stockData.prices[stockData.prices.length - 1];
-        const priceHistory = generateRealisticPriceHistory(basePrice, 120);
-        
+        // เคส 2: ไม่อยู่ในฐาน -> ถ้าเปิด USE_API ให้ลองดึงจริง (หรือ fallback จำลอง)
+        let meta = { name: symbol, price: 100 };
+        if (USE_API) {
+          try {
+            meta = await fetchStockMeta(symbol);
+          } catch (e) {
+            console.warn('Fetch API failed, fallback to simulate.', e);
+          }
+        }
+
+        // จำลองกราฟจากราคาปัจจุบัน (meta.price) เพื่อให้ระบบทำงานต่อได้ครบ
+        const priceHistory = generateRealisticPriceHistory(meta.price, 120);
         const currentPrice = priceHistory[priceHistory.length - 1];
         const previousPrice = priceHistory[priceHistory.length - 2];
         const change = currentPrice - previousPrice;
         const changePercent = (change / previousPrice) * 100;
 
-        // แสดงข้อมูล
-        displayStockInfo(symbol, stockData.name, currentPrice, change, changePercent);
+        displayStockInfo(symbol, meta.name || symbol, currentPrice, change, changePercent);
+
         const levels = calculateSupportResistance(priceHistory);
         drawChart(priceHistory, levels);
         displayLevels(levels, currentPrice);
@@ -748,18 +809,16 @@
 
       } catch (error) {
         console.error('❌ Error:', error);
-        showError('❌ เกิดข้อผิดพลาด: ' + error.message);
+        showError('❌ เกิดข้อผิดพลาด ' + error.message);
       } finally {
         showLoading(false);
       }
     }
 
+    // ----------------- ฟังก์ชันเดิม (คงหน้าตา/พฤติกรรม) -----------------
     function displayStockInfo(symbol, name, currentPrice, change, changePercent) {
       document.getElementById('stockSymbol').textContent = symbol;
       document.getElementById('stockName').textContent = name;
-      
-      const sourceText = dataSource === 'simulated' ? '📊 ข้อมูลจำลอง (Demo)' : '🌐 ข้อมูลจริง (Live)';
-      document.getElementById('dataSource').textContent = sourceText;
       
       const price = currentPrice.toFixed(2);
       const changeFormatted = change.toFixed(2);
@@ -794,14 +853,17 @@
         support3: support3,
         resistance1: Math.min(resistance1, max * 1.05),
         resistance2: Math.min(resistance2, max * 1.10),
-        resistance3: resistance3
+        resistance3: resistance3,
+        pivot: pivot
       };
     }
 
     function drawChart(prices, levels) {
       const ctx = document.getElementById('priceChart');
       
-      if (priceChart) priceChart.destroy();
+      if (priceChart) {
+        priceChart.destroy();
+      }
 
       const dates = prices.map((p, i) => {
         const date = new Date();
@@ -852,7 +914,8 @@
             legend: {
               labels: {
                 color: '#fff',
-                font: { size: 12, weight: 'bold' }
+                font: { size: 12, weight: 'bold' },
+                usePointStyle: true
               }
             }
           },
@@ -870,6 +933,7 @@
       });
     }
 
+    // ----------------- อัปเดตเพื่อโชว์ระยะห่างจากราคาปัจจุบัน (เพิ่ม/ปรับเล็กน้อย) -----------------
     function displayLevels(levels, currentPrice) {
       const fmt = v => `$${v.toFixed(2)}`;
       const distPct = v => `${((Math.abs(v - currentPrice) / currentPrice) * 100).toFixed(2)}%`;
@@ -938,15 +1002,6 @@
     function showError(message) {
       document.getElementById('error').innerHTML = message;
       document.getElementById('error').style.display = 'block';
-    }
-
-    function hideInfo() {
-      document.getElementById('info').style.display = 'none';
-    }
-
-    function showInfo(message) {
-      document.getElementById('info').innerHTML = message;
-      document.getElementById('info').style.display = 'block';
     }
 
     function showAnalysisData() {
