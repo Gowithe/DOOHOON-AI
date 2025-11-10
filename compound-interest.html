@@ -566,41 +566,66 @@
         console.log('🔍 กำลังดึงข้อมูล:', symbol);
 
         // ดึงข้อมูลจาก Finnhub
-        const [metricsResponse, profileResponse] = await Promise.all([
+        const [metricsResponse, profileResponse, quoteResponse] = await Promise.all([
           fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_API_KEY}`),
-          fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`)
+          fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`),
+          fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`)
         ]);
 
         const metrics = await metricsResponse.json();
         const profile = await profileResponse.json();
+        const quote = await quoteResponse.json();
 
-        console.log('📊 ข้อมูลที่ได้:', { metrics, profile });
+        console.log('📊 ข้อมูลที่ได้:', { metrics, profile, quote });
 
-        // ตรวจสอบว่ามีข้อมูลหรือไม่
-        if (!profile.name) {
-          throw new Error('ไม่พบข้อมูลหุ้นนี้ กรุณาตรวจสอบสัญลักษณ์');
+        // ตรวจสอบว่ามีข้อมูลราคาหรือไม่
+        if (!quote.c || quote.c === 0) {
+          // ถ้าไม่มีข้อมูล ให้ใช้ค่า default
+          alert(`⚠️ ไม่พบข้อมูลหุ้น ${symbol} ในระบบ\n\nคุณสามารถกรอกข้อมูลด้วยตนเองได้:\n• ผลตอบแทนเฉลี่ย (%/ปี)\n• ปันผล (% Dividend Yield)`);
+          searchBtn.innerHTML = originalText;
+          searchBtn.disabled = false;
+          return;
         }
 
-        // คำนวณผลตอบแทนเฉลี่ยจาก 52 week high/low
-        const week52High = metrics.metric?.['52WeekHigh'] || 0;
-        const week52Low = metrics.metric?.['52WeekLow'] || 0;
-        const avgReturn = week52High > 0 && week52Low > 0 
-          ? ((week52High - week52Low) / week52Low * 100).toFixed(1)
-          : 12; // default 12% ถ้าไม่มีข้อมูล
+        // คำนวณผลตอบแทนเฉลี่ย
+        let avgReturn = 12; // default
+        
+        // ลองคำนวณจาก 52 week high/low
+        const week52High = metrics.metric?.['52WeekHigh'];
+        const week52Low = metrics.metric?.['52WeekLow'];
+        
+        if (week52High && week52Low && week52High > 0 && week52Low > 0) {
+          avgReturn = ((week52High - week52Low) / week52Low * 100);
+          // จำกัดไม่ให้เกิน 50% เพื่อความสมเหตุสมผล
+          avgReturn = Math.min(Math.max(avgReturn, 5), 50);
+        } else {
+          // ถ้าไม่มีข้อมูล ลองคำนวณจากราคาเปลี่ยนแปลง %
+          const changePercent = quote.dp;
+          if (changePercent && Math.abs(changePercent) < 100) {
+            avgReturn = Math.abs(changePercent) * 52; // ประมาณการจากการเปลี่ยนแปลงรายสัปดาห์
+            avgReturn = Math.min(Math.max(avgReturn, 5), 50);
+          }
+        }
 
         // ดึง Dividend Yield
-        const dividendYield = metrics.metric?.dividendYieldIndicatedAnnual || 0;
+        let dividendYield = metrics.metric?.dividendYieldIndicatedAnnual || 0;
+        
+        // ถ้าไม่มีข้อมูลปันผล ให้ใช้ค่า 0
+        if (!dividendYield || dividendYield < 0) {
+          dividendYield = 0;
+        }
 
         // อัพเดตค่าในฟอร์ม
-        document.getElementById('annualReturn').value = Math.min(parseFloat(avgReturn), 50); // จำกัดไม่เกิน 50%
+        document.getElementById('annualReturn').value = avgReturn.toFixed(1);
         document.getElementById('dividendYield').value = dividendYield.toFixed(2);
 
         // แสดงข้อความยืนยัน
-        alert(`✅ พบข้อมูลหุ้น ${symbol}\n\n${profile.name}\n\nผลตอบแทนโดยประมาณ: ${Math.min(parseFloat(avgReturn), 50)}%\nปันผล: ${dividendYield.toFixed(2)}%\n\nกรุณากรอกข้อมูลที่เหลือแล้วกดคำนวณ`);
+        const companyName = profile.name || symbol;
+        alert(`✅ พบข้อมูลหุ้น ${symbol}\n\n${companyName}\n\nราคาปัจจุบัน: ${quote.c.toFixed(2)}\nผลตอบแทนโดยประมาณ: ${avgReturn.toFixed(1)}% ต่อปี\nปันผล: ${dividendYield.toFixed(2)}%\n\n✏️ คุณสามารถแก้ไขตัวเลขได้ตามที่ต้องการ`);
 
       } catch (error) {
         console.error('❌ Error:', error);
-        alert('❌ ' + error.message);
+        alert(`⚠️ เกิดข้อผิดพลาดในการดึงข้อมูล\n\nคุณสามารถกรอกข้อมูลด้วยตนเองได้:\n• ผลตอบแทนเฉลี่ย (%/ปี)\n• ปันผล (% Dividend Yield)\n\nError: ${error.message}`);
       } finally {
         searchBtn.innerHTML = originalText;
         searchBtn.disabled = false;
