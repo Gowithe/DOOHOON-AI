@@ -795,6 +795,7 @@
         }
       } catch (error) {
         console.error('Error fetching historical data:', error);
+        throw new Error('ไม่สามารถดึงข้อมูลราคาย้อนหลังได้');
       }
     }
 
@@ -817,4 +818,197 @@
           if (highs[i] <= highs[i - j] || highs[i] <= highs[i + j]) {
             isHigh = false;
           }
-          if (lows[i] >= lows[i - j] || lows[i]
+          if (lows[i] >= lows[i - j] || lows[i] >= lows[i + j]) {
+            isLow = false;
+          }
+        }
+
+        if (isHigh) pivotHighs.push(highs[i]);
+        if (isLow) pivotLows.push(lows[i]);
+      }
+
+      // เรียงลำดับและหาระดับที่สำคัญที่สุด
+      pivotHighs.sort((a, b) => b - a);
+      pivotLows.sort((a, b) => a - b);
+
+      const support = [
+        pivotLows[0] || Math.min(...lows),
+        pivotLows[1] || Math.min(...lows) * 0.98,
+        pivotLows[2] || Math.min(...lows) * 0.95
+      ].sort((a, b) => b - a);
+
+      const resistance = [
+        pivotHighs[0] || Math.max(...highs),
+        pivotHighs[1] || Math.max(...highs) * 1.02,
+        pivotHighs[2] || Math.max(...highs) * 1.05
+      ].sort((a, b) => a - b);
+
+      return {
+        support1: support[0],
+        support2: support[1],
+        support3: support[2],
+        resistance1: resistance[0],
+        resistance2: resistance[1],
+        resistance3: resistance[2]
+      };
+    }
+
+    function drawChart(data, levels) {
+      const ctx = document.getElementById('priceChart');
+      
+      if (priceChart) {
+        priceChart.destroy();
+      }
+
+      const dates = data.t.map((t, i) => {
+        const date = new Date(t * 1000);
+        return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
+      });
+
+      priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'ราคาปิด',
+              data: data.c,
+              borderColor: '#ffd700',
+              backgroundColor: 'rgba(255,215,0,0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'แนวรับ 1',
+              data: Array(data.c.length).fill(levels.support1),
+              borderColor: '#00ff88',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'แนวต้าน 1',
+              data: Array(data.c.length).fill(levels.resistance1),
+              borderColor: '#ff6b6b',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff',
+                font: { size: 12, weight: 'bold' }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            },
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            }
+          }
+        }
+      });
+    }
+
+    function displayLevels(levels, currentPrice) {
+      // Support Levels
+      document.getElementById('support1').textContent = `$${levels.support1.toFixed(2)}`;
+      document.getElementById('support2').textContent = `$${levels.support2.toFixed(2)}`;
+      document.getElementById('support3').textContent = `$${levels.support3.toFixed(2)}`;
+
+      // Resistance Levels
+      document.getElementById('resistance1').textContent = `$${levels.resistance1.toFixed(2)}`;
+      document.getElementById('resistance2').textContent = `$${levels.resistance2.toFixed(2)}`;
+      document.getElementById('resistance3').textContent = `$${levels.resistance3.toFixed(2)}`;
+    }
+
+    function generateRecommendations(levels, currentPrice) {
+      const recommendations = [];
+      const changePercent = ((currentPrice - levels.support1) / levels.support1) * 100;
+
+      if (currentPrice < levels.support1) {
+        recommendations.push('⚠️ ราคาอยู่ต่ำกว่าแนวรับ 1 อาจเป็นจุดซื้อที่ดี');
+      } else if (currentPrice > levels.resistance1) {
+        recommendations.push('⚠️ ราคาอยู่สูงกว่าแนวต้าน 1 ควรระวังการขึ้นต่อ');
+      } else {
+        recommendations.push('✓ ราคาอยู่ในโซนปกติระหว่างแนวรับและแนวต้าน');
+      }
+
+      if (levels.resistance1 - currentPrice < currentPrice - levels.support1) {
+        recommendations.push('📈 ราคาเข้าใกล้แนวต้าน ควรเตรียมพร้อมสำหรับการขาย');
+      } else {
+        recommendations.push('📉 ราคาเข้าใกล้แนวรับ ควรเตรียมพร้อมสำหรับการซื้อ');
+      }
+
+      recommendations.push('💡 ลองใช้ Fibonacci Retracement หรือ RSI ประกอบการตัดสินใจ');
+
+      const recommendationHtml = recommendations
+        .map(rec => `<li>${rec}</li>`)
+        .join('');
+      
+      document.getElementById('recommendations').innerHTML = recommendationHtml;
+
+      // Trading Signal
+      const signal = currentPrice > levels.resistance1 ? 'BEARISH 🔴' : 
+                     currentPrice < levels.support1 ? 'BULLISH 🟢' : 'NEUTRAL 🟡';
+      const icon = currentPrice > levels.resistance1 ? '🔴' : 
+                   currentPrice < levels.support1 ? '🟢' : '🟡';
+
+      document.getElementById('tradingSignal').textContent = signal;
+      document.getElementById('signalIcon').textContent = icon;
+    }
+
+    function changeTimeframe(timeframe) {
+      currentTimeframe = timeframe;
+
+      // Update button states
+      document.querySelectorAll('.timeframe-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Reload data
+      if (currentSymbol) {
+        fetchHistoricalData(currentSymbol, timeframe);
+      }
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+
+    function showError(message) {
+      document.getElementById('error').innerHTML = message;
+      document.getElementById('error').style.display = 'block';
+    }
+
+    function showAnalysisData() {
+      document.getElementById('analysisData').style.display = 'block';
+    }
+
+    function hideAnalysisData() {
+      document.getElementById('analysisData').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
