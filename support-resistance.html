@@ -646,24 +646,49 @@
   </div>
 
   <script>
+    // ข้อมูลหุ้นจำลอง
+    const STOCK_DATABASE = {
+      'AAPL': {
+        name: 'Apple Inc.',
+        prices: [150, 151, 149, 152, 151, 153, 154, 152, 155, 156, 155, 154, 157, 158, 156, 159, 160, 158, 161, 162, 161, 160, 163, 164, 165]
+      },
+      'NVDA': {
+        name: 'NVIDIA Corporation',
+        prices: [120, 122, 121, 123, 125, 124, 126, 128, 127, 129, 131, 130, 132, 134, 133, 135, 137, 136, 138, 140, 139, 141, 142, 140, 143]
+      },
+      'TSLA': {
+        name: 'Tesla Inc.',
+        prices: [240, 242, 241, 244, 246, 245, 248, 250, 249, 252, 254, 253, 256, 258, 257, 260, 262, 261, 264, 266, 265, 263, 267, 269, 268]
+      },
+      'GOOGL': {
+        name: 'Alphabet Inc.',
+        prices: [140, 141, 140, 142, 143, 142, 144, 145, 144, 146, 147, 146, 148, 149, 148, 150, 151, 150, 152, 153, 152, 151, 154, 155, 156]
+      },
+      'MSFT': {
+        name: 'Microsoft Corporation',
+        prices: [380, 382, 381, 384, 386, 385, 388, 390, 389, 392, 394, 393, 396, 398, 397, 400, 402, 401, 404, 406, 405, 403, 408, 410, 412]
+      }
+    };
+
     let priceChart = null;
     let currentSymbol = '';
-    let historicalData = null;
-
-    // ใช้ Yahoo Finance API ที่ไม่ต้อง API Key
-    const STOCK_DATA = {
-      'AAPL': { name: 'Apple Inc.', symbol: 'AAPL' },
-      'NVDA': { name: 'NVIDIA Corporation', symbol: 'NVDA' },
-      'TSLA': { name: 'Tesla Inc.', symbol: 'TSLA' },
-      'GOOGL': { name: 'Alphabet Inc.', symbol: 'GOOGL' },
-      'MSFT': { name: 'Microsoft Corporation', symbol: 'MSFT' },
-      'AMZN': { name: 'Amazon.com Inc.', symbol: 'AMZN' },
-      'META': { name: 'Meta Platforms Inc.', symbol: 'META' }
-    };
 
     function quickSearch(symbol) {
       document.getElementById('stockInput').value = symbol;
       analyzeStock();
+    }
+
+    function generateRealisticPriceHistory(basePrice, days = 120) {
+      const prices = [];
+      let price = basePrice;
+      
+      for (let i = 0; i < days; i++) {
+        const change = (Math.random() - 0.48) * 3; // ความเปลี่ยนแปลงสุ่ม
+        price = Math.max(price + change, basePrice * 0.85); // ไม่ให้ลดเกิน 15%
+        prices.push(price);
+      }
+      
+      return prices;
     }
 
     async function analyzeStock() {
@@ -671,6 +696,11 @@
       
       if (!symbol) {
         showError('⚠️ กรุณาใส่สัญลักษณ์หุ้น');
+        return;
+      }
+
+      if (!STOCK_DATABASE[symbol]) {
+        showError('⚠️ ไม่พบข้อมูลหุ้น ' + symbol + ' กรุณาลองเช่น AAPL, NVDA, TSLA, GOOGL, MSFT');
         return;
       }
 
@@ -682,88 +712,85 @@
       try {
         console.log('🔍 กำลังวิเคราะห์:', symbol);
 
-        // ดึงข้อมูลจาก Yahoo Finance API
-        const response = await fetch(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=6mo`
-        );
-        
-        if (!response.ok) {
-          throw new Error('ไม่พบข้อมูลหุ้นนี้');
-        }
+        // จำลองการดึงข้อมูล
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        const data = await response.json();
+        const stockData = STOCK_DATABASE[symbol];
+        const basePrice = stockData.prices[stockData.prices.length - 1];
+        const priceHistory = generateRealisticPriceHistory(basePrice, 120);
         
-        if (!data.chart.result || !data.chart.result[0]) {
-          throw new Error('ไม่พบข้อมูลหุ้นนี้ กรุณาตรวจสอบสัญลักษณ์');
-        }
-
-        const result = data.chart.result[0];
-        const quote = result.quote[0];
+        const currentPrice = priceHistory[priceHistory.length - 1];
+        const previousPrice = priceHistory[priceHistory.length - 2];
+        const change = currentPrice - previousPrice;
+        const changePercent = (change / previousPrice) * 100;
 
         // แสดงข้อมูลหุ้น
-        displayStockInfo(symbol, quote);
+        displayStockInfo(symbol, stockData.name, currentPrice, change, changePercent);
 
-        // ประมวลผลข้อมูลราคา
-        const prices = result.quote;
-        const levels = calculateSupportResistance(prices);
+        // คำนวณแนวรับ-แนวต้าน
+        const levels = calculateSupportResistance(priceHistory);
         
-        drawChart(prices, levels);
-        displayLevels(levels, quote.close);
-        generateRecommendations(levels, quote.close);
+        // วาดกราฟ
+        drawChart(priceHistory, levels);
+        
+        // แสดงระดับ
+        displayLevels(levels, currentPrice);
+        
+        // สร้างคำแนะนำ
+        generateRecommendations(levels, currentPrice);
 
         // แสดงข้อมูล
         showAnalysisData();
 
       } catch (error) {
         console.error('❌ Error:', error);
-        showError('❌ ' + error.message);
+        showError('❌ เกิดข้อผิดพลาด ' + error.message);
       } finally {
         showLoading(false);
       }
     }
 
-    function displayStockInfo(symbol, quote) {
+    function displayStockInfo(symbol, name, currentPrice, change, changePercent) {
       document.getElementById('stockSymbol').textContent = symbol;
-      document.getElementById('stockName').textContent = STOCK_DATA[symbol]?.name || symbol;
+      document.getElementById('stockName').textContent = name;
       
-      const price = quote.close.toFixed(2);
-      const change = (quote.close - quote.open).toFixed(2);
-      const changePercent = ((change / quote.open) * 100).toFixed(2);
-      const isPositive = parseFloat(change) >= 0;
+      const price = currentPrice.toFixed(2);
+      const changeFormatted = change.toFixed(2);
+      const changePercentFormatted = changePercent.toFixed(2);
+      const isPositive = change >= 0;
 
       document.getElementById('currentPrice').textContent = `$${price}`;
       
       const changeElement = document.getElementById('priceChange');
-      changeElement.textContent = `${isPositive ? '+' : ''}${change} (${isPositive ? '+' : ''}${changePercent}%)`;
+      changeElement.textContent = `${isPositive ? '+' : ''}${changeFormatted} (${isPositive ? '+' : ''}${changePercentFormatted}%)`;
       changeElement.className = `price-change ${isPositive ? 'positive' : 'negative'}`;
     }
 
     function calculateSupportResistance(prices) {
-      const closes = prices.map(p => p.close);
-      const highs = prices.map(p => p.high);
-      const lows = prices.map(p => p.low);
-
-      const max = Math.max(...highs);
-      const min = Math.min(...lows);
-      const avg = (closes.reduce((a, b) => a + b) / closes.length);
-
-      // คำนวณแนวรับ-แนวต้าน
-      const support1 = min + (avg - min) * 0.2;
-      const support2 = min + (avg - min) * 0.5;
+      const sorted = [...prices].sort((a, b) => a - b);
+      const max = Math.max(...prices);
+      const min = Math.min(...prices);
+      const avg = prices.reduce((a, b) => a + b) / prices.length;
+      
+      // Pivot Point Method
+      const pivot = (max + min + prices[prices.length - 1]) / 3;
+      
+      const support1 = (2 * pivot) - max;
+      const support2 = pivot - (max - min);
       const support3 = min;
-
-      const resistance1 = avg + (max - avg) * 0.2;
-      const resistance2 = avg + (max - avg) * 0.5;
+      
+      const resistance1 = (2 * pivot) - min;
+      const resistance2 = pivot + (max - min);
       const resistance3 = max;
 
       return {
-        support1: Math.max(support1, min),
-        support2: Math.max(support2, min),
+        support1: Math.max(support1, min * 0.95),
+        support2: Math.max(support2, min * 0.90),
         support3: support3,
-        resistance1: resistance1,
-        resistance2: resistance2,
+        resistance1: Math.min(resistance1, max * 1.05),
+        resistance2: Math.min(resistance2, max * 1.10),
         resistance3: resistance3,
-        avg: avg
+        pivot: pivot
       };
     }
 
@@ -774,9 +801,9 @@
         priceChart.destroy();
       }
 
-      const closes = prices.map(p => p.close);
-      const dates = prices.map(p => {
-        const date = new Date(p.date * 1000);
+      const dates = prices.map((p, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (prices.length - i));
         return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
       });
 
@@ -787,18 +814,18 @@
           datasets: [
             {
               label: 'ราคาปิด',
-              data: closes,
+              data: prices,
               borderColor: '#ffd700',
               backgroundColor: 'rgba(255,215,0,0.1)',
               borderWidth: 2,
               fill: true,
-              tension: 0.3,
+              tension: 0.4,
               pointRadius: 0,
               pointHoverRadius: 6
             },
             {
               label: 'แนวรับ 1',
-              data: Array(closes.length).fill(levels.support1),
+              data: Array(prices.length).fill(levels.support1),
               borderColor: '#00ff88',
               borderDash: [5, 5],
               borderWidth: 2,
@@ -807,7 +834,7 @@
             },
             {
               label: 'แนวต้าน 1',
-              data: Array(closes.length).fill(levels.resistance1),
+              data: Array(prices.length).fill(levels.resistance1),
               borderColor: '#ff6b6b',
               borderDash: [5, 5],
               borderWidth: 2,
@@ -823,7 +850,8 @@
             legend: {
               labels: {
                 color: '#fff',
-                font: { size: 12, weight: 'bold' }
+                font: { size: 12, weight: 'bold' },
+                usePointStyle: true
               }
             }
           },
