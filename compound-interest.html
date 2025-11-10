@@ -430,8 +430,8 @@
         <div class="input-group full-width">
           <label>📈 ชื่อหุ้น <span class="label-hint">(พิมพ์แล้วกด Enter หรือปุ่มค้นหา)</span></label>
           <div style="display: flex; gap: 10px;">
-            <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="KO" onkeypress="if(event.key==='Enter') fetchStockData()" style="flex: 1;">
-            <button onclick="fetchStockData()" style="padding: 15px 30px; width: auto; font-size: 0.9em;">🔍 ค้นหา</button>
+            <input type="text" id="stockSymbol" placeholder="เช่น AAPL, NVDA, TSLA" value="KO" onkeypress="if(event.key==='Enter') fetchStockData(event)" style="flex: 1;">
+            <button onclick="fetchStockData(event)" style="padding: 15px 30px; width: auto; font-size: 0.9em;">🔍 ค้นหา</button>
           </div>
         </div>
         
