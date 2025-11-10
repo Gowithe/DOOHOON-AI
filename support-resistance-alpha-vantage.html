@@ -667,7 +667,7 @@
 
   <script>
     // ===== Alpha Vantage API Key =====
-    const ALPHA_VANTAGE_API_KEY = 'SSHS1YDZEUU1VQM0'; // ใช้ demo key ก่อน
+    const ALPHA_VANTAGE_API_KEY = 'demo'; // ใช้ demo key ก่อน
     // ⚠️ สำหรับใช้จริง: สมัครที่ https://www.alphavantage.co/api/ แล้วเปลี่ยน 'demo' เป็น key ของคุณ
     
     let priceChart = null;
@@ -772,28 +772,46 @@
     }
 
     function calculateSupportResistance(prices) {
-      const max = Math.max(...prices);
-      const min = Math.min(...prices);
-      const currentPrice = prices[prices.length - 1];
+      // ===== MA + ATR Method =====
       
-      // Pivot Point Method
-      const pivot = (max + min + currentPrice) / 3;
+      // คำนวณ MA20 (Moving Average 20 วัน)
+      const ma20Period = Math.min(20, prices.length);
+      const ma20 = prices.slice(-ma20Period).reduce((a, b) => a + b, 0) / ma20Period;
       
-      const support1 = (2 * pivot) - max;
-      const support2 = pivot - (max - min);
-      const support3 = min;
+      // คำนวณ ATR14 (Average True Range 14 วัน)
+      const atr14Period = Math.min(14, prices.length);
+      const atrData = [];
       
-      const resistance1 = (2 * pivot) - min;
-      const resistance2 = pivot + (max - min);
-      const resistance3 = max;
+      for (let i = Math.max(0, prices.length - atr14Period); i < prices.length; i++) {
+        let trueRange;
+        if (i === 0) {
+          trueRange = prices[i]; // First value
+        } else {
+          const high = Math.max(prices[i], prices[i - 1]);
+          const low = Math.min(prices[i], prices[i - 1]);
+          trueRange = high - low;
+        }
+        atrData.push(trueRange);
+      }
+      
+      const atr14 = atrData.reduce((a, b) => a + b, 0) / atrData.length;
+      
+      // Support & Resistance ตาม MA + ATR
+      const support1 = ma20 - (1.5 * atr14);
+      const support2 = ma20 - (2 * atr14);
+      const support3 = ma20 - (2.5 * atr14);
+      
+      const resistance1 = ma20 + (1.5 * atr14);
+      const resistance2 = ma20 + (2 * atr14);
+      const resistance3 = ma20 + (2.5 * atr14);
 
       return {
-        support1: Math.max(support1, min * 0.95),
-        support2: Math.max(support2, min * 0.90),
-        support3: support3,
-        resistance1: Math.min(resistance1, max * 1.05),
-        resistance2: Math.min(resistance2, max * 1.10),
-        resistance3: resistance3
+        support1: Math.max(support1, Math.min(...prices) * 0.9),
+        support2: Math.max(support2, Math.min(...prices) * 0.85),
+        support3: Math.max(support3, Math.min(...prices) * 0.80),
+        resistance1: Math.min(resistance1, Math.max(...prices) * 1.1),
+        resistance2: Math.min(resistance2, Math.max(...prices) * 1.15),
+        resistance3: Math.min(resistance3, Math.max(...prices) * 1.2)
       };
     }
 
