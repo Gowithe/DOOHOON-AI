@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOOHOON - แนวรับ แนวต้าน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      background: radial-gradient(circle at 30% 20%, rgba(255,215,0,0.12), transparent 65%), 
+                  radial-gradient(circle at 80% 80%, rgba(218,165,32,0.08), transparent 60%),
+                  #0a0a0a;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      color: #ffd700;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    .subtitle {
+      color: #c9a136;
+      font-size: 1.1em;
+    }
+    
+    .search-section {
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    
+    .search-wrapper {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 16px;
+      padding: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .search-wrapper:focus-within {
+      border-color: rgba(255,215,0,0.5);
+      box-shadow: 0 8px 40px rgba(255,215,0,0.2);
+    }
+    
+    input {
+      flex: 1;
+      padding: 18px 24px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 1.1em;
+      font-family: 'Poppins', sans-serif;
+      outline: none;
+      font-weight: 500;
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    
+    button {
+      padding: 18px 36px;
+      background: linear-gradient(135deg, #ffd700, #daa520);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-weight: 700;
+      font-size: 1.05em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, #ffec7f, #ffb400);
+      box-shadow: 0 6px 25px rgba(255,215,0,0.5);
+    }
+
+    .quick-picks {
+      margin-top: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 0.95em;
+    }
+    
+    .quick-picks span {
+      display: inline-block;
+      margin: 5px 8px;
+      padding: 8px 16px;
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 8px;
+      color: #daa520;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    
+    .quick-picks span:hover {
+      background: rgba(255,215,0,0.15);
+      border-color: rgba(255,215,0,0.4);
+      color: #ffd700;
+      transform: translateY(-2px);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      font-size: 1.3em;
+      color: #ffd700;
+      display: none;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,215,0,0.2);
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error {
+      max-width: 600px;
+      margin: 40px auto;
+      background: rgba(255,50,50,0.1);
+      border: 2px solid rgba(255,50,50,0.3);
+      border-radius: 15px;
+      padding: 24px;
+      color: #ff6b6b;
+      display: none;
+      text-align: center;
+      font-size: 1.1em;
+    }
+    
+    .analysis-data {
+      display: none;
+      animation: fadeIn 0.6s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stock-info {
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .stock-title-section {
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    .stock-symbol {
+      font-size: 2.5em;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .stock-name {
+      font-size: 1.2em;
+      color: #c9a136;
+    }
+    
+    .current-price-section {
+      text-align: right;
+    }
+    
+    .price-label {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+    
+    .current-price {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .price-change {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+    
+    .positive {
+      color: #00ff88;
+    }
+    
+    .negative {
+      color: #ff6b6b;
+    }
+    
+    .chart-section {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .chart-title {
+      color: #ffd700;
+      font-size: 1.6em;
+      font-weight: 700;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 450px;
+      margin-bottom: 20px;
+    }
+    
+    canvas {
+      max-height: 450px;
+    }
+    
+    .levels-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .level-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+    }
+    
+    .level-card.support {
+      border-color: rgba(0,255,136,0.3);
+    }
+    
+    .level-card.resistance {
+      border-color: rgba(255,68,68,0.3);
+    }
+    
+    .level-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .level-icon {
+      font-size: 2em;
+    }
+    
+    .level-title {
+      font-size: 1.6em;
+      font-weight: 700;
+    }
+    
+    .level-title.support {
+      color: #00ff88;
+    }
+    
+    .level-title.resistance {
+      color: #ff6b6b;
+    }
+    
+    .level-item {
+      background: rgba(255,255,255,0.05);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid;
+    }
+    
+    .level-item.support {
+      border-left-color: #00ff88;
+    }
+    
+    .level-item.resistance {
+      border-left-color: #ff6b6b;
+    }
+    
+    .level-label {
+      color: #ddd;
+      font-size: 0.95em;
+    }
+    
+    .level-price {
+      font-size: 1.4em;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .level-distance {
+      font-size: 0.85em;
+      color: #888;
+      margin-top: 5px;
+    }
+    
+    .analysis-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .analysis-title {
+      color: #ffd700;
+      font-size: 1.6em;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    
+    .signal-box {
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+    
+    .signal-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .signal-icon {
+      font-size: 2.5em;
+    }
+    
+    .signal-text {
+      flex: 1;
+    }
+    
+    .signal-label {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+    
+    .signal-value {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #ffd700;
+    }
+    
+    .recommendation-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .recommendation-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,215,0,0.1);
+      color: #ddd;
+      line-height: 1.7;
+    }
+    
+    .recommendation-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .recommendation-list li::before {
+      content: '✓';
+      color: #00ff88;
+      font-weight: 700;
+      margin-right: 10px;
+    }
+    
+    .tip-box {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    
+    .tip-box strong {
+      color: #ffd700;
+    }
+    
+    .tip-box p {
+      color: #ddd;
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+      
+      .search-wrapper {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .stock-info {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .current-price-section {
+        text-align: center;
+      }
+      
+      .levels-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-container {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 แนวรับ - แนวต้าน</h1>
+      <p class="subtitle">Support & Resistance Level Finder</p>
+    </div>
+
+    <div class="search-section">
+      <div class="search-wrapper">
+        <input 
+          type="text" 
+          id="stockInput" 
+          placeholder="พิมพ์ชื่อหุ้น เช่น AAPL, NVDA, TSLA..." 
+          onkeypress="if(event.key==='Enter') analyzeStock()"
+        />
+        <button onclick="analyzeStock()">วิเคราะห์</button>
+      </div>
+      <div class="quick-picks">
+        ลองค้นหา: 
+        <span onclick="quickSearch('AAPL')">AAPL</span>
+        <span onclick="quickSearch('NVDA')">NVDA</span>
+        <span onclick="quickSearch('TSLA')">TSLA</span>
+        <span onclick="quickSearch('GOOGL')">GOOGL</span>
+        <span onclick="quickSearch('MSFT')">MSFT</span>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div>กำลังวิเคราะห์แนวรับ-แนวต้าน...</div>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="analysis-data" id="analysisData">
+      <!-- Stock Info -->
+      <div class="stock-info">
+        <div class="stock-title-section">
+          <div class="stock-symbol" id="stockSymbol">AAPL</div>
+          <div class="stock-name" id="stockName">Apple Inc.</div>
+        </div>
+        <div class="current-price-section">
+          <div class="price-label">ราคาปัจจุบัน</div>
+          <div class="current-price" id="currentPrice">$0.00</div>
+          <div class="price-change" id="priceChange">+0.00 (0.00%)</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="chart-title">📈 กราฟราคาและแนวรับ-แนวต้าน</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Support & Resistance Levels -->
+      <div class="levels-grid">
+        <!-- Support Levels -->
+        <div class="level-card support">
+          <div class="level-header">
+            <div class="level-icon">🟢</div>
+            <div class="level-title support">แนวรับ (Support)</div>
+          </div>
+          <div id="supportLevels">
+            <div class="level-item support">
+              <div>
+                <div class="level-label">แนวรับ 1 (แข็งแกร่ง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="support1">$0.00</div>
+            </div>
+            <div class="level-item support">
+              <div>
+                <div class="level-label">แนวรับ 2 (ปานกลาง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="support2">$0.00</div>
+            </div>
+            <div class="level-item support">
+              <div>
+                <div class="level-label">แนวรับ 3 (อ่อน)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="support3">$0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resistance Levels -->
+        <div class="level-card resistance">
+          <div class="level-header">
+            <div class="level-icon">🔴</div>
+            <div class="level-title resistance">แนวต้าน (Resistance)</div>
+          </div>
+          <div id="resistanceLevels">
+            <div class="level-item resistance">
+              <div>
+                <div class="level-label">แนวต้าน 1 (แข็งแกร่ง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="resistance1">$0.00</div>
+            </div>
+            <div class="level-item resistance">
+              <div>
+                <div class="level-label">แนวต้าน 2 (ปานกลาง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="resistance2">$0.00</div>
+            </div>
+            <div class="level-item resistance">
+              <div>
+                <div class="level-label">แนวต้าน 3 (อ่อน)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="resistance3">$0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trading Analysis -->
+      <div class="analysis-card">
+        <div class="analysis-title">💡 การวิเคราะห์และคำแนะนำ</div>
+        
+        <div class="signal-box">
+          <div class="signal-header">
+            <div class="signal-icon" id="signalIcon">📊</div>
+            <div class="signal-text">
+              <div class="signal-label">สัญญาณการเทรด</div>
+              <div class="signal-value" id="tradingSignal">วิเคราะห์...</div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="recommendation-list" id="recommendations">
+          <li>กำลังวิเคราะห์ข้อมูล...</li>
+        </ul>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 วิธีใช้แนวรับ-แนวต้าน:</strong>
+        <p>
+          <strong>แนวรับ (Support):</strong> ระดับราคาที่มีแรงซื้อเข้ามาพยุงไม่ให้ราคาตกต่ำลง เหมาะสำหรับ<strong>จุดเข้าซื้อ</strong><br><br>
+          <strong>แนวต้าน (Resistance):</strong> ระดับราคาที่มีแรงขายออกมาทำให้ราคาไม่สามารถขึ้นสูงได้ เหมาะสำหรับ<strong>จุดขาย/ตั้ง Stop Loss</strong><br><br>
+          <strong>⚠️ หมายเหตุ:</strong> แนวรับ-แนวต้านเป็นเพียงเครื่องมือประกอบการตัดสินใจ ควรใช้ร่วมกับ Indicator อื่นๆ และข้อมูลพื้นฐาน<br>
+          หากราคา<strong>"ทะลุแนวต้าน"</strong>อาจกลายเป็นแนวรับใหม่ และหากราคา<strong>"ทะลุแนวรับ"</strong>ลงไป อาจกลายเป็นแนวต้านใหม่
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ข้อมูลหุ้นจำลอง
+    const STOCK_DATABASE = {
+      'AAPL': {
+        name: 'Apple Inc.',
+        prices: [150, 151, 149, 152, 151, 153, 154, 152, 155, 156, 155, 154, 157, 158, 156, 159, 160, 158, 161, 162, 161, 160, 163, 164, 165]
+      },
+      'NVDA': {
+        name: 'NVIDIA Corporation',
+        prices: [120, 122, 121, 123, 125, 124, 126, 128, 127, 129, 131, 130, 132, 134, 133, 135, 137, 136, 138, 140, 139, 141, 142, 140, 143]
+      },
+      'TSLA': {
+        name: 'Tesla Inc.',
+        prices: [240, 242, 241, 244, 246, 245, 248, 250, 249, 252, 254, 253, 256, 258, 257, 260, 262, 261, 264, 266, 265, 263, 267, 269, 268]
+      },
+      'GOOGL': {
+        name: 'Alphabet Inc.',
+        prices: [140, 141, 140, 142, 143, 142, 144, 145, 144, 146, 147, 146, 148, 149, 148, 150, 151, 150, 152, 153, 152, 151, 154, 155, 156]
+      },
+      'MSFT': {
+        name: 'Microsoft Corporation',
+        prices: [380, 382, 381, 384, 386, 385, 388, 390, 389, 392, 394, 393, 396, 398, 397, 400, 402, 401, 404, 406, 405, 403, 408, 410, 412]
+      }
+    };
+
+    let priceChart = null;
+    let currentSymbol = '';
+
+    function quickSearch(symbol) {
+      document.getElementById('stockInput').value = symbol;
+      analyzeStock();
+    }
+
+    function generateRealisticPriceHistory(basePrice, days = 120) {
+      const prices = [];
+      let price = basePrice;
+      
+      for (let i = 0; i < days; i++) {
+        const change = (Math.random() - 0.48) * 3; // ความเปลี่ยนแปลงสุ่ม
+        price = Math.max(price + change, basePrice * 0.85); // ไม่ให้ลดเกิน 15%
+        prices.push(price);
+      }
+      
+      return prices;
+    }
+
+    async function analyzeStock() {
+      const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
+      
+      if (!symbol) {
+        showError('⚠️ กรุณาใส่สัญลักษณ์หุ้น');
+        return;
+      }
+
+      if (!STOCK_DATABASE[symbol]) {
+        showError('⚠️ ไม่พบข้อมูลหุ้น ' + symbol + ' กรุณาลองเช่น AAPL, NVDA, TSLA, GOOGL, MSFT');
+        return;
+      }
+
+      currentSymbol = symbol;
+      showLoading(true);
+      hideError();
+      hideAnalysisData();
+
+      try {
+        console.log('🔍 กำลังวิเคราะห์:', symbol);
+
+        // จำลองการดึงข้อมูล
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const stockData = STOCK_DATABASE[symbol];
+        const basePrice = stockData.prices[stockData.prices.length - 1];
+        const priceHistory = generateRealisticPriceHistory(basePrice, 120);
+        
+        const currentPrice = priceHistory[priceHistory.length - 1];
+        const previousPrice = priceHistory[priceHistory.length - 2];
+        const change = currentPrice - previousPrice;
+        const changePercent = (change / previousPrice) * 100;
+
+        // แสดงข้อมูลหุ้น
+        displayStockInfo(symbol, stockData.name, currentPrice, change, changePercent);
+
+        // คำนวณแนวรับ-แนวต้าน
+        const levels = calculateSupportResistance(priceHistory);
+        
+        // วาดกราฟ
+        drawChart(priceHistory, levels);
+        
+        // แสดงระดับ
+        displayLevels(levels, currentPrice);
+        
+        // สร้างคำแนะนำ
+        generateRecommendations(levels, currentPrice);
+
+        // แสดงข้อมูล
+        showAnalysisData();
+
+      } catch (error) {
+        console.error('❌ Error:', error);
+        showError('❌ เกิดข้อผิดพลาด ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function displayStockInfo(symbol, name, currentPrice, change, changePercent) {
+      document.getElementById('stockSymbol').textContent = symbol;
+      document.getElementById('stockName').textContent = name;
+      
+      const price = currentPrice.toFixed(2);
+      const changeFormatted = change.toFixed(2);
+      const changePercentFormatted = changePercent.toFixed(2);
+      const isPositive = change >= 0;
+
+      document.getElementById('currentPrice').textContent = `$${price}`;
+      
+      const changeElement = document.getElementById('priceChange');
+      changeElement.textContent = `${isPositive ? '+' : ''}${changeFormatted} (${isPositive ? '+' : ''}${changePercentFormatted}%)`;
+      changeElement.className = `price-change ${isPositive ? 'positive' : 'negative'}`;
+    }
+
+    function calculateSupportResistance(prices) {
+      const sorted = [...prices].sort((a, b) => a - b);
+      const max = Math.max(...prices);
+      const min = Math.min(...prices);
+      const avg = prices.reduce((a, b) => a + b) / prices.length;
+      
+      // Pivot Point Method
+      const pivot = (max + min + prices[prices.length - 1]) / 3;
+      
+      const support1 = (2 * pivot) - max;
+      const support2 = pivot - (max - min);
+      const support3 = min;
+      
+      const resistance1 = (2 * pivot) - min;
+      const resistance2 = pivot + (max - min);
+      const resistance3 = max;
+
+      return {
+        support1: Math.max(support1, min * 0.95),
+        support2: Math.max(support2, min * 0.90),
+        support3: support3,
+        resistance1: Math.min(resistance1, max * 1.05),
+        resistance2: Math.min(resistance2, max * 1.10),
+        resistance3: resistance3,
+        pivot: pivot
+      };
+    }
+
+    function drawChart(prices, levels) {
+      const ctx = document.getElementById('priceChart');
+      
+      if (priceChart) {
+        priceChart.destroy();
+      }
+
+      const dates = prices.map((p, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (prices.length - i));
+        return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
+      });
+
+      priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'ราคาปิด',
+              data: prices,
+              borderColor: '#ffd700',
+              backgroundColor: 'rgba(255,215,0,0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'แนวรับ 1',
+              data: Array(prices.length).fill(levels.support1),
+              borderColor: '#00ff88',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'แนวต้าน 1',
+              data: Array(prices.length).fill(levels.resistance1),
+              borderColor: '#ff6b6b',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff',
+                font: { size: 12, weight: 'bold' },
+                usePointStyle: true
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            },
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            }
+          }
+        }
+      });
+    }
+
+    function displayLevels(levels, currentPrice) {
+      document.getElementById('support1').textContent = `$${levels.support1.toFixed(2)}`;
+      document.getElementById('support2').textContent = `$${levels.support2.toFixed(2)}`;
+      document.getElementById('support3').textContent = `$${levels.support3.toFixed(2)}`;
+
+      document.getElementById('resistance1').textContent = `$${levels.resistance1.toFixed(2)}`;
+      document.getElementById('resistance2').textContent = `$${levels.resistance2.toFixed(2)}`;
+      document.getElementById('resistance3').textContent = `$${levels.resistance3.toFixed(2)}`;
+    }
+
+    function generateRecommendations(levels, currentPrice) {
+      const recommendations = [];
+
+      if (currentPrice < levels.support1) {
+        recommendations.push('⚠️ ราคาอยู่ต่ำกว่าแนวรับ 1 อาจเป็นจุดซื้อที่ดี');
+      } else if (currentPrice > levels.resistance1) {
+        recommendations.push('⚠️ ราคาอยู่สูงกว่าแนวต้าน 1 ควรระวังการขึ้นต่อ');
+      } else {
+        recommendations.push('✓ ราคาอยู่ในโซนปกติระหว่างแนวรับและแนวต้าน');
+      }
+
+      if (levels.resistance1 - currentPrice < currentPrice - levels.support1) {
+        recommendations.push('📈 ราคาเข้าใกล้แนวต้าน ควรเตรียมพร้อมสำหรับการขาย');
+      } else {
+        recommendations.push('📉 ราคาเข้าใกล้แนวรับ ควรเตรียมพร้อมสำหรับการซื้อ');
+      }
+
+      recommendations.push('💡 ลองใช้ Fibonacci Retracement หรือ RSI ประกอบการตัดสินใจ');
+
+      const recommendationHtml = recommendations
+        .map(rec => `<li>${rec}</li>`)
+        .join('');
+      
+      document.getElementById('recommendations').innerHTML = recommendationHtml;
+
+      // Trading Signal
+      const signal = currentPrice > levels.resistance1 ? 'BEARISH 🔴' : 
+                     currentPrice < levels.support1 ? 'BULLISH 🟢' : 'NEUTRAL 🟡';
+      const icon = currentPrice > levels.resistance1 ? '🔴' : 
+                   currentPrice < levels.support1 ? '🟢' : '🟡';
+
+      document.getElementById('tradingSignal').textContent = signal;
+      document.getElementById('signalIcon').textContent = icon;
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+
+    function showError(message) {
+      document.getElementById('error').innerHTML = message;
+      document.getElementById('error').style.display = 'block';
+    }
+
+    function showAnalysisData() {
+      document.getElementById('analysisData').style.display = 'block';
+    }
+
+    function hideAnalysisData() {
+      document.getElementById('analysisData').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
