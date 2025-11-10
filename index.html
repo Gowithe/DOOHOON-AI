@@ -432,7 +432,7 @@
         console.log('🔍 กำลังดึงข้อมูลหุ้น:', symbol);
 
         // เรียก API
-        const res = await fetch(`ai_stock_summary.php?symbol=${symbol}`);
+        const res = await fetch(`ai_summarize.php?symbol=${symbol}`);
         
         if (!res.ok) {
           throw new Error(`HTTP Error: ${res.status}`);
@@ -521,7 +521,7 @@
             <p style="margin-top: 15px; font-size: 0.9em;">
               กรุณาตรวจสอบ:<br>
               • ชื่อหุ้นถูกต้อง (เช่น AAPL, NVDA, TSLA)<br>
-              • ไฟล์ ai_stock_summary.php อยู่ในโฟลเดอร์เดียวกัน<br>
+              • ไฟล์ ai_summarize.php อยู่ในโฟลเดอร์เดียวกัน<br>
               • เซิร์ฟเวอร์ทำงานปกติ
             </p>
           </div>
