@@ -55,6 +55,18 @@
       margin-bottom: 20px;
     }
 
+    .api-info {
+      background: rgba(100, 150, 255, 0.15);
+      border: 2px solid rgba(100, 150, 255, 0.4);
+      color: #87ceeb;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 0.9em;
+      display: none;
+    }
+
     .demo-alert {
       background: rgba(255, 193, 7, 0.15);
       border: 2px solid rgba(255, 193, 7, 0.5);
@@ -389,6 +401,9 @@
     <div class="header">
       <h1>💰 สุขภาพทางการเงิน</h1>
       <p class="subtitle">สรุปสุขภาพทางการเงินของหุ้น</p>
+      <div class="api-info" id="apiInfo">
+        ℹ️ ใช้โหมดสาธารณะ - ใส่ API Key เพื่อดึงข้อมูลจริง
+      </div>
       <div class="demo-alert" id="demoAlert">
         ⚠️ โหมดสาธารณะ - กำลังแสดงข้อมูลตัวอย่าง เพิ่มคีย์ API เพื่อใช้ข้อมูลจริง
       </div>
@@ -437,32 +452,41 @@
   </div>
 
   <script>
-    // ============ CONFIGURATION & CACHE ============
     const CONFIG = {
-      CACHE_TTL_MS: 600000, // 10 minutes
-      DEBOUNCE_MS: 600,
-      USE_DEMO: true, // Will be set based on API keys
+      CACHE_TTL_MS: 600000,
+      USE_DEMO: true,
+      API_SOURCE: 'demo',
     };
 
-    // Check for API keys from environment
     function checkAPIKeys() {
-      const hasAlphaVantage = !!window.ALPHA_VANTAGE_API_KEY;
-      const hasFinnhub = !!window.FINNHUB_API_KEY;
+      const hasAlphaVantage = !!window.ALPHA_VANTAGE_API_KEY;='SSHS1YDZEUU1VQM0'
+      const hasFinnhub = !!window.FINNHUB_API_KEY;='d46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0'
 
-      if (!hasAlphaVantage && !hasFinnhub) {
-        CONFIG.USE_DEMO = true;
-        document.getElementById('demoAlert').style.display = 'block';
-      } else {
+      if (hasAlphaVantage) {
         CONFIG.USE_DEMO = false;
+        CONFIG.API_SOURCE = 'alpha-vantage';
+        document.getElementById('apiInfo').style.display = 'none';
+        document.getElementById('demoAlert').style.display = 'none';
+        console.log('✅ Alpha Vantage API Key detected');
+      } else if (hasFinnhub) {
+        CONFIG.USE_DEMO = false;
+        CONFIG.API_SOURCE = 'finnhub';
+        document.getElementById('apiInfo').style.display = 'none';
+        document.getElementById('demoAlert').style.display = 'none';
+        console.log('✅ Finnhub API Key detected');
+      } else {
+        CONFIG.USE_DEMO = true;
+        CONFIG.API_SOURCE = 'demo';
+        document.getElementById('apiInfo').style.display = 'block';
+        document.getElementById('demoAlert').style.display = 'block';
+        console.log('📊 Using Demo Mode');
       }
     }
 
-    // ============ CACHE MANAGEMENT ============
     function getCache(symbol) {
       try {
         const cached = localStorage.getItem(`fh_${symbol}`);
         if (!cached) return null;
-
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp > CONFIG.CACHE_TTL_MS) {
           localStorage.removeItem(`fh_${symbol}`);
@@ -485,22 +509,33 @@
       }
     }
 
-    // ============ API FETCHING ============
+    function safeFloat(val) {
+      const num = parseFloat(val);
+      return isNaN(num) ? 0 : num;
+    }
+
     async function fetchAlphaVantage(symbol) {
       const key = window.ALPHA_VANTAGE_API_KEY;
       if (!key) return null;
 
       try {
+        console.log('📊 Fetching from Alpha Vantage:', symbol);
         const res = await fetch(
           `https://www.alphavantage.co/query?function=INCOME_STATEMENT&symbol=${symbol}&apikey=${key}`
         );
         const data = await res.json();
 
-        if (data.Information) {
-          console.warn('Alpha Vantage rate limited or error:', data.Information);
+        if (data.Information || data.Error) {
+          console.warn('Alpha Vantage error:', data.Information || data.Error);
           return null;
         }
 
+        if (!data.annualReports || data.annualReports.length === 0) {
+          console.warn('No annual reports found for', symbol);
+          return null;
+        }
+
+        console.log('✅ Alpha Vantage data received for:', symbol);
         return parseAlphaVantageData(symbol, data);
       } catch (e) {
         console.error('Alpha Vantage fetch error:', e);
@@ -528,31 +563,66 @@
       }
     }
 
-    // ============ DATA PARSING ============
     function parseAlphaVantageData(symbol, data) {
       const annual = data.annualReports || [];
-      if (annual.length < 2) return null;
+      if (annual.length === 0) return null;
 
       const latest = annual[0];
-      const previous = annual[1];
+      const previous = annual.length > 1 ? annual[1] : null;
+
+      const latestRevenue = safeFloat(latest.totalRevenue);
+      const latestNetIncome = safeFloat(latest.netIncome);
+      const latestEBIT = safeFloat(latest.ebitda);
+      const latestEPS = safeFloat(latest.eps);
+      const latestOperatingIncome = safeFloat(latest.operatingIncome);
+      const latestInterestExpense = safeFloat(latest.interestExpense);
+
+      const prevRevenue = previous ? safeFloat(previous.totalRevenue) : 0;
+      const prevNetIncome = previous ? safeFloat(previous.netIncome) : 0;
+      const prevEPS = previous ? safeFloat(previous.eps) : 0;
+
+      const revenueGrowth = prevRevenue > 0 
+        ? ((latestRevenue - prevRevenue) / prevRevenue) * 100 
+        : 0;
+
+      const netIncomeGrowth = prevNetIncome !== 0
+        ? ((latestNetIncome - prevNetIncome) / Math.abs(prevNetIncome)) * 100 
+        : 0;
+
+      const epsGrowth = prevEPS !== 0
+        ? ((latestEPS - prevEPS) / Math.abs(prevEPS)) * 100 
+        : 0;
+
+      const profitMargin = latestRevenue > 0
+        ? (latestNetIncome / latestRevenue) * 100
+        : 0;
+
+      let interestCoverage = null;
+      const ebit = latestOperatingIncome > 0 ? latestOperatingIncome : latestEBIT;
+      if (ebit > 0 && latestInterestExpense > 0) {
+        interestCoverage = ebit / latestInterestExpense;
+      }
 
       return {
         symbol,
+        source: 'Alpha Vantage',
         revenueYoY: {
-          value: parseFloat(latest.totalRevenue) || null,
-          prevValue: parseFloat(previous.totalRevenue) || null,
+          value: latestRevenue,
+          prevValue: prevRevenue,
+          growth: revenueGrowth,
         },
         netIncomeYoY: {
-          value: parseFloat(latest.netIncome) || null,
-          prevValue: parseFloat(previous.netIncome) || null,
+          value: latestNetIncome,
+          prevValue: prevNetIncome,
+          growth: netIncomeGrowth,
         },
-        eps: parseFloat(latest.eps) || null,
-        netMargin: latest.netIncome && latest.totalRevenue
-          ? (parseFloat(latest.netIncome) / parseFloat(latest.totalRevenue) * 100)
-          : null,
-        debtToEquity: null, // Would need balance sheet
-        interestCoverage: null, // Would need EBIT & interest
-        freeCashFlow: null, // Would need cash flow statement
+        eps: latestEPS,
+        epsGrowth: epsGrowth,
+        netMargin: profitMargin,
+        profitMargin: profitMargin,
+        debtToEquity: null,
+        interestCoverage: interestCoverage,
+        freeCashFlow: null,
       };
     }
 
@@ -560,8 +630,7 @@
       const metric = metrics.metric || {};
       const quarterly = financials.quarterly || [];
 
-      // Calculate TTM values from quarterly data
-      let revenueTTM = metric.revenueTTM || null;
+      let revenueTTM = safeFloat(metric.revenueTTM) || null;
       let netIncomeTTM = null;
 
       if (quarterly.length >= 4) {
@@ -571,9 +640,10 @@
 
       return {
         symbol,
+        source: 'Finnhub',
         revenueYoY: {
           value: revenueTTM,
-          prevValue: null, // Not directly available
+          prevValue: null,
           growth: metric.revenueGrowth ? metric.revenueGrowth * 100 : null,
         },
         netIncomeYoY: {
@@ -581,7 +651,7 @@
           prevValue: null,
           growth: metric.netIncomeGrowth ? metric.netIncomeGrowth * 100 : null,
         },
-        eps: metric.epsBasicExclExtraItemsTTM || metric.epsTTM || null,
+        eps: safeFloat(metric.epsBasicExclExtraItemsTTM) || safeFloat(metric.epsTTM) || null,
         epsGrowth: metric.epsgrowth ? metric.epsgrowth * 100 : null,
         netMargin: metric.netMargin ? metric.netMargin * 100 : null,
         profitMargin: metric.profitMargin ? metric.profitMargin * 100 : null,
@@ -591,7 +661,6 @@
       };
     }
 
-    // ============ DEMO DATA ============
     function generateDemoData(symbol) {
       const demoSymbols = {
         'AAPL': { revenue: 383285, netIncome: 96995, eps: 6.05, margin: 25.3, de: 0.58, fcf: 110543 },
@@ -612,6 +681,7 @@
 
       return {
         symbol: symbol.toUpperCase(),
+        source: 'Demo',
         revenueYoY: {
           value: base.revenue * 1e6,
           prevValue: base.revenue * 0.88e6,
@@ -628,10 +698,8 @@
       };
     }
 
-    // ============ SCORING LOGIC ============
     function scoreRevenueYoY(data) {
       if (!data || !data.value || !data.prevValue) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
       const growth = ((data.value - data.prevValue) / data.prevValue) * 100;
       if (growth >= 10) return { status: 'good', value: growth };
       if (growth >= 0) return { status: 'neutral', value: growth };
@@ -640,44 +708,38 @@
 
     function scoreNetIncome(data) {
       if (!data || data.value === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
       const isPositive = data.value > 0;
       const growth = data.prevValue
         ? ((data.value - data.prevValue) / Math.abs(data.prevValue)) * 100
         : (data.growth || 0);
-
       if (isPositive && growth >= 5) return { status: 'good', value: growth };
       if (isPositive && growth >= 0) return { status: 'neutral', value: growth };
       return { status: 'poor', value: growth };
     }
 
     function scoreEPSGrowth(growth) {
-      if (growth === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
+      if (growth === null || growth === undefined) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
       if (growth >= 10) return { status: 'good', value: growth };
       if (growth >= 0) return { status: 'neutral', value: growth };
       return { status: 'poor', value: growth };
     }
 
     function scoreProfitMargin(margin) {
-      if (margin === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
+      if (margin === null || margin === undefined) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
       if (margin >= 10) return { status: 'good', value: margin };
       if (margin >= 0) return { status: 'neutral', value: margin };
       return { status: 'poor', value: margin };
     }
 
     function scoreDebtToEquity(de) {
-      if (de === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
+      if (de === null || de === undefined) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
       if (de < 0.8) return { status: 'good', value: de };
       if (de < 1.5) return { status: 'neutral', value: de };
       return { status: 'poor', value: de };
     }
 
     function scoreInterestCoverage(coverage) {
-      if (coverage === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
+      if (coverage === null || coverage === undefined) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
       if (coverage >= 3) return { status: 'good', value: coverage };
       if (coverage >= 1) return { status: 'neutral', value: coverage };
       return { status: 'poor', value: coverage };
@@ -685,23 +747,20 @@
 
     function scoreFreeCashFlow(data) {
       if (!data || data.value === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
-
       const isPositive = data.value > 0;
       const growth = data.growth !== undefined ? data.growth : 0;
-
       if (isPositive && growth >= 5) return { status: 'good', value: data.value };
       if (isPositive && growth >= 0) return { status: 'neutral', value: data.value };
       return { status: 'poor', value: data.value };
     }
 
-    // ============ FORMATTING ============
     function formatNumber(num) {
-      if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      if (num === null || num === undefined || isNaN(num)) return 'ไม่มี';
       return Math.abs(num).toLocaleString('en-US', { maximumFractionDigits: 1 });
     }
 
     function formatCurrency(num) {
-      if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      if (num === null || num === undefined || isNaN(num)) return 'ไม่มี';
       const abs = Math.abs(num);
       if (abs >= 1e9) return '$' + (abs / 1e9).toFixed(1) + 'B';
       if (abs >= 1e6) return '$' + (abs / 1e6).toFixed(1) + 'M';
@@ -709,11 +768,10 @@
     }
 
     function formatPercent(num, decimals = 1) {
-      if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      if (num === null || num === undefined || isNaN(num)) return 'ไม่มี';
       return (Math.round(num * (10 ** decimals)) / (10 ** decimals)).toFixed(decimals) + '%';
     }
 
-    // ============ RENDER CARD ============
     function renderCard(title, valueText, status, reason) {
       const statusColors = {
         good: 'status-good',
@@ -721,14 +779,12 @@
         poor: 'status-poor',
         gray: 'status-gray',
       };
-
       const statusLabels = {
         good: '✓',
         neutral: '~',
         poor: '✗',
         gray: '?',
       };
-
       return `
         <div class="metric-card">
           <div class="card-title">
@@ -741,7 +797,6 @@
       `;
     }
 
-    // ============ ANALYSIS ENGINE ============
     async function analyzeStock() {
       const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
       if (!ticker) {
@@ -749,7 +804,6 @@
         return;
       }
 
-      // Check cache
       const cached = getCache(ticker);
       if (cached) {
         displayResults(cached);
@@ -764,12 +818,10 @@
 
         if (CONFIG.USE_DEMO) {
           data = generateDemoData(ticker);
-        } else {
-          // Try Finnhub first, then Alpha Vantage
+        } else if (CONFIG.API_SOURCE === 'alpha-vantage') {
+          data = await fetchAlphaVantage(ticker);
+        } else if (CONFIG.API_SOURCE === 'finnhub') {
           data = await fetchFinnhub(ticker);
-          if (!data) {
-            data = await fetchAlphaVantage(ticker);
-          }
         }
 
         if (!data) {
@@ -788,9 +840,8 @@
     function displayResults(data) {
       const symbol = data.symbol;
       document.getElementById('resultSymbol').textContent = symbol;
-      document.getElementById('lastUpdated').textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH');
+      document.getElementById('lastUpdated').textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH') + ' (' + (data.source || 'Demo') + ')';
 
-      // Score metrics
       const revenueScore = scoreRevenueYoY(data.revenueYoY);
       const netIncomeScore = scoreNetIncome(data.netIncomeYoY);
       const epsScore = scoreEPSGrowth(data.epsGrowth !== undefined ? data.epsGrowth : 0);
@@ -799,10 +850,8 @@
       const interestScore = scoreInterestCoverage(data.interestCoverage);
       const fcfScore = scoreFreeCashFlow(data.freeCashFlow);
 
-      // Build cards
       let html = '';
 
-      // Revenue YoY
       if (revenueScore.status !== 'gray') {
         const growth = revenueScore.value;
         const v1 = formatCurrency(data.revenueYoY.value);
@@ -810,10 +859,9 @@
         const reason = `รายได้เติบโต ${growth >= 0 ? '+' : ''}${formatPercent(growth)} ปีต่อปี (${v2} → ${v1})`;
         html += renderCard('รายได้ YoY', formatPercent(growth), revenueScore.status, reason);
       } else {
-        html += renderCard('รายได้ YoY', 'ไม่มี', 'gray', 'ข้อมูลรายได้ประวัติศาสตร์ไม่ disponible');
+        html += renderCard('รายได้ YoY', 'ไม่มี', 'gray', 'ข้อมูลรายได้ประวัติศาสตร์ไม่พบ');
       }
 
-      // Net Income
       if (netIncomeScore.status !== 'gray') {
         const growth = netIncomeScore.value;
         const v1 = formatCurrency(data.netIncomeYoY.value);
@@ -821,82 +869,58 @@
         const reason = `กำไรสุทธิ ${growth >= 0 ? '+' : ''}${formatPercent(growth)} ปีต่อปี • มูลค่า: ${v1}`;
         html += renderCard('กำไรสุทธิ (TTM)', formatPercent(growth), status, reason);
       } else {
-        html += renderCard('กำไรสุทธิ (TTM)', 'ไม่มี', 'gray', 'ข้อมูลกำไรสุทธิไม่ disponible');
+        html += renderCard('กำไรสุทธิ (TTM)', 'ไม่มี', 'gray', 'ข้อมูลกำไรสุทธิไม่พบ');
       }
 
-      // EPS Growth
       if (epsScore.status !== 'gray') {
         const growth = epsScore.value;
         const eps = data.eps !== null ? data.eps.toFixed(2) : 'ไม่มี';
         const reason = `กำไรต่อหุ้น เติบโต ${growth >= 0 ? '+' : ''}${formatPercent(growth)} ปีต่อปี • EPS: $${eps}`;
         html += renderCard('การเติบโต EPS', formatPercent(growth), epsScore.status, reason);
       } else {
-        html += renderCard('การเติบโต EPS', 'ไม่มี', 'gray', 'ข้อมูลการเติบโต EPS ไม่ disponible');
+        html += renderCard('การเติบโต EPS', 'ไม่มี', 'gray', 'ข้อมูลการเติบโต EPS ไม่พบ');
       }
 
-      // Profit Margin
       if (marginScore.status !== 'gray') {
         const margin = marginScore.value;
         const profitStatus = margin >= 10 ? 'กำไรสุขภาพดี' : margin >= 0 ? 'กำไรปานกลาง' : 'ต่ำกว่า breakeven';
         const reason = `อัตรากำไรสุทธิที่ ${formatPercent(margin)} • ${profitStatus}`;
         html += renderCard('อัตรากำไร (TTM)', formatPercent(margin), marginScore.status, reason);
       } else {
-        html += renderCard('อัตรากำไร (TTM)', 'ไม่มี', 'gray', 'ข้อมูลอัตรากำไรไม่ disponible');
+        html += renderCard('อัตรากำไร (TTM)', 'ไม่มี', 'gray', 'ข้อมูลอัตรากำไรไม่พบ');
       }
 
-      // Debt to Equity
       if (deScore.status !== 'gray') {
         const de = deScore.value.toFixed(2);
         const statusMsg = data.debtToEquity < 0.8 ? 'Leverage อนุรักษ์นิยม' : data.debtToEquity < 1.5 ? 'Leverage ปานกลาง' : 'Leverage สูง';
         const reason = `อัตราส่วน D/E ${de} • ${statusMsg}`;
         html += renderCard('หนี้สิน/ส่วนของผู้ถือหุ้น', de, deScore.status, reason);
       } else {
-        html += renderCard('หนี้สิน/ส่วนของผู้ถือหุ้น', 'ไม่มี', 'gray', 'ข้อมูลงบดุลไม่ disponible');
+        html += renderCard('หนี้สิน/ส่วนของผู้ถือหุ้น', 'ไม่มี', 'gray', 'ข้อมูลงบดุลไม่พบ');
       }
 
-      // Interest Coverage (placeholder)
       if (interestScore.status !== 'gray') {
-        html += renderCard('ความครอบคลุมดอกเบี้ย', 'ไม่มี', 'gray', 'ต้องมีข้อมูลค่าใช้จ่ายดอกเบี้ย');
+        const coverage = data.interestCoverage.toFixed(2);
+        const statusMsg = data.interestCoverage >= 3 ? 'ความปลอดภัยสูง' : data.interestCoverage >= 1 ? 'ความปลอดภัยปานกลาง' : 'ความเสี่ยงสูง';
+        const reason = `ความครอบคลุมดอกเบี้ย ${coverage}x • ${statusMsg}`;
+        html += renderCard('ความครอบคลุมดอกเบี้ย', coverage + 'x', interestScore.status, reason);
       } else {
-        html += renderCard('ความครอบคลุมดอกเบี้ย', 'ไม่มี', 'gray', 'ข้อมูลค่าใช้จ่ายดอกเบี้ยไม่ disponible');
+        html += renderCard('ความครอบคลุมดอกเบี้ย', 'ไม่มี', 'gray', 'ข้อมูลค่าใช้จ่ายดอกเบี้ยไม่พบ');
       }
 
-      // Free Cash Flow
       if (fcfScore.status !== 'gray') {
         const fcf = formatCurrency(data.freeCashFlow);
         const statusMsg = data.freeCashFlow > 0 ? 'การสร้าง FCF บวก' : 'FCF เป็นลบ';
         const reason = `กระแสเงินสดอิสระ: ${fcf} (TTM) • ${statusMsg}`;
         html += renderCard('กระแสเงินสดอิสระ (TTM)', fcf, fcfScore.status, reason);
       } else {
-        html += renderCard('กระแสเงินสดอิสระ (TTM)', 'ไม่มี', 'gray', 'ข้อมูลงบกระแสเงินสดไม่ disponible');
+        html += renderCard('กระแสเงินสดอิสระ (TTM)', 'ไม่มี', 'gray', 'ข้อมูลงบกระแสเงินสดไม่พบ');
       }
 
       document.getElementById('metricsGrid').innerHTML = html;
       document.getElementById('resultsWrapper').style.display = 'block';
-
-      // Store for JSON export
-      window.lastResults = {
-        symbol,
-        timestamp: new Date().toISOString(),
-        metrics: {
-          revenueYoY: revenueScore,
-          netIncome: netIncomeScore,
-          eps: epsScore,
-          profitMargin: marginScore,
-          debtToEquity: deScore,
-          interestCoverage: interestScore,
-          freeCashFlow: fcfScore,
-        },
-        rawData: data,
-      };
     }
 
-    function quickPick(ticker) {
-      document.getElementById('tickerInput').value = ticker;
-      analyzeStock();
-    }
-
-    // ============ UI HELPERS ============
     function showLoading(show) {
       document.getElementById('loading').style.display = show ? 'block' : 'none';
     }
@@ -910,15 +934,17 @@
     function hideError() {
       document.getElementById('error').style.display = 'none';
     }
-    let debounceTimer;
+    function quickPick(ticker) {
+      document.getElementById('tickerInput').value = ticker;
+      analyzeStock();
+    }
+
     document.getElementById('tickerInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        clearTimeout(debounceTimer);
         analyzeStock();
       }
     });
 
-    // ============ INITIALIZATION ============
     checkAPIKeys();
   </script>
 </body>
