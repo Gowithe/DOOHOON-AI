@@ -477,7 +477,7 @@
 
     <script>
         // ใช้ API เดิมที่มีอยู่แล้ว
-        const API_URL = 'stock_analyzer_api_secure.php';
+        const API_URL = 'stock_analyzer_api_v2.php';
 
         async function search(symbol = null) {
             const sym = (symbol || document.getElementById('symbol').value).trim().toUpperCase();
