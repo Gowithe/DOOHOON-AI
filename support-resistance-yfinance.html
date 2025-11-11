@@ -674,6 +674,57 @@
       analyzeStock();
     }
 
+    function generateMockData(symbol) {
+      // Mock data สำหรับทดสอบ
+      const mockStocks = {
+        'AAPL': { name: 'Apple Inc.', basePrice: 228.50, volatility: 2.5 },
+        'NVDA': { name: 'NVIDIA Corp.', basePrice: 142.80, volatility: 3.5 },
+        'TSLA': { name: 'Tesla Inc.', basePrice: 310.45, volatility: 4.0 },
+        'GOOGL': { name: 'Alphabet Inc.', basePrice: 195.30, volatility: 2.0 },
+        'MSFT': { name: 'Microsoft Corp.', basePrice: 435.75, volatility: 2.2 }
+      };
+
+      const stock = mockStocks[symbol] || { name: symbol, basePrice: 100, volatility: 2.5 };
+      
+      // สร้างข้อมูลประวัติ 60 วัน
+      const prices = [];
+      const timestamps = [];
+      let price = stock.basePrice;
+      
+      const today = new Date();
+      for (let i = 59; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        timestamps.push(Math.floor(date.getTime() / 1000));
+        
+        // สร้างราคาแบบสุ่ม
+        const change = (Math.random() - 0.5) * stock.volatility;
+        price = price * (1 + change / 100);
+        prices.push(parseFloat(price.toFixed(2)));
+      }
+
+      // สร้างราคาปัจจุบัน
+      const currentPrice = prices[prices.length - 1];
+      const previousClose = prices[prices.length - 2] || currentPrice;
+      const change = currentPrice - previousClose;
+      const changePercent = (change / previousClose) * 100;
+
+      return {
+        symbol,
+        name: stock.name,
+        currentPrice,
+        previousClose,
+        change,
+        changePercent,
+        prices,
+        timestamps,
+        dates: timestamps.map(ts => {
+          const date = new Date(ts * 1000);
+          return date.toLocaleDateString('th-TH');
+        })
+      };
+    }
+
     async function analyzeStock() {
       const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
       
@@ -690,61 +741,23 @@
       hideAnalysisData();
 
       try {
-        console.log('🔍 ดึงข้อมูล:', symbol);
+        console.log('🔍 ดึงข้อมูล (Mock):', symbol);
 
-        // ใช้ CORS proxy ที่เสถียร
-        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        // ใช้ Mock data
+        await new Promise(resolve => setTimeout(resolve, 1000)); // จำลองการดึงข้อมูล
+        
+        const mockData = generateMockData(symbol);
 
-        // ใช้ yfinance API
-        const yfinanceUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price,summaryDetail,financialData`;
-        const res = await fetch(corsProxy + encodeURIComponent(yfinanceUrl));
-        const data = await res.json();
-
-        if (!data.quoteSummary || data.quoteSummary.result.length === 0) {
-          throw new Error(`ไม่พบข้อมูล ${symbol} - กรุณาตรวจสอบสัญลักษณ์หรือลองใหม่`);
-        }
-
-        const result = data.quoteSummary.result[0];
-        const priceData = result.price;
-
-        if (!priceData) {
-          throw new Error('ไม่สามารถดึงข้อมูลราคา');
-        }
-
-        // ดึงข้อมูลราคาประวัติ
-        const historyUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?interval=1d&range=3mo`;
-        const historyRes = await fetch(corsProxy + encodeURIComponent(historyUrl));
-        const historyData = await historyRes.json();
-
-        if (!historyData.chart.result[0]) {
-          throw new Error('ไม่สามารถดึงข้อมูลราคาประวัติ');
-        }
-
-        const chart = historyData.chart.result[0];
-        const prices = chart.indicators.quote[0].close.filter(p => p !== null);
-        const timestamps = chart.timestamp;
-
-        const dates = timestamps.map(ts => {
-          const date = new Date(ts * 1000);
-          return date.toLocaleDateString('th-TH');
-        });
-
-        // ข้อมูลปัจจุบัน
-        const currentPrice = priceData.regularMarketPrice.raw;
-        const previousClose = priceData.regularMarketPreviousClose.raw;
-        const change = currentPrice - previousClose;
-        const changePercent = (change / previousClose) * 100;
-
-        displayStockInfo(symbol, currentPrice, change, changePercent);
+        displayStockInfo(mockData.symbol, mockData.currentPrice, mockData.change, mockData.changePercent);
 
         // คำนวณแนวรับ-แนวต้าน
-        const levels = calculateSupportResistance(prices);
-        drawChart(prices, dates, levels);
-        displayLevels(levels, currentPrice);
-        generateRecommendations(levels, currentPrice);
+        const levels = calculateSupportResistance(mockData.prices);
+        drawChart(mockData.prices, mockData.dates, levels);
+        displayLevels(levels, mockData.currentPrice);
+        generateRecommendations(levels, mockData.currentPrice);
 
         showAnalysisData();
-        showSuccess(`✅ ดึงข้อมูลสำเร็จ! (${prices.length} วันย้อนหลัง)`);
+        showSuccess(`✅ ข้อมูล Mock สำเร็จ! (${mockData.prices.length} วันย้อนหลัง) - 🧪 โหมดทดสอบ`);
 
       } catch (error) {
         console.error('❌ Error:', error);
