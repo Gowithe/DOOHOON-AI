@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOOHOON - แนวรับ แนวต้าน</title>
+  <title>DOOHOON - แนวรับ แนวต้าน (Finnhub)</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
@@ -180,14 +180,14 @@
       font-size: 1.1em;
     }
 
-    .info {
+    .success {
       max-width: 600px;
       margin: 20px auto;
-      background: rgba(100,200,255,0.1);
-      border: 2px solid rgba(100,200,255,0.3);
+      background: rgba(0,255,136,0.1);
+      border: 2px solid rgba(0,255,136,0.3);
       border-radius: 15px;
       padding: 24px;
-      color: #6fc9ff;
+      color: #00ff88;
       display: none;
       text-align: center;
       font-size: 0.95em;
@@ -514,7 +514,7 @@
   <div class="container">
     <div class="header">
       <h1>📊 แนวรับ - แนวต้าน</h1>
-      <p class="subtitle">Support & Resistance Level Finder (Finnhub API)</p>
+      <p class="subtitle">Support & Resistance Level Finder (Finnhub Real-Time)</p>
     </div>
 
     <div class="search-section">
@@ -539,11 +539,11 @@
 
     <div class="loading" id="loading">
       <div class="loading-spinner"></div>
-      <div>🔄 กำลังดึงข้อมูลจาก Finnhub API...</div>
+      <div>🔄 กำลังดึงข้อมูลราคาจริง...</div>
     </div>
 
     <div class="error" id="error"></div>
-    <div class="info" id="info"></div>
+    <div class="success" id="success"></div>
 
     <div class="analysis-data" id="analysisData">
       <!-- Stock Info -->
@@ -551,7 +551,7 @@
         <div class="stock-title-section">
           <div class="stock-symbol" id="stockSymbol">AAPL</div>
           <div class="stock-name" id="stockName">Apple Inc.</div>
-          <div class="data-source" id="dataSource">🌐 ข้อมูลจริง (Finnhub)</div>
+          <div class="data-source" id="dataSource">🌐 ข้อมูลจริง Live (Finnhub)</div>
         </div>
         <div class="current-price-section">
           <div class="price-label">ราคาปัจจุบัน</div>
@@ -657,18 +657,17 @@
       <div class="tip-box">
         <strong>💡 วิธีใช้แนวรับ-แนวต้าน:</strong>
         <p>
-          <strong>แนวรับ (Support):</strong> ระดับราคาที่มีแรงซื้อเข้ามาพยุงไม่ให้ราคาตกต่ำลง เหมาะสำหรับ<strong>จุดเข้าซื้อ</strong><br><br>
-          <strong>แนวต้าน (Resistance):</strong> ระดับราคาที่มีแรงขายออกมาทำให้ราคาไม่สามารถขึ้นสูงได้ เหมาะสำหรับ<strong>จุดขาย/ตั้ง Stop Loss</strong><br><br>
-          <strong>⚠️ หมายเหตุ:</strong> แนวรับ-แนวต้านเป็นเพียงเครื่องมือประกอบการตัดสินใจ ควรใช้ร่วมกับ Indicator อื่นๆ และข้อมูลพื้นฐาน
+          <strong>แนวรับ (Support):</strong> ระดับราคาที่มีแรงซื้อเข้ามาพยุงไม่ให้ราคาตกต่ำลง<br><br>
+          <strong>แนวต้าน (Resistance):</strong> ระดับราคาที่มีแรงขายออกมาทำให้ราคาไม่สามารถขึ้นสูงได้<br><br>
+          <strong>⚠️ หมายเหตุ:</strong> ใช้เครื่องมือนี้ประกอบการตัดสินใจ ไม่ใช่การบอกสั่งซื้อขาย
         </p>
       </div>
     </div>
   </div>
 
   <script>
-    // ===== ตั้งค่า API =====
+    // ===== Finnhub API Key =====
     const FINNHUB_API_KEY = 'd46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0';
-    const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
     
     let priceChart = null;
     let currentSymbol = '';
@@ -690,54 +689,57 @@
       currentSymbol = symbol;
       showLoading(true);
       hideError();
-      hideInfo();
+      hideSuccess();
       hideAnalysisData();
 
       try {
         console.log('🔍 ดึงข้อมูล:', symbol);
 
-        // ดึงข้อมูลจาก Finnhub
+        // ดึงข้อมูลราคาปัจจุบัน
         const quoteUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
-        const profileUrl = `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
-        const candleUrl = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${Math.floor(Date.now()/1000) - 180*24*60*60}&to=${Math.floor(Date.now()/1000)}&token=${FINNHUB_API_KEY}`;
+        const quoteRes = await fetch(quoteUrl);
+        const quoteData = await quoteRes.json();
 
-        // ใช้ CORS proxy เพื่อหลีกเลี่ยง CORS error
-        const [quoteRes, profileRes, candleRes] = await Promise.all([
-          fetch(CORS_PROXY + encodeURIComponent(quoteUrl)).catch(() => fetch(quoteUrl)),
-          fetch(CORS_PROXY + encodeURIComponent(profileUrl)).catch(() => fetch(profileUrl)),
-          fetch(CORS_PROXY + encodeURIComponent(candleUrl)).catch(() => fetch(candleUrl))
-        ]);
-
-        if (!quoteRes.ok || !profileRes.ok || !candleRes.ok) {
-          throw new Error('❌ ไม่พบข้อมูลหุ้น ' + symbol);
+        if (!quoteData.c) {
+          throw new Error(`ไม่พบข้อมูล ${symbol} - กรุณาตรวจสอบสัญลักษณ์หรือลองใหม่`);
         }
 
-        const quote = await quoteRes.json();
-        const profile = await profileRes.json();
-        const candle = await candleRes.json();
+        // ดึงข้อมูลราคาย้อนหลัง (60 วัน)
+        const today = new Date();
+        const from = Math.floor(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000) / 1000);
+        const to = Math.floor(today / 1000);
 
-        if (!quote.c || quote.c === 0) {
-          throw new Error('ไม่พบข้อมูลหุ้น ' + symbol + ' (อาจสัญลักษณ์ไม่ถูกต้อง)');
-        }
+        const candleUrl = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`;
+        const candleRes = await fetch(candleUrl);
+        const candleData = await candleRes.json();
 
-        if (!candle.o || !Array.isArray(candle.o)) {
+        if (!candleData.c || candleData.c.length === 0) {
           throw new Error('ไม่สามารถดึงข้อมูลราคาย้อนหลัง');
         }
 
-        // แสดงข้อมูล
-        displayStockInfo(symbol, profile, quote);
+        // จัดเรียงข้อมูล
+        const prices = candleData.c.map(price => price);
+        const dates = candleData.t.map(timestamp => {
+          const date = new Date(timestamp * 1000);
+          return date.toLocaleDateString('th-TH');
+        });
 
-        // สร้างข้อมูลกราฟ
-        const priceHistory = candle.c;
-        const levels = calculateSupportResistance(priceHistory);
+        // ข้อมูลปัจจุบัน
+        const currentPrice = quoteData.c;
+        const previousClose = quoteData.pc || currentPrice;
+        const change = currentPrice - previousClose;
+        const changePercent = (change / previousClose) * 100;
 
-        // วาดกราฟ
-        drawChart(candle, levels);
-        displayLevels(levels, quote.c);
-        generateRecommendations(levels, quote.c);
+        displayStockInfo(symbol, currentPrice, change, changePercent);
+
+        // คำนวณแนวรับ-แนวต้าน
+        const levels = calculateSupportResistance(prices);
+        drawChart(prices, dates, levels);
+        displayLevels(levels, currentPrice);
+        generateRecommendations(levels, currentPrice);
 
         showAnalysisData();
-        showInfo(`✅ ดึงข้อมูลจาก Finnhub API สำเร็จ (${priceHistory.length} วันย้อนหลัง)`);
+        showSuccess(`✅ ดึงข้อมูลจาก Finnhub สำเร็จ! (${prices.length} วันย้อนหลัง)`);
 
       } catch (error) {
         console.error('❌ Error:', error);
@@ -747,58 +749,70 @@
       }
     }
 
-    function displayStockInfo(symbol, profile, quote) {
+    function displayStockInfo(symbol, currentPrice, change, changePercent) {
       document.getElementById('stockSymbol').textContent = symbol;
-      document.getElementById('stockName').textContent = profile.name || symbol;
-      document.getElementById('dataSource').textContent = '🌐 ข้อมูลจริง (Finnhub Live)';
+      document.getElementById('stockName').textContent = symbol;
       
-      const price = quote.c.toFixed(2);
-      const change = quote.d.toFixed(2);
-      const changePercent = quote.dp.toFixed(2);
-      const isPositive = parseFloat(change) >= 0;
+      const price = currentPrice.toFixed(2);
+      const changeFormatted = change.toFixed(2);
+      const changePercentFormatted = changePercent.toFixed(2);
+      const isPositive = change >= 0;
 
       document.getElementById('currentPrice').textContent = `$${price}`;
       
       const changeElement = document.getElementById('priceChange');
-      changeElement.textContent = `${isPositive ? '+' : ''}${change} (${isPositive ? '+' : ''}${changePercent}%)`;
+      changeElement.textContent = `${isPositive ? '+' : ''}${changeFormatted} (${isPositive ? '+' : ''}${changePercentFormatted}%)`;
       changeElement.className = `price-change ${isPositive ? 'positive' : 'negative'}`;
     }
 
     function calculateSupportResistance(prices) {
-      const max = Math.max(...prices);
-      const min = Math.min(...prices);
-      const currentPrice = prices[prices.length - 1];
+      // ===== MA + ATR Method =====
       
-      // Pivot Point Method
-      const pivot = (max + min + currentPrice) / 3;
+      // คำนวณ MA20 (Moving Average 20 วัน)
+      const ma20Period = Math.min(20, prices.length);
+      const ma20 = prices.slice(-ma20Period).reduce((a, b) => a + b, 0) / ma20Period;
       
-      const support1 = (2 * pivot) - max;
-      const support2 = pivot - (max - min);
-      const support3 = min;
+      // คำนวณ ATR14 (Average True Range 14 วัน)
+      const atr14Period = Math.min(14, prices.length);
+      const atrData = [];
       
-      const resistance1 = (2 * pivot) - min;
-      const resistance2 = pivot + (max - min);
-      const resistance3 = max;
+      for (let i = Math.max(0, prices.length - atr14Period); i < prices.length; i++) {
+        let trueRange;
+        if (i === 0) {
+          trueRange = prices[i];
+        } else {
+          const high = Math.max(prices[i], prices[i - 1]);
+          const low = Math.min(prices[i], prices[i - 1]);
+          trueRange = high - low;
+        }
+        atrData.push(trueRange);
+      }
+      
+      const atr14 = atrData.reduce((a, b) => a + b, 0) / atrData.length;
+      
+      // Support & Resistance ตาม MA + ATR
+      const support1 = ma20 - (1.5 * atr14);
+      const support2 = ma20 - (2 * atr14);
+      const support3 = ma20 - (2.5 * atr14);
+      
+      const resistance1 = ma20 + (1.5 * atr14);
+      const resistance2 = ma20 + (2 * atr14);
+      const resistance3 = ma20 + (2.5 * atr14);
 
       return {
-        support1: Math.max(support1, min * 0.95),
-        support2: Math.max(support2, min * 0.90),
-        support3: support3,
-        resistance1: Math.min(resistance1, max * 1.05),
-        resistance2: Math.min(resistance2, max * 1.10),
-        resistance3: resistance3
+        support1: Math.max(support1, Math.min(...prices) * 0.9),
+        support2: Math.max(support2, Math.min(...prices) * 0.85),
+        support3: Math.max(support3, Math.min(...prices) * 0.80),
+        resistance1: Math.min(resistance1, Math.max(...prices) * 1.1),
+        resistance2: Math.min(resistance2, Math.max(...prices) * 1.15),
+        resistance3: Math.min(resistance3, Math.max(...prices) * 1.2)
       };
     }
 
-    function drawChart(candle, levels) {
+    function drawChart(prices, dates, levels) {
       const ctx = document.getElementById('priceChart');
       
       if (priceChart) priceChart.destroy();
-
-      const dates = candle.t.map(t => {
-        const date = new Date(t * 1000);
-        return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
-      });
 
       priceChart = new Chart(ctx, {
         type: 'line',
@@ -807,7 +821,7 @@
           datasets: [
             {
               label: 'ราคาปิด',
-              data: candle.c,
+              data: prices,
               borderColor: '#ffd700',
               backgroundColor: 'rgba(255,215,0,0.1)',
               borderWidth: 2,
@@ -818,7 +832,7 @@
             },
             {
               label: 'แนวรับ 1',
-              data: Array(candle.c.length).fill(levels.support1),
+              data: Array(prices.length).fill(levels.support1),
               borderColor: '#00ff88',
               borderDash: [5, 5],
               borderWidth: 2,
@@ -827,7 +841,7 @@
             },
             {
               label: 'แนวต้าน 1',
-              data: Array(candle.c.length).fill(levels.resistance1),
+              data: Array(prices.length).fill(levels.resistance1),
               borderColor: '#ff6b6b',
               borderDash: [5, 5],
               borderWidth: 2,
@@ -903,10 +917,7 @@
 
       recommendations.push('💡 ลองใช้ Fibonacci Retracement หรือ RSI ประกอบการตัดสินใจ');
 
-      const recommendationHtml = recommendations
-        .map(rec => `<li>${rec}</li>`)
-        .join('');
-      
+      const recommendationHtml = recommendations.map(rec => `<li>${rec}</li>`).join('');
       document.getElementById('recommendations').innerHTML = recommendationHtml;
 
       const signal = currentPrice > levels.resistance1 ? 'BEARISH 🔴' : 
@@ -931,13 +942,13 @@
       document.getElementById('error').style.display = 'block';
     }
 
-    function hideInfo() {
-      document.getElementById('info').style.display = 'none';
+    function hideSuccess() {
+      document.getElementById('success').style.display = 'none';
     }
 
-    function showInfo(message) {
-      document.getElementById('info').innerHTML = message;
-      document.getElementById('info').style.display = 'block';
+    function showSuccess(message) {
+      document.getElementById('success').innerHTML = message;
+      document.getElementById('success').style.display = 'block';
     }
 
     function showAnalysisData() {
