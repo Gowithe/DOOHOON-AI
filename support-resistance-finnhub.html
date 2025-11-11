@@ -695,8 +695,11 @@
       try {
         console.log('🔍 ดึงข้อมูล:', symbol);
 
+        // CORS Proxy
+        const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+
         // ดึงข้อมูลราคาปัจจุบัน
-        const quoteUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+        const quoteUrl = `${corsProxy}https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
         const quoteRes = await fetch(quoteUrl);
         const quoteData = await quoteRes.json();
 
@@ -709,7 +712,7 @@
         const from = Math.floor(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000) / 1000);
         const to = Math.floor(today / 1000);
 
-        const candleUrl = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`;
+        const candleUrl = `${corsProxy}https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`;
         const candleRes = await fetch(candleUrl);
         const candleData = await candleRes.json();
 
