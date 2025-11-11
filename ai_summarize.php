@@ -14,10 +14,10 @@ header('Access-Control-Allow-Headers: Content-Type');
 // ================================================================================
 // 🔑 API KEYS & CONFIGURATION
 // ================================================================================
-$OPENAI_API_KEY    = getenv("OPENAI_API_KEY");
-$FINNHUB_API_KEY   = getenv("FINNHUB_API_KEY");
-$OPENAI_PROJECT_ID = getenv("OPENAI_PROJECT_ID");
-$OPENAI_ORG_ID     = getenv("OPENAI_ORG_ID");
+$OPENAI_API_KEY    = getenv("OPENAI_API_KEY");="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"
+$FINNHUB_API_KEY   = getenv("FINNHUB_API_KEY");="d46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0"
+$OPENAI_PROJECT_ID = getenv("OPENAI_PROJECT_ID");="proj_92KLDoBqQc20XIoDthK6mQrG"
+$OPENAI_ORG_ID     = getenv("OPENAI_ORG_ID");="org-FCSQDR1fI5llIyCGUSVJKEpJ"
 
 // Cache duration (in seconds)
 $CACHE_DURATION = 3600;
@@ -255,3 +255,4 @@ setCachedData($symbol, $output);
 
 echo json_encode($output, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 ?>
+
