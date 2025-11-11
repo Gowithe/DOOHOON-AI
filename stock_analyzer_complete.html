@@ -310,8 +310,29 @@
             showLoading(false);
         }
 
+        // ฟังก์ชันแปลภาษาด้วย Google Translate
+        async function translateText(text, targetLang = 'th') {
+            if (!text || text.length === 0) return text;
+            
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data[0]) {
+                    return data[0].map(item => item[0]).join('');
+                }
+                return text;
+            } catch (error) {
+                console.error('Translation error:', error);
+                return text; // ถ้าแปลไม่ได้ ให้ return ข้อความเดิม
+            }
+        }
+
         async function loadNews(symbol) {
             const newsContainer = document.getElementById('news-container');
+            newsContainer.innerHTML = '<p class="info-content">กำลังโหลดข่าวและแปลเป็นภาษาไทย...</p>';
+            
             try {
                 const from = new Date();
                 from.setDate(from.getDate() - 7);
@@ -327,18 +348,41 @@
                 }
 
                 newsContainer.innerHTML = '';
-                news.slice(0, 5).forEach(item => {
+                
+                // แปลข่าวทีละข่าว
+                const newsToShow = news.slice(0, 5);
+                for (const item of newsToShow) {
                     const div = document.createElement('div');
                     div.className = 'news-item';
-                    const date = new Date(item.datetime * 1000).toLocaleDateString('th-TH');
+                    const date = new Date(item.datetime * 1000).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long', 
+                        day: 'numeric'
+                    });
+                    
+                    // แปลหัวข้อและสรุปเป็นภาษาไทย
+                    const headline = item.headline || 'ไม่มีหัวข้อ';
+                    const summary = item.summary || 'ไม่มีสรุป';
+                    
+                    // แสดงข่าวก่อน แล้วค่อยแปล
                     div.innerHTML = `
-                        <div class="news-headline">${item.headline || 'ไม่มีหัวข้อ'}</div>
-                        <div class="news-summary">${item.summary || 'ไม่มีสรุป'}</div>
+                        <div class="news-headline">${headline}</div>
+                        <div class="news-summary">${summary}</div>
                         <div class="news-meta">${item.source || 'N/A'} • ${date}</div>
                     `;
                     newsContainer.appendChild(div);
-                });
+                    
+                    // แปลภาษาแบบ async
+                    translateText(headline).then(translatedHeadline => {
+                        div.querySelector('.news-headline').textContent = translatedHeadline;
+                    });
+                    
+                    translateText(summary).then(translatedSummary => {
+                        div.querySelector('.news-summary').textContent = translatedSummary;
+                    });
+                }
             } catch (error) {
+                console.error('News loading error:', error);
                 newsContainer.innerHTML = '<p class="info-content">ไม่สามารถโหลดข่าวได้</p>';
             }
         }
