@@ -79,6 +79,19 @@
       font-size: 0.95em;
     }
 
+    .api-status {
+      background: rgba(34, 197, 94, 0.15);
+      border: 2px solid rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      text-align: center;
+      font-size: 0.9em;
+      font-weight: 600;
+    }
+
     .search-section {
       max-width: 750px;
       margin: 0 auto 40px;
@@ -401,6 +414,9 @@
     <div class="header">
       <h1>💰 สุขภาพทางการเงิน</h1>
       <p class="subtitle">สรุปสุขภาพทางการเงินของหุ้น</p>
+      <div class="api-status" id="apiStatus">
+        ✅ API Keys พร้อมใช้งาน - กำลังดึงข้อมูลจริง
+      </div>
       <div class="api-info" id="apiInfo">
         ℹ️ ใช้โหมดสาธารณะ - ใส่ API Key เพื่อดึงข้อมูลจริง
       </div>
@@ -452,6 +468,10 @@
   </div>
 
   <script>
+    // ✅ ตั้งค่า API Keys ที่นี่
+    window.ALPHA_VANTAGE_API_KEY = 'SSHS1YDZEUU1VQM0';
+    window.FINNHUB_API_KEY = 'd46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0';
+
     const CONFIG = {
       CACHE_TTL_MS: 600000,
       USE_DEMO: true,
@@ -459,24 +479,27 @@
     };
 
     function checkAPIKeys() {
-      const hasAlphaVantage = !!window.ALPHA_VANTAGE_API_KEY;='SSHS1YDZEUU1VQM0'
-      const hasFinnhub = !!window.FINNHUB_API_KEY;='d46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0'
+      const hasAlphaVantage = !!window.ALPHA_VANTAGE_API_KEY;
+      const hasFinnhub = !!window.FINNHUB_API_KEY;
 
       if (hasAlphaVantage) {
         CONFIG.USE_DEMO = false;
         CONFIG.API_SOURCE = 'alpha-vantage';
+        document.getElementById('apiStatus').style.display = 'block';
         document.getElementById('apiInfo').style.display = 'none';
         document.getElementById('demoAlert').style.display = 'none';
         console.log('✅ Alpha Vantage API Key detected');
       } else if (hasFinnhub) {
         CONFIG.USE_DEMO = false;
         CONFIG.API_SOURCE = 'finnhub';
+        document.getElementById('apiStatus').style.display = 'block';
         document.getElementById('apiInfo').style.display = 'none';
         document.getElementById('demoAlert').style.display = 'none';
         console.log('✅ Finnhub API Key detected');
       } else {
         CONFIG.USE_DEMO = true;
         CONFIG.API_SOURCE = 'demo';
+        document.getElementById('apiStatus').style.display = 'none';
         document.getElementById('apiInfo').style.display = 'block';
         document.getElementById('demoAlert').style.display = 'block';
         console.log('📊 Using Demo Mode');
@@ -548,6 +571,7 @@
       if (!key) return null;
 
       try {
+        console.log('📊 Fetching from Finnhub:', symbol);
         const [metricsRes, financialsRes] = await Promise.all([
           fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${key}`),
           fetch(`https://finnhub.io/api/v1/stock/financials-reported?symbol=${symbol}&token=${key}`),
@@ -556,6 +580,7 @@
         const metrics = await metricsRes.json();
         const financials = await financialsRes.json();
 
+        console.log('✅ Finnhub data received for:', symbol);
         return parseFinnhubData(symbol, metrics, financials);
       } catch (e) {
         console.error('Finnhub fetch error:', e);
@@ -934,6 +959,7 @@
     function hideError() {
       document.getElementById('error').style.display = 'none';
     }
+
     function quickPick(ticker) {
       document.getElementById('tickerInput').value = ticker;
       analyzeStock();
@@ -945,6 +971,7 @@
       }
     });
 
+    // เรียกใช้เมื่อโหลดหน้า
     checkAPIKeys();
   </script>
 </body>
