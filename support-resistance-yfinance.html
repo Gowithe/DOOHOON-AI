@@ -741,27 +741,82 @@
       hideAnalysisData();
 
       try {
-        console.log('🔍 ดึงข้อมูล (Mock):', symbol);
+        console.log('🔍 ดึงข้อมูล:', symbol);
 
-        // ใช้ Mock data
-        await new Promise(resolve => setTimeout(resolve, 1000)); // จำลองการดึงข้อมูล
+        // ใช้ Cloudflare Worker เป็น Proxy
+        const workerUrl = 'https://stock-proxy.gowitamnuay.workers.dev/';
         
-        const mockData = generateMockData(symbol);
+        // ดึงข้อมูลราคาปัจจุบัน
+        const yfinanceUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price,summaryDetail,financialData`;
+        const quoteRes = await fetch(`${workerUrl}?url=${encodeURIComponent(yfinanceUrl)}`);
+        const quoteData = await quoteRes.json();
 
-        displayStockInfo(mockData.symbol, mockData.currentPrice, mockData.change, mockData.changePercent);
+        if (!quoteData.quoteSummary || quoteData.quoteSummary.result.length === 0) {
+          throw new Error(`ไม่พบข้อมูล ${symbol} - กรุณาตรวจสอบสัญลักษณ์หรือลองใหม่`);
+        }
+
+        const result = quoteData.quoteSummary.result[0];
+        const priceData = result.price;
+
+        if (!priceData) {
+          throw new Error('ไม่สามารถดึงข้อมูลราคา');
+        }
+
+        // ดึงข้อมูลราคาประวัติ
+        const historyUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?interval=1d&range=3mo`;
+        const historyRes = await fetch(`${workerUrl}?url=${encodeURIComponent(historyUrl)}`);
+        const historyData = await historyRes.json();
+
+        if (!historyData.chart.result[0]) {
+          throw new Error('ไม่สามารถดึงข้อมูลราคาประวัติ');
+        }
+
+        const chart = historyData.chart.result[0];
+        const prices = chart.indicators.quote[0].close.filter(p => p !== null);
+        const timestamps = chart.timestamp;
+
+        const dates = timestamps.map(ts => {
+          const date = new Date(ts * 1000);
+          return date.toLocaleDateString('th-TH');
+        });
+
+        // ข้อมูลปัจจุบัน
+        const currentPrice = priceData.regularMarketPrice.raw;
+        const previousClose = priceData.regularMarketPreviousClose.raw;
+        const change = currentPrice - previousClose;
+        const changePercent = (change / previousClose) * 100;
+
+        displayStockInfo(symbol, currentPrice, change, changePercent);
 
         // คำนวณแนวรับ-แนวต้าน
-        const levels = calculateSupportResistance(mockData.prices);
-        drawChart(mockData.prices, mockData.dates, levels);
-        displayLevels(levels, mockData.currentPrice);
-        generateRecommendations(levels, mockData.currentPrice);
+        const levels = calculateSupportResistance(prices);
+        drawChart(prices, dates, levels);
+        displayLevels(levels, currentPrice);
+        generateRecommendations(levels, currentPrice);
 
         showAnalysisData();
-        showSuccess(`✅ ข้อมูล Mock สำเร็จ! (${mockData.prices.length} วันย้อนหลัง) - 🧪 โหมดทดสอบ`);
+        showSuccess(`✅ ดึงข้อมูลจริงสำเร็จ! (${prices.length} วันย้อนหลัง) 🎯`);
 
       } catch (error) {
         console.error('❌ Error:', error);
-        showError('❌ ' + error.message);
+        showError('❌ ' + error.message + '\n\n💡 ลองใช้ Mock data แทนได้ - ผมจะสร้างให้อัตโนมัติ');
+        
+        // Fallback ไป Mock data ถ้า API fail
+        try {
+          setTimeout(() => {
+            console.log('🧪 Fallback ไป Mock data...');
+            const mockData = generateMockData(symbol);
+            displayStockInfo(mockData.symbol, mockData.currentPrice, mockData.change, mockData.changePercent);
+            const levels = calculateSupportResistance(mockData.prices);
+            drawChart(mockData.prices, mockData.dates, levels);
+            displayLevels(levels, mockData.currentPrice);
+            generateRecommendations(levels, mockData.currentPrice);
+            showAnalysisData();
+            showSuccess(`⚠️ ใช้ Mock data แทน (ไม่สามารถเชื่อมต่อ API จริง) - 🧪`);
+          }, 500);
+        } catch(e) {
+          console.error('Mock fallback error:', e);
+        }
       } finally {
         showLoading(false);
       }
