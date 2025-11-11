@@ -1,0 +1,40 @@
+# ================================================================================
+# 🔒 GITIGNORE - ป้องกันไฟล์สำคัญไม่ให้ขึ้น Git
+# ================================================================================
+
+# Environment Variables (สำคัญมาก!)
+.env
+.env.local
+.env.production
+config.php
+secrets.php
+
+# API Keys
+*_api_key.txt
+*_secret.txt
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+error_log
+debug.log
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Backup files
+*.bak
+*.backup
+*~
