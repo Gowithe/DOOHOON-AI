@@ -505,7 +505,7 @@
     </div>
 
     <script>
-        const API_URL = 'stock_analyzer_api.php';
+        const API_URL = 'stock_analyzer_api_secure.php';
 
         async function search(symbol = null) {
             const sym = (symbol || document.getElementById('symbol').value).trim().toUpperCase();
@@ -620,4 +620,5 @@
         search();
     </script>
 </body>
+
 </html>
