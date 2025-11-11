@@ -386,6 +386,377 @@
       color: #ffd700;
     }
 
+    .overall-score-section {
+      background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(218,165,32,0.1));
+      border: 2px solid rgba(255,215,0,0.4);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .overall-score-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+      animation: glow 4s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .overall-score-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .score-label {
+      font-size: 1.3em;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .score-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    .score-circle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      font-size: 3em;
+      font-weight: 900;
+      position: relative;
+      box-shadow: 0 0 30px rgba(255,215,0,0.3), inset 0 0 20px rgba(255,215,0,0.1);
+    }
+
+    .score-circle.score-excellent {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #fff;
+      border: 3px solid #22c55e;
+    }
+
+    .score-circle.score-good {
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+      color: #000;
+      border: 3px solid #eab308;
+    }
+
+    .score-circle.score-average {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #fff;
+      border: 3px solid #f97316;
+    }
+
+    .score-circle.score-poor {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff;
+      border: 3px solid #ef4444;
+    }
+
+    .score-sub-label {
+      font-size: 0.7em;
+      font-weight: 600;
+      margin-top: 8px;
+      opacity: 0.95;
+    }
+
+    .score-breakdown {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .score-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 0.9em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score-item-name {
+      color: #b3b3b3;
+      font-weight: 500;
+    }
+
+    .score-item-value {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 1.1em;
+    }
+
+    .recommendation-section {
+      background: rgba(255,215,0,0.08);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 25px;
+      margin-top: 25px;
+    }
+
+    .recommendation-title {
+      font-size: 1.1em;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .recommendation-text {
+      color: #d9d9d9;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+
+    .recommendation-text strong {
+      color: #ffd700;
+    }
+
+    .comparison-container {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+    }
+
+    .comparison-title {
+      font-size: 1em;
+      color: #c9a136;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .comparison-bars {
+      display: flex;
+      gap: 20px;
+      flex-direction: column;
+    }
+
+    .bar-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .bar-label {
+      min-width: 120px;
+      font-size: 0.9em;
+      color: #aaa;
+    }
+
+    .bar-background {
+      flex: 1;
+      height: 24px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,215,0,0.2);
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffd700, #ffed4e);
+      border-radius: 12px;
+      transition: width 0.6s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-size: 0.8em;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .health-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85em;
+      margin-top: 10px;
+    }
+
+    .health-badge.excellent {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .health-badge.good {
+      background: rgba(234, 179, 8, 0.2);
+      color: #facc15;
+      border: 1px solid rgba(234, 179, 8, 0.4);
+    }
+
+    .health-badge.average {
+      background: rgba(249, 115, 22, 0.2);
+      color: #fb923c;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+
+    .health-badge.poor {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .compare-section {
+      background: rgba(255,215,0,0.05);
+      border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .compare-title {
+      font-size: 1em;
+      color: #c9a136;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .compare-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .compare-btn {
+      padding: 10px 18px;
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 8px;
+      color: #ffd700;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+    }
+
+    .compare-btn:hover {
+      background: rgba(255,215,0,0.2);
+      border-color: rgba(255,215,0,0.5);
+      transform: translateY(-2px);
+    }
+
+    .export-section {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .export-btn {
+      padding: 12px 20px;
+      background: rgba(100, 200, 255, 0.15);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      border-radius: 8px;
+      color: #87ceeb;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95em;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .export-btn:hover {
+      background: rgba(100, 200, 255, 0.25);
+      border-color: rgba(100, 200, 255, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .features-section {
+      background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(218,165,32,0.04));
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      display: none;
+    }
+
+    .features-section.show {
+      display: block;
+      animation: slideDown 0.4s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .feature-item:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,215,0,0.3);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      font-size: 2em;
+      min-width: 50px;
+    }
+
+    .feature-content {
+      flex: 1;
+    }
+
+    .feature-title {
+      font-size: 0.95em;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 5px;
+    }
+
+    .feature-desc {
+      font-size: 0.85em;
+      color: #b3b3b3;
+      line-height: 1.5;
+    }
+
     @media (max-width: 768px) {
       .cards-grid {
         grid-template-columns: 1fr;
@@ -405,6 +776,20 @@
 
       button {
         width: 100%;
+      }
+
+      .score-container {
+        flex-direction: column;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .score-circle {
+        width: 100px;
+        height: 100px;
+        font-size: 2.2em;
       }
     }
   </style>
@@ -445,6 +830,54 @@
       </div>
     </div>
 
+    <div class="features-section" id="featuresSection">
+      <h3 style="color: #ffd700; margin-bottom: 20px; font-size: 1.2em;">✨ คุณสมบัติหลัก</h3>
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div class="feature-content">
+            <div class="feature-title">คะแนนรวม 100</div>
+            <div class="feature-desc">ประเมินสุขภาพทางการเงินอย่างครบถ้วน</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">💰</div>
+          <div class="feature-content">
+            <div class="feature-title">7 ตัวชี้วัด</div>
+            <div class="feature-desc">วิเคราะห์จากรายได้ กำไร หนี้สิน และอื่นๆ</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-content">
+            <div class="feature-title">แนะนำส่วนบุคคล</div>
+            <div class="feature-desc">คำแนะนำเฉพาะสำหรับแต่ละหุ้น</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-content">
+            <div class="feature-title">ข้อมูลจริง</div>
+            <div class="feature-desc">ดึงข้อมูลจาก Finnhub API</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📈</div>
+          <div class="feature-content">
+            <div class="feature-title">การเติบโตรายปี</div>
+            <div class="feature-desc">ติดตามแนวโน้มและการเปลี่ยนแปลง</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-content">
+            <div class="feature-title">ความปลอดภัย</div>
+            <div class="feature-desc">วิเคราะห์อัตราส่วนหนี้สินและความครอบคลุม</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="loading" id="loading">
       <div class="loading-spinner"></div>
       <div class="loading-text">กำลังวิเคราะห์ข้อมูลทางการเงิน...</div>
@@ -460,6 +893,20 @@
 
       <h2 class="section-title">📊 ตัวชี้วัดทางการเงิน</h2>
       <div class="cards-grid" id="metricsGrid"></div>
+
+      <div class="overall-score-section">
+        <div class="overall-score-content">
+          <div class="score-label">⭐ คะแนนสุขภาพทางการเงินรวม</div>
+          <div class="score-container">
+            <div class="score-circle" id="scoreCircle">
+              <div>-</div>
+              <div class="score-sub-label">/ 100</div>
+            </div>
+          </div>
+          <div id="scoreBreakdown" class="score-breakdown"></div>
+          <div id="scoreRecommendation" class="recommendation-section"></div>
+        </div>
+      </div>
 
       <div class="footer-note">
         <strong>⚠️ หมายเหตุสำคัญ:</strong> การวิเคราะห์นี้ใช้ข้อมูลทางการเงินในอดีต และจัดทำขึ้นเพื่อการศึกษาเท่านั้น ผลการทำงานในอดีตไม่ได้เป็นการรับประกันผลผลิตในอนาคต โปรดทำการวิจัยอย่างถี่ถ้วนและปรึกษากับที่ปรึกษาการเงินก่อนตัดสินใจลงทุน
@@ -822,6 +1269,137 @@
       `;
     }
 
+    function calculateOverallScore(data) {
+      let scores = [];
+      let scoreDetails = [];
+
+      // Revenue Growth Score (0-20 points)
+      if (data.revenueYoY && data.revenueYoY.value && data.revenueYoY.prevValue) {
+        const growth = ((data.revenueYoY.value - data.revenueYoY.prevValue) / data.revenueYoY.prevValue) * 100;
+        let score = 0;
+        if (growth >= 20) score = 20;
+        else if (growth >= 10) score = 15;
+        else if (growth >= 0) score = 10;
+        else if (growth >= -10) score = 5;
+        scores.push(score);
+        scoreDetails.push({ name: 'รายได้ YoY', value: score, max: 20 });
+      }
+
+      // Net Income Score (0-20 points)
+      if (data.netIncomeYoY && data.netIncomeYoY.value !== null) {
+        const isPositive = data.netIncomeYoY.value > 0;
+        const growth = data.netIncomeYoY.prevValue
+          ? ((data.netIncomeYoY.value - data.netIncomeYoY.prevValue) / Math.abs(data.netIncomeYoY.prevValue)) * 100
+          : (data.netIncomeYoY.growth || 0);
+        let score = 0;
+        if (isPositive && growth >= 15) score = 20;
+        else if (isPositive && growth >= 5) score = 15;
+        else if (isPositive && growth >= 0) score = 10;
+        else if (isPositive && growth >= -10) score = 5;
+        scores.push(score);
+        scoreDetails.push({ name: 'กำไรสุทธิ', value: score, max: 20 });
+      }
+
+      // EPS Growth Score (0-15 points)
+      if (data.epsGrowth !== undefined && data.epsGrowth !== null) {
+        let score = 0;
+        if (data.epsGrowth >= 20) score = 15;
+        else if (data.epsGrowth >= 10) score = 12;
+        else if (data.epsGrowth >= 0) score = 8;
+        else if (data.epsGrowth >= -10) score = 4;
+        scores.push(score);
+        scoreDetails.push({ name: 'การเติบโต EPS', value: score, max: 15 });
+      }
+
+      // Profit Margin Score (0-15 points)
+      if (data.netMargin !== null && data.netMargin !== undefined) {
+        let score = 0;
+        if (data.netMargin >= 20) score = 15;
+        else if (data.netMargin >= 10) score = 12;
+        else if (data.netMargin >= 5) score = 8;
+        else if (data.netMargin >= 0) score = 4;
+        scores.push(score);
+        scoreDetails.push({ name: 'อัตรากำไร', value: score, max: 15 });
+      }
+
+      // Debt to Equity Score (0-15 points)
+      if (data.debtToEquity !== null && data.debtToEquity !== undefined) {
+        let score = 0;
+        if (data.debtToEquity < 0.5) score = 15;
+        else if (data.debtToEquity < 0.8) score = 12;
+        else if (data.debtToEquity < 1.5) score = 8;
+        else if (data.debtToEquity < 2.0) score = 4;
+        scores.push(score);
+        scoreDetails.push({ name: 'หนี้สิน/ส่วนทุน', value: score, max: 15 });
+      }
+
+      // Interest Coverage Score (0-10 points)
+      if (data.interestCoverage !== null && data.interestCoverage !== undefined) {
+        let score = 0;
+        if (data.interestCoverage >= 5) score = 10;
+        else if (data.interestCoverage >= 3) score = 8;
+        else if (data.interestCoverage >= 1) score = 4;
+        scores.push(score);
+        scoreDetails.push({ name: 'ความครอบคลุมดอกเบี้ย', value: score, max: 10 });
+      }
+
+      // Free Cash Flow Score (0-5 points)
+      if (data.freeCashFlow !== null && data.freeCashFlow !== undefined) {
+        let score = 0;
+        if (data.freeCashFlow > 0) score = 5;
+        scores.push(score);
+        scoreDetails.push({ name: 'กระแสเงินสด', value: score, max: 5 });
+      }
+
+      const totalScore = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / (20 + 20 + 15 + 15 + 15 + 10 + 5)) * 100) : 0;
+      return { totalScore, scoreDetails };
+    }
+
+    function getHealthCategory(score) {
+      if (score >= 80) return { category: 'excellent', label: 'ยอดเยี่ยม', color: 'score-excellent' };
+      if (score >= 60) return { category: 'good', label: 'ดี', color: 'score-good' };
+      if (score >= 40) return { category: 'average', label: 'ปานกลาง', color: 'score-average' };
+      return { category: 'poor', label: 'ต้องปรับปรุง', color: 'score-poor' };
+    }
+
+    function getScoreRecommendation(score, data) {
+      const health = getHealthCategory(score);
+      let recommendation = '';
+      let details = [];
+
+      if (score >= 80) {
+        recommendation = `🎯 ยอดเยี่ยม! หุ้น ${data.symbol} มี<strong>สุขภาพทางการเงินที่แข็งแกร่ง</strong> ด้วยการเติบโตที่มั่นคง กำไรดี และหนี้สินต่ำ`;
+        details = [
+          '✅ ผลการดำเนินงานแข็งแกร่งและมีการเติบโตที่ต่อเนื่อง',
+          '✅ หนี้สินต่ำและการจัดการการเงินที่มีประสิทธิภาพ',
+          '💡 ติดตามอยู่เพื่อยืนยันว่าแนวโน้มเป็นบวกยังคงต่อเนื่อง'
+        ];
+      } else if (score >= 60) {
+        recommendation = `👍 ดี! หุ้น ${data.symbol} มี<strong>สุขภาพทางการเงินที่ดี</strong> แต่มีบางด้านที่อาจปรับปรุงได้`;
+        details = [
+          '✅ ผลการดำเนินงานน่าพอใจโดยทั่วไป',
+          '⚠️ มีบางด้านที่ต้องทำความเข้าใจเพิ่มเติม',
+          '💡 ศึกษาสาเหตุของข้อบกพร่องและติดตามผลกระทบในอนาคต'
+        ];
+      } else if (score >= 40) {
+        recommendation = `⚠️ ปานกลาง! หุ้น ${data.symbol} มี<strong>สุขภาพทางการเงินที่ต่อสายบ้าง</strong> ต้องการความเข้าใจลึกต่อไป`;
+        details = [
+          '⚠️ มีความท้าทายในด้านการบริหารหนี้สินหรือความสามารถในการทำกำไร',
+          '📊 ต้องติดตามผลการดำเนินงานอย่างใกล้ชิด',
+          '💡 ลองศึกษาแผนการฟื้นฟูของบริษัทก่อนตัดสินใจลงทุน'
+        ];
+      } else {
+        recommendation = `🔴 ต้องปรับปรุง! หุ้น ${data.symbol} มี<strong>สุขภาพทางการเงินที่อ่อนแอ</strong> ซึ่งอาจมีความเสี่ยง`;
+        details = [
+          '❌ มีสัญญาณเตือนจำนวนมากในเรื่องหนี้สินหรือผลการดำเนินงาน',
+          '⚠️ ความเสี่ยงสูง - ต้องขอคำปรึกษาจากผู้เชี่ยวชาญ',
+          '💡 ศึกษาเพิ่มเติมอย่างรอบคอบก่อนพิจารณาลงทุน'
+        ];
+      }
+
+      return { recommendation, details, health };
+    }
+
     async function analyzeStock() {
       const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
       if (!ticker) {
@@ -944,6 +1522,41 @@
 
       document.getElementById('metricsGrid').innerHTML = html;
       document.getElementById('resultsWrapper').style.display = 'block';
+
+      // Calculate and display overall score
+      const scoreData = calculateOverallScore(data);
+      const totalScore = scoreData.totalScore;
+      const health = getHealthCategory(totalScore);
+      const { recommendation, details } = getScoreRecommendation(totalScore, data);
+
+      // Update score circle
+      const scoreCircle = document.getElementById('scoreCircle');
+      scoreCircle.className = `score-circle ${health.color}`;
+      scoreCircle.innerHTML = `<div>${totalScore}</div><div class="score-sub-label">/ 100</div>`;
+
+      // Update score breakdown
+      const breakdownHTML = scoreData.scoreDetails
+        .map(item => `
+          <div class="score-item">
+            <span class="score-item-name">${item.name}</span>
+            <span class="score-item-value">${item.value}/${item.max}</span>
+          </div>
+        `)
+        .join('');
+      document.getElementById('scoreBreakdown').innerHTML = breakdownHTML;
+
+      // Update recommendation
+      const recommendationHTML = `
+        <div class="recommendation-title">💡 แนะนำ</div>
+        <div class="recommendation-text">${recommendation}</div>
+        <div style="margin-top: 15px;">
+          ${details.map(detail => `<div style="margin-bottom: 8px;">${detail}</div>`).join('')}
+        </div>
+        <div style="margin-top: 15px;">
+          <span class="health-badge ${health.category}">สถานะ: ${health.label}</span>
+        </div>
+      `;
+      document.getElementById('scoreRecommendation').innerHTML = recommendationHTML;
     }
 
     function showLoading(show) {
@@ -973,6 +1586,7 @@
 
     // เรียกใช้เมื่อโหลดหน้า
     checkAPIKeys();
+    document.getElementById('featuresSection').classList.add('show');
   </script>
 </body>
 </html>
