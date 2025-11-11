@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOOHOON - แนวรับ แนวต้าน (yfinance)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      background: radial-gradient(circle at 30% 20%, rgba(255,215,0,0.12), transparent 65%), 
+                  radial-gradient(circle at 80% 80%, rgba(218,165,32,0.08), transparent 60%),
+                  #0a0a0a;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      color: #ffd700;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    .subtitle {
+      color: #c9a136;
+      font-size: 1.1em;
+    }
+    
+    .search-section {
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    
+    .search-wrapper {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 16px;
+      padding: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .search-wrapper:focus-within {
+      border-color: rgba(255,215,0,0.5);
+      box-shadow: 0 8px 40px rgba(255,215,0,0.2);
+    }
+    
+    input {
+      flex: 1;
+      padding: 18px 24px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 1.1em;
+      font-family: 'Poppins', sans-serif;
+      outline: none;
+      font-weight: 500;
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    
+    button {
+      padding: 18px 36px;
+      background: linear-gradient(135deg, #ffd700, #daa520);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-weight: 700;
+      font-size: 1.05em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, #ffec7f, #ffb400);
+      box-shadow: 0 6px 25px rgba(255,215,0,0.5);
+    }
+
+    .quick-picks {
+      margin-top: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 0.95em;
+    }
+    
+    .quick-picks span {
+      display: inline-block;
+      margin: 5px 8px;
+      padding: 8px 16px;
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 8px;
+      color: #daa520;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    
+    .quick-picks span:hover {
+      background: rgba(255,215,0,0.15);
+      border-color: rgba(255,215,0,0.4);
+      color: #ffd700;
+      transform: translateY(-2px);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      font-size: 1.3em;
+      color: #ffd700;
+      display: none;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,215,0,0.2);
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error {
+      max-width: 600px;
+      margin: 40px auto;
+      background: rgba(255,50,50,0.1);
+      border: 2px solid rgba(255,50,50,0.3);
+      border-radius: 15px;
+      padding: 24px;
+      color: #ff6b6b;
+      display: none;
+      text-align: center;
+      font-size: 1.1em;
+    }
+
+    .success {
+      max-width: 600px;
+      margin: 20px auto;
+      background: rgba(0,255,136,0.1);
+      border: 2px solid rgba(0,255,136,0.3);
+      border-radius: 15px;
+      padding: 24px;
+      color: #00ff88;
+      display: none;
+      text-align: center;
+      font-size: 0.95em;
+    }
+    
+    .analysis-data {
+      display: none;
+      animation: fadeIn 0.6s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stock-info {
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .stock-title-section {
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    .stock-symbol {
+      font-size: 2.5em;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .stock-name {
+      font-size: 1.2em;
+      color: #c9a136;
+    }
+
+    .data-source {
+      font-size: 0.8em;
+      color: #888;
+      margin-top: 5px;
+    }
+    
+    .current-price-section {
+      text-align: right;
+    }
+    
+    .price-label {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+    
+    .current-price {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .price-change {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+    
+    .positive {
+      color: #00ff88;
+    }
+    
+    .negative {
+      color: #ff6b6b;
+    }
+    
+    .chart-section {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .chart-title {
+      color: #ffd700;
+      font-size: 1.6em;
+      font-weight: 700;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 450px;
+      margin-bottom: 20px;
+    }
+    
+    canvas {
+      max-height: 450px;
+    }
+    
+    .levels-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .level-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+    }
+    
+    .level-card.support {
+      border-color: rgba(0,255,136,0.3);
+    }
+    
+    .level-card.resistance {
+      border-color: rgba(255,68,68,0.3);
+    }
+    
+    .level-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .level-icon {
+      font-size: 2em;
+    }
+    
+    .level-title {
+      font-size: 1.6em;
+      font-weight: 700;
+    }
+    
+    .level-title.support {
+      color: #00ff88;
+    }
+    
+    .level-title.resistance {
+      color: #ff6b6b;
+    }
+    
+    .level-item {
+      background: rgba(255,255,255,0.05);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid;
+    }
+    
+    .level-item.support {
+      border-left-color: #00ff88;
+    }
+    
+    .level-item.resistance {
+      border-left-color: #ff6b6b;
+    }
+    
+    .level-label {
+      color: #ddd;
+      font-size: 0.95em;
+    }
+    
+    .level-price {
+      font-size: 1.4em;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .level-distance {
+      font-size: 0.85em;
+      color: #888;
+      margin-top: 5px;
+    }
+    
+    .analysis-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .analysis-title {
+      color: #ffd700;
+      font-size: 1.6em;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    
+    .signal-box {
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+    
+    .signal-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .signal-icon {
+      font-size: 2.5em;
+    }
+    
+    .signal-text {
+      flex: 1;
+    }
+    
+    .signal-label {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+    
+    .signal-value {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #ffd700;
+    }
+    
+    .recommendation-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .recommendation-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,215,0,0.1);
+      color: #ddd;
+      line-height: 1.7;
+    }
+    
+    .recommendation-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .recommendation-list li::before {
+      content: '✓';
+      color: #00ff88;
+      font-weight: 700;
+      margin-right: 10px;
+    }
+    
+    .tip-box {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    
+    .tip-box strong {
+      color: #ffd700;
+    }
+    
+    .tip-box p {
+      color: #ddd;
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+      
+      .search-wrapper {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .stock-info {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .current-price-section {
+        text-align: center;
+      }
+      
+      .levels-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-container {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 แนวรับ - แนวต้าน</h1>
+      <p class="subtitle">Support & Resistance Level Finder (yfinance - No API Key Needed)</p>
+    </div>
+
+    <div class="search-section">
+      <div class="search-wrapper">
+        <input 
+          type="text" 
+          id="stockInput" 
+          placeholder="พิมพ์ชื่อหุ้น เช่น AAPL, NVDA, TSLA..." 
+          onkeypress="if(event.key==='Enter') analyzeStock()"
+        />
+        <button onclick="analyzeStock()">วิเคราะห์</button>
+      </div>
+      <div class="quick-picks">
+        ลองค้นหา: 
+        <span onclick="quickSearch('AAPL')">AAPL</span>
+        <span onclick="quickSearch('NVDA')">NVDA</span>
+        <span onclick="quickSearch('TSLA')">TSLA</span>
+        <span onclick="quickSearch('GOOGL')">GOOGL</span>
+        <span onclick="quickSearch('MSFT')">MSFT</span>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div>🔄 กำลังดึงข้อมูลราคาจริง...</div>
+    </div>
+
+    <div class="error" id="error"></div>
+    <div class="success" id="success"></div>
+
+    <div class="analysis-data" id="analysisData">
+      <!-- Stock Info -->
+      <div class="stock-info">
+        <div class="stock-title-section">
+          <div class="stock-symbol" id="stockSymbol">AAPL</div>
+          <div class="stock-name" id="stockName">Apple Inc.</div>
+          <div class="data-source" id="dataSource">🌐 ข้อมูลจริง (yfinance API)</div>
+        </div>
+        <div class="current-price-section">
+          <div class="price-label">ราคาปัจจุบัน</div>
+          <div class="current-price" id="currentPrice">$0.00</div>
+          <div class="price-change" id="priceChange">+0.00 (0.00%)</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="chart-title">📈 กราฟราคาและแนวรับ-แนวต้าน</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Support & Resistance Levels -->
+      <div class="levels-grid">
+        <!-- Support Levels -->
+        <div class="level-card support">
+          <div class="level-header">
+            <div class="level-icon">🟢</div>
+            <div class="level-title support">แนวรับ (Support)</div>
+          </div>
+          <div id="supportLevels">
+            <div class="level-item support">
+              <div>
+                <div class="level-label">แนวรับ 1 (แข็งแกร่ง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="support1">$0.00</div>
+            </div>
+            <div class="level-item support">
+              <div>
+                <div class="level-label">แนวรับ 2 (ปานกลาง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="support2">$0.00</div>
+            </div>
+            <div class="level-item support">
+              <div>
+                <div class="level-label">แนวรับ 3 (อ่อน)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="support3">$0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resistance Levels -->
+        <div class="level-card resistance">
+          <div class="level-header">
+            <div class="level-icon">🔴</div>
+            <div class="level-title resistance">แนวต้าน (Resistance)</div>
+          </div>
+          <div id="resistanceLevels">
+            <div class="level-item resistance">
+              <div>
+                <div class="level-label">แนวต้าน 1 (แข็งแกร่ง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="resistance1">$0.00</div>
+            </div>
+            <div class="level-item resistance">
+              <div>
+                <div class="level-label">แนวต้าน 2 (ปานกลาง)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="resistance2">$0.00</div>
+            </div>
+            <div class="level-item resistance">
+              <div>
+                <div class="level-label">แนวต้าน 3 (อ่อน)</div>
+                <div class="level-distance">ห่างจากราคาปัจจุบัน</div>
+              </div>
+              <div class="level-price" id="resistance3">$0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trading Analysis -->
+      <div class="analysis-card">
+        <div class="analysis-title">💡 การวิเคราะห์และคำแนะนำ</div>
+        
+        <div class="signal-box">
+          <div class="signal-header">
+            <div class="signal-icon" id="signalIcon">📊</div>
+            <div class="signal-text">
+              <div class="signal-label">สัญญาณการเทรด</div>
+              <div class="signal-value" id="tradingSignal">วิเคราะห์...</div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="recommendation-list" id="recommendations">
+          <li>กำลังวิเคราะห์ข้อมูล...</li>
+        </ul>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 วิธีใช้แนวรับ-แนวต้าน:</strong>
+        <p>
+          <strong>แนวรับ (Support):</strong> ระดับราคาที่มีแรงซื้อเข้ามาพยุงไม่ให้ราคาตกต่ำลง<br><br>
+          <strong>แนวต้าน (Resistance):</strong> ระดับราคาที่มีแรงขายออกมาทำให้ราคาไม่สามารถขึ้นสูงได้<br><br>
+          <strong>⚠️ หมายเหตุ:</strong> ใช้เครื่องมือนี้ประกอบการตัดสินใจ ไม่ใช่การบอกสั่งซื้อขาย
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let priceChart = null;
+    let currentSymbol = '';
+
+    function quickSearch(symbol) {
+      document.getElementById('stockInput').value = symbol;
+      analyzeStock();
+    }
+
+    async function analyzeStock() {
+      const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
+      
+      if (!symbol) {
+        showError('⚠️ กรุณาใส่สัญลักษณ์หุ้น');
+        hideAnalysisData();
+        return;
+      }
+
+      currentSymbol = symbol;
+      showLoading(true);
+      hideError();
+      hideSuccess();
+      hideAnalysisData();
+
+      try {
+        console.log('🔍 ดึงข้อมูล:', symbol);
+
+        // ใช้ yfinance API proxy
+        const yfinanceUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price,summaryDetail,financialData`;
+        const res = await fetch(yfinanceUrl);
+        const data = await res.json();
+
+        if (!data.quoteSummary || data.quoteSummary.result.length === 0) {
+          throw new Error(`ไม่พบข้อมูล ${symbol} - กรุณาตรวจสอบสัญลักษณ์หรือลองใหม่`);
+        }
+
+        const result = data.quoteSummary.result[0];
+        const priceData = result.price;
+
+        if (!priceData) {
+          throw new Error('ไม่สามารถดึงข้อมูลราคา');
+        }
+
+        // ดึงข้อมูลราคาประวัติ
+        const historyUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?interval=1d&range=3mo`;
+        const historyRes = await fetch(historyUrl);
+        const historyData = await historyRes.json();
+
+        if (!historyData.chart.result[0]) {
+          throw new Error('ไม่สามารถดึงข้อมูลราคาประวัติ');
+        }
+
+        const chart = historyData.chart.result[0];
+        const prices = chart.indicators.quote[0].close.filter(p => p !== null);
+        const timestamps = chart.timestamp;
+
+        const dates = timestamps.map(ts => {
+          const date = new Date(ts * 1000);
+          return date.toLocaleDateString('th-TH');
+        });
+
+        // ข้อมูลปัจจุบัน
+        const currentPrice = priceData.regularMarketPrice.raw;
+        const previousClose = priceData.regularMarketPreviousClose.raw;
+        const change = currentPrice - previousClose;
+        const changePercent = (change / previousClose) * 100;
+
+        displayStockInfo(symbol, currentPrice, change, changePercent);
+
+        // คำนวณแนวรับ-แนวต้าน
+        const levels = calculateSupportResistance(prices);
+        drawChart(prices, dates, levels);
+        displayLevels(levels, currentPrice);
+        generateRecommendations(levels, currentPrice);
+
+        showAnalysisData();
+        showSuccess(`✅ ดึงข้อมูลสำเร็จ! (${prices.length} วันย้อนหลัง)`);
+
+      } catch (error) {
+        console.error('❌ Error:', error);
+        showError('❌ ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function displayStockInfo(symbol, currentPrice, change, changePercent) {
+      document.getElementById('stockSymbol').textContent = symbol;
+      document.getElementById('stockName').textContent = symbol;
+      
+      const price = currentPrice.toFixed(2);
+      const changeFormatted = change.toFixed(2);
+      const changePercentFormatted = changePercent.toFixed(2);
+      const isPositive = change >= 0;
+
+      document.getElementById('currentPrice').textContent = `$${price}`;
+      
+      const changeElement = document.getElementById('priceChange');
+      changeElement.textContent = `${isPositive ? '+' : ''}${changeFormatted} (${isPositive ? '+' : ''}${changePercentFormatted}%)`;
+      changeElement.className = `price-change ${isPositive ? 'positive' : 'negative'}`;
+    }
+
+    function calculateSupportResistance(prices) {
+      // ===== MA + ATR Method =====
+      
+      // คำนวณ MA20 (Moving Average 20 วัน)
+      const ma20Period = Math.min(20, prices.length);
+      const ma20 = prices.slice(-ma20Period).reduce((a, b) => a + b, 0) / ma20Period;
+      
+      // คำนวณ ATR14 (Average True Range 14 วัน)
+      const atr14Period = Math.min(14, prices.length);
+      const atrData = [];
+      
+      for (let i = Math.max(0, prices.length - atr14Period); i < prices.length; i++) {
+        let trueRange;
+        if (i === 0) {
+          trueRange = prices[i];
+        } else {
+          const high = Math.max(prices[i], prices[i - 1]);
+          const low = Math.min(prices[i], prices[i - 1]);
+          trueRange = high - low;
+        }
+        atrData.push(trueRange);
+      }
+      
+      const atr14 = atrData.reduce((a, b) => a + b, 0) / atrData.length;
+      
+      // Support & Resistance ตาม MA + ATR
+      const support1 = ma20 - (1.5 * atr14);
+      const support2 = ma20 - (2 * atr14);
+      const support3 = ma20 - (2.5 * atr14);
+      
+      const resistance1 = ma20 + (1.5 * atr14);
+      const resistance2 = ma20 + (2 * atr14);
+      const resistance3 = ma20 + (2.5 * atr14);
+
+      return {
+        support1: Math.max(support1, Math.min(...prices) * 0.9),
+        support2: Math.max(support2, Math.min(...prices) * 0.85),
+        support3: Math.max(support3, Math.min(...prices) * 0.80),
+        resistance1: Math.min(resistance1, Math.max(...prices) * 1.1),
+        resistance2: Math.min(resistance2, Math.max(...prices) * 1.15),
+        resistance3: Math.min(resistance3, Math.max(...prices) * 1.2)
+      };
+    }
+
+    function drawChart(prices, dates, levels) {
+      const ctx = document.getElementById('priceChart');
+      
+      if (priceChart) priceChart.destroy();
+
+      priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'ราคาปิด',
+              data: prices,
+              borderColor: '#ffd700',
+              backgroundColor: 'rgba(255,215,0,0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'แนวรับ 1',
+              data: Array(prices.length).fill(levels.support1),
+              borderColor: '#00ff88',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'แนวต้าน 1',
+              data: Array(prices.length).fill(levels.resistance1),
+              borderColor: '#ff6b6b',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff',
+                font: { size: 12, weight: 'bold' }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            },
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#888' }
+            }
+          }
+        }
+      });
+    }
+
+    function displayLevels(levels, currentPrice) {
+      const fmt = v => `$${v.toFixed(2)}`;
+      const distPct = v => `${((Math.abs(v - currentPrice) / currentPrice) * 100).toFixed(2)}%`;
+
+      document.getElementById('support1').textContent = fmt(levels.support1);
+      document.getElementById('support2').textContent = fmt(levels.support2);
+      document.getElementById('support3').textContent = fmt(levels.support3);
+
+      document.getElementById('resistance1').textContent = fmt(levels.resistance1);
+      document.getElementById('resistance2').textContent = fmt(levels.resistance2);
+      document.getElementById('resistance3').textContent = fmt(levels.resistance3);
+
+      const supItems = document.querySelectorAll('#supportLevels .level-item');
+      supItems[0].querySelector('.level-distance').textContent = `ห่างจากราคาปัจจุบัน ${distPct(levels.support1)}`;
+      supItems[1].querySelector('.level-distance').textContent = `ห่างจากราคาปัจจุบัน ${distPct(levels.support2)}`;
+      supItems[2].querySelector('.level-distance').textContent = `ห่างจากราคาปัจจุบัน ${distPct(levels.support3)}`;
+
+      const resItems = document.querySelectorAll('#resistanceLevels .level-item');
+      resItems[0].querySelector('.level-distance').textContent = `ห่างจากราคาปัจจุบัน ${distPct(levels.resistance1)}`;
+      resItems[1].querySelector('.level-distance').textContent = `ห่างจากราคาปัจจุบัน ${distPct(levels.resistance2)}`;
+      resItems[2].querySelector('.level-distance').textContent = `ห่างจากราคาปัจจุบัน ${distPct(levels.resistance3)}`;
+    }
+
+    function generateRecommendations(levels, currentPrice) {
+      const recommendations = [];
+
+      if (currentPrice < levels.support1) {
+        recommendations.push('⚠️ ราคาอยู่ต่ำกว่าแนวรับ 1 อาจเป็นจุดซื้อที่ดี');
+      } else if (currentPrice > levels.resistance1) {
+        recommendations.push('⚠️ ราคาอยู่สูงกว่าแนวต้าน 1 ควรระวังการขึ้นต่อ');
+      } else {
+        recommendations.push('✓ ราคาอยู่ในโซนปกติระหว่างแนวรับและแนวต้าน');
+      }
+
+      if (levels.resistance1 - currentPrice < currentPrice - levels.support1) {
+        recommendations.push('📈 ราคาเข้าใกล้แนวต้าน ควรเตรียมพร้อมสำหรับการขาย');
+      } else {
+        recommendations.push('📉 ราคาเข้าใกล้แนวรับ ควรเตรียมพร้อมสำหรับการซื้อ');
+      }
+
+      recommendations.push('💡 ลองใช้ Fibonacci Retracement หรือ RSI ประกอบการตัดสินใจ');
+
+      const recommendationHtml = recommendations.map(rec => `<li>${rec}</li>`).join('');
+      document.getElementById('recommendations').innerHTML = recommendationHtml;
+
+      const signal = currentPrice > levels.resistance1 ? 'BEARISH 🔴' : 
+                     currentPrice < levels.support1 ? 'BULLISH 🟢' : 'NEUTRAL 🟡';
+      const icon = currentPrice > levels.resistance1 ? '🔴' : 
+                   currentPrice < levels.support1 ? '🟢' : '🟡';
+
+      document.getElementById('tradingSignal').textContent = signal;
+      document.getElementById('signalIcon').textContent = icon;
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+
+    function showError(message) {
+      document.getElementById('error').innerHTML = message;
+      document.getElementById('error').style.display = 'block';
+    }
+
+    function hideSuccess() {
+      document.getElementById('success').style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      document.getElementById('success').innerHTML = message;
+      document.getElementById('success').style.display = 'block';
+    }
+
+    function showAnalysisData() {
+      document.getElementById('analysisData').style.display = 'block';
+    }
+
+    function hideAnalysisData() {
+      document.getElementById('analysisData').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
