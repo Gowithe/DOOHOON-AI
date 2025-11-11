@@ -692,9 +692,12 @@
       try {
         console.log('🔍 ดึงข้อมูล:', symbol);
 
-        // ใช้ yfinance API proxy
+        // ใช้ CORS proxy ที่เสถียร
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+
+        // ใช้ yfinance API
         const yfinanceUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price,summaryDetail,financialData`;
-        const res = await fetch(yfinanceUrl);
+        const res = await fetch(corsProxy + encodeURIComponent(yfinanceUrl));
         const data = await res.json();
 
         if (!data.quoteSummary || data.quoteSummary.result.length === 0) {
@@ -710,7 +713,7 @@
 
         // ดึงข้อมูลราคาประวัติ
         const historyUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?interval=1d&range=3mo`;
-        const historyRes = await fetch(historyUrl);
+        const historyRes = await fetch(corsProxy + encodeURIComponent(historyUrl));
         const historyData = await historyRes.json();
 
         if (!historyData.chart.result[0]) {
