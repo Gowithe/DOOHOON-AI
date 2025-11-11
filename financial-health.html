@@ -241,30 +241,6 @@
       margin-top: 15px;
     }
 
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 25px;
-      flex-wrap: wrap;
-    }
-
-    .action-buttons button {
-      padding: 10px 20px;
-      font-size: 0.9em;
-      letter-spacing: 0.5px;
-    }
-
-    .copy-btn {
-      background: linear-gradient(135deg, #00d4ff, #0099cc) !important;
-      box-shadow: 0 4px 15px rgba(0,212,255,0.3) !important;
-    }
-
-    .copy-btn:hover {
-      background: linear-gradient(135deg, #00e5ff, #00b8e6) !important;
-      box-shadow: 0 6px 25px rgba(0,212,255,0.5) !important;
-    }
-
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -398,14 +374,6 @@
         font-size: 2em;
       }
 
-      .action-buttons {
-        flex-direction: column;
-      }
-
-      .action-buttons button {
-        width: 100%;
-      }
-
       .search-wrapper {
         flex-direction: column;
       }
@@ -419,10 +387,10 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>💰 Financial Health</h1>
-      <p class="subtitle">สรุปสุขภาพทางการเงินของหุ้น - Stock Financial Health Summary</p>
+      <h1>💰 สุขภาพทางการเงิน</h1>
+      <p class="subtitle">สรุปสุขภาพทางการเงินของหุ้น</p>
       <div class="demo-alert" id="demoAlert">
-        ⚠️ Demo Mode - Showing sample data. Add API keys to use real data.
+        ⚠️ โหมดสาธารณะ - กำลังแสดงข้อมูลตัวอย่าง เพิ่มคีย์ API เพื่อใช้ข้อมูลจริง
       </div>
     </div>
 
@@ -431,13 +399,13 @@
         <input
           type="text"
           id="tickerInput"
-          placeholder="Enter ticker (e.g., AAPL, NVDA, TSLA)"
+          placeholder="ใส่สัญลักษณ์หุ้น เช่น AAPL, NVDA, TSLA"
           maxlength="10"
         />
-        <button onclick="analyzeStock()">Analyze</button>
+        <button onclick="analyzeStock()">วิเคราะห์</button>
       </div>
       <div class="quick-picks">
-        <span class="quick-picks-label">Quick Pick:</span>
+        <span class="quick-picks-label">ตัวเลือกด่วน:</span>
         <span onclick="quickPick('AAPL')">AAPL</span>
         <span onclick="quickPick('NVDA')">NVDA</span>
         <span onclick="quickPick('TSLA')">TSLA</span>
@@ -448,7 +416,7 @@
 
     <div class="loading" id="loading">
       <div class="loading-spinner"></div>
-      <div class="loading-text">Analyzing financial data...</div>
+      <div class="loading-text">กำลังวิเคราะห์ข้อมูลทางการเงิน...</div>
     </div>
 
     <div class="error" id="error"></div>
@@ -456,17 +424,14 @@
     <div class="results-wrapper" id="resultsWrapper">
       <div class="result-header">
         <div class="result-symbol" id="resultSymbol">--</div>
-        <div class="last-updated" id="lastUpdated">Last updated: --</div>
-        <div class="action-buttons">
-          <button class="copy-btn" onclick="copyResultsJSON()">📋 Copy JSON</button>
-        </div>
+        <div class="last-updated" id="lastUpdated">อัปเดตล่าสุด: --</div>
       </div>
 
-      <h2 class="section-title">Financial Metrics</h2>
+      <h2 class="section-title">📊 ตัวชี้วัดทางการเงิน</h2>
       <div class="cards-grid" id="metricsGrid"></div>
 
       <div class="footer-note">
-        <strong>⚠️ Important Note:</strong> This analysis uses historical financial data and is provided for educational purposes only. Past performance does not guarantee future results. Always conduct thorough research and consult with financial advisors before making investment decisions.
+        <strong>⚠️ หมายเหตุสำคัญ:</strong> การวิเคราะห์นี้ใช้ข้อมูลทางการเงินในอดีต และจัดทำขึ้นเพื่อการศึกษาเท่านั้น ผลการทำงานในอดีตไม่ได้เป็นการรับประกันผลผลิตในอนาคต โปรดทำการวิจัยอย่างถี่ถ้วนและปรึกษากับที่ปรึกษาการเงินก่อนตัดสินใจลงทุน
       </div>
     </div>
   </div>
@@ -665,7 +630,7 @@
 
     // ============ SCORING LOGIC ============
     function scoreRevenueYoY(data) {
-      if (!data || !data.value || !data.prevValue) return { status: 'gray', reason: 'Missing data' };
+      if (!data || !data.value || !data.prevValue) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       const growth = ((data.value - data.prevValue) / data.prevValue) * 100;
       if (growth >= 10) return { status: 'good', value: growth };
@@ -674,7 +639,7 @@
     }
 
     function scoreNetIncome(data) {
-      if (!data || data.value === null) return { status: 'gray', reason: 'Missing data' };
+      if (!data || data.value === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       const isPositive = data.value > 0;
       const growth = data.prevValue
@@ -687,7 +652,7 @@
     }
 
     function scoreEPSGrowth(growth) {
-      if (growth === null) return { status: 'gray', reason: 'Missing data' };
+      if (growth === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       if (growth >= 10) return { status: 'good', value: growth };
       if (growth >= 0) return { status: 'neutral', value: growth };
@@ -695,7 +660,7 @@
     }
 
     function scoreProfitMargin(margin) {
-      if (margin === null) return { status: 'gray', reason: 'Missing data' };
+      if (margin === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       if (margin >= 10) return { status: 'good', value: margin };
       if (margin >= 0) return { status: 'neutral', value: margin };
@@ -703,7 +668,7 @@
     }
 
     function scoreDebtToEquity(de) {
-      if (de === null) return { status: 'gray', reason: 'Missing data' };
+      if (de === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       if (de < 0.8) return { status: 'good', value: de };
       if (de < 1.5) return { status: 'neutral', value: de };
@@ -711,7 +676,7 @@
     }
 
     function scoreInterestCoverage(coverage) {
-      if (coverage === null) return { status: 'gray', reason: 'Missing data' };
+      if (coverage === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       if (coverage >= 3) return { status: 'good', value: coverage };
       if (coverage >= 1) return { status: 'neutral', value: coverage };
@@ -719,7 +684,7 @@
     }
 
     function scoreFreeCashFlow(data) {
-      if (!data || data.value === null) return { status: 'gray', reason: 'Missing data' };
+      if (!data || data.value === null) return { status: 'gray', reason: 'ข้อมูลไม่ครบ' };
 
       const isPositive = data.value > 0;
       const growth = data.growth !== undefined ? data.growth : 0;
@@ -780,7 +745,7 @@
     async function analyzeStock() {
       const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
       if (!ticker) {
-        showError('Please enter a stock ticker');
+        showError('โปรดใส่สัญลักษณ์หุ้น');
         return;
       }
 
@@ -808,7 +773,7 @@
         }
 
         if (!data) {
-          throw new Error('Could not fetch data for ' + ticker + '. Please check the ticker symbol.');
+          throw new Error('ไม่สามารถดึงข้อมูล ' + ticker + ' กรุณาตรวจสอบสัญลักษณ์หุ้น');
         }
 
         setCache(ticker, data);
@@ -823,7 +788,7 @@
     function displayResults(data) {
       const symbol = data.symbol;
       document.getElementById('resultSymbol').textContent = symbol;
-      document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+      document.getElementById('lastUpdated').textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH');
 
       // Score metrics
       const revenueScore = scoreRevenueYoY(data.revenueYoY);
@@ -842,10 +807,10 @@
         const growth = revenueScore.value;
         const v1 = formatCurrency(data.revenueYoY.value);
         const v2 = formatCurrency(data.revenueYoY.prevValue);
-        const reason = `Revenue growth ${growth >= 0 ? '+' : ''}${formatPercent(growth)} YoY (${v2} → ${v1})`;
-        html += renderCard('Revenue YoY Growth', formatPercent(growth), revenueScore.status, reason);
+        const reason = `รายได้เติบโต ${growth >= 0 ? '+' : ''}${formatPercent(growth)} ปีต่อปี (${v2} → ${v1})`;
+        html += renderCard('รายได้ YoY', formatPercent(growth), revenueScore.status, reason);
       } else {
-        html += renderCard('Revenue YoY Growth', 'N/A', 'gray', 'Historical revenue data unavailable from API');
+        html += renderCard('รายได้ YoY', 'ไม่มี', 'gray', 'ข้อมูลรายได้ประวัติศาสตร์ไม่ disponible');
       }
 
       // Net Income
@@ -853,56 +818,57 @@
         const growth = netIncomeScore.value;
         const v1 = formatCurrency(data.netIncomeYoY.value);
         const status = data.netIncomeYoY.value > 0 ? netIncomeScore.status : 'poor';
-        const reason = `Net income ${growth >= 0 ? '+' : ''}${formatPercent(growth)} YoY • Value: ${v1}`;
-        html += renderCard('Net Income (TTM)', formatPercent(growth), status, reason);
+        const reason = `กำไรสุทธิ ${growth >= 0 ? '+' : ''}${formatPercent(growth)} ปีต่อปี • มูลค่า: ${v1}`;
+        html += renderCard('กำไรสุทธิ (TTM)', formatPercent(growth), status, reason);
       } else {
-        html += renderCard('Net Income (TTM)', 'N/A', 'gray', 'Net income data unavailable from API');
+        html += renderCard('กำไรสุทธิ (TTM)', 'ไม่มี', 'gray', 'ข้อมูลกำไรสุทธิไม่ disponible');
       }
 
       // EPS Growth
       if (epsScore.status !== 'gray') {
         const growth = epsScore.value;
-        const eps = data.eps !== null ? data.eps.toFixed(2) : 'N/A';
-        const reason = `EPS growth ${growth >= 0 ? '+' : ''}${formatPercent(growth)} YoY • EPS: $${eps}`;
-        html += renderCard('EPS Growth', formatPercent(growth), epsScore.status, reason);
+        const eps = data.eps !== null ? data.eps.toFixed(2) : 'ไม่มี';
+        const reason = `กำไรต่อหุ้น เติบโต ${growth >= 0 ? '+' : ''}${formatPercent(growth)} ปีต่อปี • EPS: $${eps}`;
+        html += renderCard('การเติบโต EPS', formatPercent(growth), epsScore.status, reason);
       } else {
-        html += renderCard('EPS Growth', 'N/A', 'gray', 'EPS growth data not available');
+        html += renderCard('การเติบโต EPS', 'ไม่มี', 'gray', 'ข้อมูลการเติบโต EPS ไม่ disponible');
       }
 
       // Profit Margin
       if (marginScore.status !== 'gray') {
         const margin = marginScore.value;
-        const reason = `Net profit margin at ${formatPercent(margin)} • ${margin >= 10 ? 'Healthy profitability' : margin >= 0 ? 'Moderate profitability' : 'Below breakeven'}`;
-        html += renderCard('Profit Margin (TTM)', formatPercent(margin), marginScore.status, reason);
+        const profitStatus = margin >= 10 ? 'กำไรสุขภาพดี' : margin >= 0 ? 'กำไรปานกลาง' : 'ต่ำกว่า breakeven';
+        const reason = `อัตรากำไรสุทธิที่ ${formatPercent(margin)} • ${profitStatus}`;
+        html += renderCard('อัตรากำไร (TTM)', formatPercent(margin), marginScore.status, reason);
       } else {
-        html += renderCard('Profit Margin (TTM)', 'N/A', 'gray', 'Profit margin data unavailable');
+        html += renderCard('อัตรากำไร (TTM)', 'ไม่มี', 'gray', 'ข้อมูลอัตรากำไรไม่ disponible');
       }
 
       // Debt to Equity
       if (deScore.status !== 'gray') {
         const de = deScore.value.toFixed(2);
-        const statusMsg = data.debtToEquity < 0.8 ? 'Conservative leverage' : data.debtToEquity < 1.5 ? 'Moderate leverage' : 'High leverage';
-        const reason = `D/E ratio of ${de} • ${statusMsg}`;
-        html += renderCard('Debt to Equity', de, deScore.status, reason);
+        const statusMsg = data.debtToEquity < 0.8 ? 'Leverage อนุรักษ์นิยม' : data.debtToEquity < 1.5 ? 'Leverage ปานกลาง' : 'Leverage สูง';
+        const reason = `อัตราส่วน D/E ${de} • ${statusMsg}`;
+        html += renderCard('หนี้สิน/ส่วนของผู้ถือหุ้น', de, deScore.status, reason);
       } else {
-        html += renderCard('Debt to Equity', 'N/A', 'gray', 'Balance sheet data not available from API');
+        html += renderCard('หนี้สิน/ส่วนของผู้ถือหุ้น', 'ไม่มี', 'gray', 'ข้อมูลงบดุลไม่ disponible');
       }
 
       // Interest Coverage (placeholder)
       if (interestScore.status !== 'gray') {
-        html += renderCard('Interest Coverage', 'N/A', 'gray', 'Interest expense data needed for calculation');
+        html += renderCard('ความครอบคลุมดอกเบี้ย', 'ไม่มี', 'gray', 'ต้องมีข้อมูลค่าใช้จ่ายดอกเบี้ย');
       } else {
-        html += renderCard('Interest Coverage', 'N/A', 'gray', 'Interest expense data not available from API');
+        html += renderCard('ความครอบคลุมดอกเบี้ย', 'ไม่มี', 'gray', 'ข้อมูลค่าใช้จ่ายดอกเบี้ยไม่ disponible');
       }
 
       // Free Cash Flow
       if (fcfScore.status !== 'gray') {
         const fcf = formatCurrency(data.freeCashFlow);
-        const statusMsg = data.freeCashFlow > 0 ? 'Positive FCF generation' : 'Negative FCF';
-        const reason = `Free cash flow: ${fcf} (TTM) • ${statusMsg}`;
-        html += renderCard('Free Cash Flow (TTM)', fcf, fcfScore.status, reason);
+        const statusMsg = data.freeCashFlow > 0 ? 'การสร้าง FCF บวก' : 'FCF เป็นลบ';
+        const reason = `กระแสเงินสดอิสระ: ${fcf} (TTM) • ${statusMsg}`;
+        html += renderCard('กระแสเงินสดอิสระ (TTM)', fcf, fcfScore.status, reason);
       } else {
-        html += renderCard('Free Cash Flow (TTM)', 'N/A', 'gray', 'Cash flow statement data unavailable from API');
+        html += renderCard('กระแสเงินสดอิสระ (TTM)', 'ไม่มี', 'gray', 'ข้อมูลงบกระแสเงินสดไม่ disponible');
       }
 
       document.getElementById('metricsGrid').innerHTML = html;
@@ -925,15 +891,9 @@
       };
     }
 
-    function copyResultsJSON() {
-      if (!window.lastResults) return;
-
-      const json = JSON.stringify(window.lastResults, null, 2);
-      navigator.clipboard.writeText(json).then(() => {
-        alert('Results copied to clipboard!');
-      }).catch(() => {
-        alert('Failed to copy. Please try again.');
-      });
+    function quickPick(ticker) {
+      document.getElementById('tickerInput').value = ticker;
+      analyzeStock();
     }
 
     // ============ UI HELPERS ============
@@ -950,13 +910,6 @@
     function hideError() {
       document.getElementById('error').style.display = 'none';
     }
-
-    function quickPick(ticker) {
-      document.getElementById('tickerInput').value = ticker;
-      analyzeStock();
-    }
-
-    // ============ DEBOUNCE ============
     let debounceTimer;
     document.getElementById('tickerInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
