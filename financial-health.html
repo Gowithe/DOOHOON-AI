@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Health - Stock Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 30% 20%, rgba(255,215,0,0.12), transparent 65%),
+                  radial-gradient(circle at 80% 80%, rgba(218,165,32,0.08), transparent 60%),
+                  #0a0a0a;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      color: #ffd700;
+      font-size: 2.8em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .subtitle {
+      color: #c9a136;
+      font-size: 1.05em;
+      margin-bottom: 20px;
+    }
+
+    .demo-alert {
+      background: rgba(255, 193, 7, 0.15);
+      border: 2px solid rgba(255, 193, 7, 0.5);
+      color: #ffc107;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      text-align: center;
+      font-size: 0.95em;
+    }
+
+    .search-section {
+      max-width: 750px;
+      margin: 0 auto 40px;
+    }
+
+    .search-wrapper {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,215,0,0.2);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .search-wrapper:focus-within {
+      border-color: rgba(255,215,0,0.5);
+      box-shadow: 0 8px 40px rgba(255,215,0,0.2);
+    }
+
+    input {
+      flex: 1;
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 1em;
+      font-family: 'Poppins', sans-serif;
+      outline: none;
+      font-weight: 500;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+
+    button {
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #ffd700, #daa520);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-weight: 700;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, #ffec7f, #ffb400);
+      box-shadow: 0 6px 25px rgba(255,215,0,0.5);
+    }
+
+    button:active {
+      transform: translateY(-1px);
+    }
+
+    .quick-picks {
+      margin-top: 18px;
+      text-align: center;
+      color: #888;
+      font-size: 0.9em;
+    }
+
+    .quick-picks-label {
+      display: block;
+      margin-bottom: 12px;
+      color: #aaa;
+    }
+
+    .quick-picks span {
+      display: inline-block;
+      margin: 4px 6px;
+      padding: 8px 14px;
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 8px;
+      color: #daa520;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+
+    .quick-picks span:hover {
+      background: rgba(255,215,0,0.15);
+      border-color: rgba(255,215,0,0.4);
+      color: #ffd700;
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 80px 20px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(255,215,0,0.2);
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #ffd700;
+      font-size: 1.1em;
+      font-weight: 500;
+    }
+
+    .error {
+      max-width: 650px;
+      margin: 40px auto;
+      background: rgba(255,50,50,0.12);
+      border: 2px solid rgba(255,50,50,0.4);
+      border-radius: 12px;
+      padding: 24px;
+      color: #ff6b6b;
+      display: none;
+      text-align: center;
+      font-size: 1.05em;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-wrapper {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .result-header {
+      background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.08));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 35px;
+      text-align: center;
+    }
+
+    .result-symbol {
+      font-size: 2.8em;
+      color: #ffd700;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .last-updated {
+      color: #888;
+      font-size: 0.9em;
+      margin-top: 15px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons button {
+      padding: 10px 20px;
+      font-size: 0.9em;
+      letter-spacing: 0.5px;
+    }
+
+    .copy-btn {
+      background: linear-gradient(135deg, #00d4ff, #0099cc) !important;
+      box-shadow: 0 4px 15px rgba(0,212,255,0.3) !important;
+    }
+
+    .copy-btn:hover {
+      background: linear-gradient(135deg, #00e5ff, #00b8e6) !important;
+      box-shadow: 0 6px 25px rgba(0,212,255,0.5) !important;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 28px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(255,215,0,0.3), transparent);
+    }
+
+    .metric-card:hover {
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      border-color: rgba(255,215,0,0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    .card-title {
+      font-size: 1.15em;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-light {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.75em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .status-good {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .status-neutral {
+      background: #eab308;
+      color: #000;
+    }
+
+    .status-poor {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .status-gray {
+      background: #6b7280;
+      color: #fff;
+    }
+
+    .card-value {
+      font-size: 1.7em;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #ffd700;
+    }
+
+    .card-reason {
+      font-size: 0.92em;
+      line-height: 1.5;
+      color: #b3b3b3;
+      border-top: 1px solid rgba(255,215,0,0.1);
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+
+    .card-reason strong {
+      color: #e0e0e0;
+    }
+
+    .section-title {
+      font-size: 1.3em;
+      font-weight: 700;
+      margin: 40px 0 25px 0;
+      color: #ffd700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .footer-note {
+      background: rgba(255,193,7,0.08);
+      border: 1px solid rgba(255,193,7,0.2);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 40px;
+      font-size: 0.92em;
+      color: #c9a136;
+      line-height: 1.6;
+    }
+
+    .footer-note strong {
+      color: #ffd700;
+    }
+
+    @media (max-width: 768px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      .result-symbol {
+        font-size: 2em;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .action-buttons button {
+        width: 100%;
+      }
+
+      .search-wrapper {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💰 Financial Health</h1>
+      <p class="subtitle">สรุปสุขภาพทางการเงินของหุ้น - Stock Financial Health Summary</p>
+      <div class="demo-alert" id="demoAlert">
+        ⚠️ Demo Mode - Showing sample data. Add API keys to use real data.
+      </div>
+    </div>
+
+    <div class="search-section">
+      <div class="search-wrapper">
+        <input
+          type="text"
+          id="tickerInput"
+          placeholder="Enter ticker (e.g., AAPL, NVDA, TSLA)"
+          maxlength="10"
+        />
+        <button onclick="analyzeStock()">Analyze</button>
+      </div>
+      <div class="quick-picks">
+        <span class="quick-picks-label">Quick Pick:</span>
+        <span onclick="quickPick('AAPL')">AAPL</span>
+        <span onclick="quickPick('NVDA')">NVDA</span>
+        <span onclick="quickPick('TSLA')">TSLA</span>
+        <span onclick="quickPick('GOOGL')">GOOGL</span>
+        <span onclick="quickPick('MSFT')">MSFT</span>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Analyzing financial data...</div>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="results-wrapper" id="resultsWrapper">
+      <div class="result-header">
+        <div class="result-symbol" id="resultSymbol">--</div>
+        <div class="last-updated" id="lastUpdated">Last updated: --</div>
+        <div class="action-buttons">
+          <button class="copy-btn" onclick="copyResultsJSON()">📋 Copy JSON</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Financial Metrics</h2>
+      <div class="cards-grid" id="metricsGrid"></div>
+
+      <div class="footer-note">
+        <strong>⚠️ Important Note:</strong> This analysis uses historical financial data and is provided for educational purposes only. Past performance does not guarantee future results. Always conduct thorough research and consult with financial advisors before making investment decisions.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ CONFIGURATION & CACHE ============
+    const CONFIG = {
+      CACHE_TTL_MS: 600000, // 10 minutes
+      DEBOUNCE_MS: 600,
+      USE_DEMO: true, // Will be set based on API keys
+    };
+
+    // Check for API keys from environment
+    function checkAPIKeys() {
+      const hasAlphaVantage = !!window.ALPHA_VANTAGE_API_KEY;
+      const hasFinnhub = !!window.FINNHUB_API_KEY;
+
+      if (!hasAlphaVantage && !hasFinnhub) {
+        CONFIG.USE_DEMO = true;
+        document.getElementById('demoAlert').style.display = 'block';
+      } else {
+        CONFIG.USE_DEMO = false;
+      }
+    }
+
+    // ============ CACHE MANAGEMENT ============
+    function getCache(symbol) {
+      try {
+        const cached = localStorage.getItem(`fh_${symbol}`);
+        if (!cached) return null;
+
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp > CONFIG.CACHE_TTL_MS) {
+          localStorage.removeItem(`fh_${symbol}`);
+          return null;
+        }
+        return data;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function setCache(symbol, data) {
+      try {
+        localStorage.setItem(`fh_${symbol}`, JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        }));
+      } catch (e) {
+        console.warn('Cache save failed:', e);
+      }
+    }
+
+    // ============ API FETCHING ============
+    async function fetchAlphaVantage(symbol) {
+      const key = window.ALPHA_VANTAGE_API_KEY;
+      if (!key) return null;
+
+      try {
+        const res = await fetch(
+          `https://www.alphavantage.co/query?function=INCOME_STATEMENT&symbol=${symbol}&apikey=${key}`
+        );
+        const data = await res.json();
+
+        if (data.Information) {
+          console.warn('Alpha Vantage rate limited or error:', data.Information);
+          return null;
+        }
+
+        return parseAlphaVantageData(symbol, data);
+      } catch (e) {
+        console.error('Alpha Vantage fetch error:', e);
+        return null;
+      }
+    }
+
+    async function fetchFinnhub(symbol) {
+      const key = window.FINNHUB_API_KEY;
+      if (!key) return null;
+
+      try {
+        const [metricsRes, financialsRes] = await Promise.all([
+          fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${key}`),
+          fetch(`https://finnhub.io/api/v1/stock/financials-reported?symbol=${symbol}&token=${key}`),
+        ]);
+
+        const metrics = await metricsRes.json();
+        const financials = await financialsRes.json();
+
+        return parseFinnhubData(symbol, metrics, financials);
+      } catch (e) {
+        console.error('Finnhub fetch error:', e);
+        return null;
+      }
+    }
+
+    // ============ DATA PARSING ============
+    function parseAlphaVantageData(symbol, data) {
+      const annual = data.annualReports || [];
+      if (annual.length < 2) return null;
+
+      const latest = annual[0];
+      const previous = annual[1];
+
+      return {
+        symbol,
+        revenueYoY: {
+          value: parseFloat(latest.totalRevenue) || null,
+          prevValue: parseFloat(previous.totalRevenue) || null,
+        },
+        netIncomeYoY: {
+          value: parseFloat(latest.netIncome) || null,
+          prevValue: parseFloat(previous.netIncome) || null,
+        },
+        eps: parseFloat(latest.eps) || null,
+        netMargin: latest.netIncome && latest.totalRevenue
+          ? (parseFloat(latest.netIncome) / parseFloat(latest.totalRevenue) * 100)
+          : null,
+        debtToEquity: null, // Would need balance sheet
+        interestCoverage: null, // Would need EBIT & interest
+        freeCashFlow: null, // Would need cash flow statement
+      };
+    }
+
+    function parseFinnhubData(symbol, metrics, financials) {
+      const metric = metrics.metric || {};
+      const quarterly = financials.quarterly || [];
+
+      // Calculate TTM values from quarterly data
+      let revenueTTM = metric.revenueTTM || null;
+      let netIncomeTTM = null;
+
+      if (quarterly.length >= 4) {
+        const last4 = quarterly.slice(0, 4);
+        netIncomeTTM = last4.reduce((sum, q) => sum + (parseFloat(q.netIncome) || 0), 0);
+      }
+
+      return {
+        symbol,
+        revenueYoY: {
+          value: revenueTTM,
+          prevValue: null, // Not directly available
+          growth: metric.revenueGrowth ? metric.revenueGrowth * 100 : null,
+        },
+        netIncomeYoY: {
+          value: netIncomeTTM,
+          prevValue: null,
+          growth: metric.netIncomeGrowth ? metric.netIncomeGrowth * 100 : null,
+        },
+        eps: metric.epsBasicExclExtraItemsTTM || metric.epsTTM || null,
+        epsGrowth: metric.epsgrowth ? metric.epsgrowth * 100 : null,
+        netMargin: metric.netMargin ? metric.netMargin * 100 : null,
+        profitMargin: metric.profitMargin ? metric.profitMargin * 100 : null,
+        debtToEquity: metric.debtToEquity || null,
+        interestCoverage: null,
+        freeCashFlow: metric.freeCashFlowTTM || null,
+      };
+    }
+
+    // ============ DEMO DATA ============
+    function generateDemoData(symbol) {
+      const demoSymbols = {
+        'AAPL': { revenue: 383285, netIncome: 96995, eps: 6.05, margin: 25.3, de: 0.58, fcf: 110543 },
+        'NVDA': { revenue: 60922, netIncome: 24471, eps: 9.63, margin: 40.2, de: 0.42, fcf: 28718 },
+        'TSLA': { revenue: 81462, netIncome: 13256, eps: 3.01, margin: 16.3, de: 0.90, fcf: 11497 },
+        'GOOGL': { revenue: 307394, netIncome: 76033, eps: 6.03, margin: 24.7, de: 0.16, fcf: 74299 },
+        'MSFT': { revenue: 245122, netIncome: 88188, eps: 11.73, margin: 36.0, de: 0.74, fcf: 63093 },
+      };
+
+      const base = demoSymbols[symbol.toUpperCase()] || {
+        revenue: 100000 + Math.random() * 200000,
+        netIncome: Math.random() * 30000,
+        eps: 2 + Math.random() * 8,
+        margin: 5 + Math.random() * 30,
+        de: 0.3 + Math.random() * 1.5,
+        fcf: 5000 + Math.random() * 50000,
+      };
+
+      return {
+        symbol: symbol.toUpperCase(),
+        revenueYoY: {
+          value: base.revenue * 1e6,
+          prevValue: base.revenue * 0.88e6,
+        },
+        netIncomeYoY: {
+          value: base.netIncome * 1e6,
+          prevValue: base.netIncome * 0.82e6,
+        },
+        eps: base.eps,
+        epsGrowth: 8 + Math.random() * 10,
+        netMargin: base.margin,
+        debtToEquity: base.de,
+        freeCashFlow: base.fcf * 1e6,
+      };
+    }
+
+    // ============ SCORING LOGIC ============
+    function scoreRevenueYoY(data) {
+      if (!data || !data.value || !data.prevValue) return { status: 'gray', reason: 'Missing data' };
+
+      const growth = ((data.value - data.prevValue) / data.prevValue) * 100;
+      if (growth >= 10) return { status: 'good', value: growth };
+      if (growth >= 0) return { status: 'neutral', value: growth };
+      return { status: 'poor', value: growth };
+    }
+
+    function scoreNetIncome(data) {
+      if (!data || data.value === null) return { status: 'gray', reason: 'Missing data' };
+
+      const isPositive = data.value > 0;
+      const growth = data.prevValue
+        ? ((data.value - data.prevValue) / Math.abs(data.prevValue)) * 100
+        : (data.growth || 0);
+
+      if (isPositive && growth >= 5) return { status: 'good', value: growth };
+      if (isPositive && growth >= 0) return { status: 'neutral', value: growth };
+      return { status: 'poor', value: growth };
+    }
+
+    function scoreEPSGrowth(growth) {
+      if (growth === null) return { status: 'gray', reason: 'Missing data' };
+
+      if (growth >= 10) return { status: 'good', value: growth };
+      if (growth >= 0) return { status: 'neutral', value: growth };
+      return { status: 'poor', value: growth };
+    }
+
+    function scoreProfitMargin(margin) {
+      if (margin === null) return { status: 'gray', reason: 'Missing data' };
+
+      if (margin >= 10) return { status: 'good', value: margin };
+      if (margin >= 0) return { status: 'neutral', value: margin };
+      return { status: 'poor', value: margin };
+    }
+
+    function scoreDebtToEquity(de) {
+      if (de === null) return { status: 'gray', reason: 'Missing data' };
+
+      if (de < 0.8) return { status: 'good', value: de };
+      if (de < 1.5) return { status: 'neutral', value: de };
+      return { status: 'poor', value: de };
+    }
+
+    function scoreInterestCoverage(coverage) {
+      if (coverage === null) return { status: 'gray', reason: 'Missing data' };
+
+      if (coverage >= 3) return { status: 'good', value: coverage };
+      if (coverage >= 1) return { status: 'neutral', value: coverage };
+      return { status: 'poor', value: coverage };
+    }
+
+    function scoreFreeCashFlow(data) {
+      if (!data || data.value === null) return { status: 'gray', reason: 'Missing data' };
+
+      const isPositive = data.value > 0;
+      const growth = data.growth !== undefined ? data.growth : 0;
+
+      if (isPositive && growth >= 5) return { status: 'good', value: data.value };
+      if (isPositive && growth >= 0) return { status: 'neutral', value: data.value };
+      return { status: 'poor', value: data.value };
+    }
+
+    // ============ FORMATTING ============
+    function formatNumber(num) {
+      if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      return Math.abs(num).toLocaleString('en-US', { maximumFractionDigits: 1 });
+    }
+
+    function formatCurrency(num) {
+      if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      const abs = Math.abs(num);
+      if (abs >= 1e9) return '$' + (abs / 1e9).toFixed(1) + 'B';
+      if (abs >= 1e6) return '$' + (abs / 1e6).toFixed(1) + 'M';
+      return '$' + abs.toFixed(0);
+    }
+
+    function formatPercent(num, decimals = 1) {
+      if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      return (Math.round(num * (10 ** decimals)) / (10 ** decimals)).toFixed(decimals) + '%';
+    }
+
+    // ============ RENDER CARD ============
+    function renderCard(title, valueText, status, reason) {
+      const statusColors = {
+        good: 'status-good',
+        neutral: 'status-neutral',
+        poor: 'status-poor',
+        gray: 'status-gray',
+      };
+
+      const statusLabels = {
+        good: '✓',
+        neutral: '~',
+        poor: '✗',
+        gray: '?',
+      };
+
+      return `
+        <div class="metric-card">
+          <div class="card-title">
+            <span class="status-light ${statusColors[status]}">${statusLabels[status]}</span>
+            ${title}
+          </div>
+          <div class="card-value">${valueText}</div>
+          <div class="card-reason">${reason}</div>
+        </div>
+      `;
+    }
+
+    // ============ ANALYSIS ENGINE ============
+    async function analyzeStock() {
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      if (!ticker) {
+        showError('Please enter a stock ticker');
+        return;
+      }
+
+      // Check cache
+      const cached = getCache(ticker);
+      if (cached) {
+        displayResults(cached);
+        return;
+      }
+
+      showLoading(true);
+      hideError();
+
+      try {
+        let data = null;
+
+        if (CONFIG.USE_DEMO) {
+          data = generateDemoData(ticker);
+        } else {
+          // Try Finnhub first, then Alpha Vantage
+          data = await fetchFinnhub(ticker);
+          if (!data) {
+            data = await fetchAlphaVantage(ticker);
+          }
+        }
+
+        if (!data) {
+          throw new Error('Could not fetch data for ' + ticker + '. Please check the ticker symbol.');
+        }
+
+        setCache(ticker, data);
+        displayResults(data);
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function displayResults(data) {
+      const symbol = data.symbol;
+      document.getElementById('resultSymbol').textContent = symbol;
+      document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+
+      // Score metrics
+      const revenueScore = scoreRevenueYoY(data.revenueYoY);
+      const netIncomeScore = scoreNetIncome(data.netIncomeYoY);
+      const epsScore = scoreEPSGrowth(data.epsGrowth !== undefined ? data.epsGrowth : 0);
+      const marginScore = scoreProfitMargin(data.netMargin);
+      const deScore = scoreDebtToEquity(data.debtToEquity);
+      const interestScore = scoreInterestCoverage(data.interestCoverage);
+      const fcfScore = scoreFreeCashFlow(data.freeCashFlow);
+
+      // Build cards
+      let html = '';
+
+      // Revenue YoY
+      if (revenueScore.status !== 'gray') {
+        const growth = revenueScore.value;
+        const v1 = formatCurrency(data.revenueYoY.value);
+        const v2 = formatCurrency(data.revenueYoY.prevValue);
+        const reason = `Revenue growth ${growth >= 0 ? '+' : ''}${formatPercent(growth)} YoY (${v2} → ${v1})`;
+        html += renderCard('Revenue YoY Growth', formatPercent(growth), revenueScore.status, reason);
+      } else {
+        html += renderCard('Revenue YoY Growth', 'N/A', 'gray', 'Historical revenue data unavailable from API');
+      }
+
+      // Net Income
+      if (netIncomeScore.status !== 'gray') {
+        const growth = netIncomeScore.value;
+        const v1 = formatCurrency(data.netIncomeYoY.value);
+        const status = data.netIncomeYoY.value > 0 ? netIncomeScore.status : 'poor';
+        const reason = `Net income ${growth >= 0 ? '+' : ''}${formatPercent(growth)} YoY • Value: ${v1}`;
+        html += renderCard('Net Income (TTM)', formatPercent(growth), status, reason);
+      } else {
+        html += renderCard('Net Income (TTM)', 'N/A', 'gray', 'Net income data unavailable from API');
+      }
+
+      // EPS Growth
+      if (epsScore.status !== 'gray') {
+        const growth = epsScore.value;
+        const eps = data.eps !== null ? data.eps.toFixed(2) : 'N/A';
+        const reason = `EPS growth ${growth >= 0 ? '+' : ''}${formatPercent(growth)} YoY • EPS: $${eps}`;
+        html += renderCard('EPS Growth', formatPercent(growth), epsScore.status, reason);
+      } else {
+        html += renderCard('EPS Growth', 'N/A', 'gray', 'EPS growth data not available');
+      }
+
+      // Profit Margin
+      if (marginScore.status !== 'gray') {
+        const margin = marginScore.value;
+        const reason = `Net profit margin at ${formatPercent(margin)} • ${margin >= 10 ? 'Healthy profitability' : margin >= 0 ? 'Moderate profitability' : 'Below breakeven'}`;
+        html += renderCard('Profit Margin (TTM)', formatPercent(margin), marginScore.status, reason);
+      } else {
+        html += renderCard('Profit Margin (TTM)', 'N/A', 'gray', 'Profit margin data unavailable');
+      }
+
+      // Debt to Equity
+      if (deScore.status !== 'gray') {
+        const de = deScore.value.toFixed(2);
+        const statusMsg = data.debtToEquity < 0.8 ? 'Conservative leverage' : data.debtToEquity < 1.5 ? 'Moderate leverage' : 'High leverage';
+        const reason = `D/E ratio of ${de} • ${statusMsg}`;
+        html += renderCard('Debt to Equity', de, deScore.status, reason);
+      } else {
+        html += renderCard('Debt to Equity', 'N/A', 'gray', 'Balance sheet data not available from API');
+      }
+
+      // Interest Coverage (placeholder)
+      if (interestScore.status !== 'gray') {
+        html += renderCard('Interest Coverage', 'N/A', 'gray', 'Interest expense data needed for calculation');
+      } else {
+        html += renderCard('Interest Coverage', 'N/A', 'gray', 'Interest expense data not available from API');
+      }
+
+      // Free Cash Flow
+      if (fcfScore.status !== 'gray') {
+        const fcf = formatCurrency(data.freeCashFlow);
+        const statusMsg = data.freeCashFlow > 0 ? 'Positive FCF generation' : 'Negative FCF';
+        const reason = `Free cash flow: ${fcf} (TTM) • ${statusMsg}`;
+        html += renderCard('Free Cash Flow (TTM)', fcf, fcfScore.status, reason);
+      } else {
+        html += renderCard('Free Cash Flow (TTM)', 'N/A', 'gray', 'Cash flow statement data unavailable from API');
+      }
+
+      document.getElementById('metricsGrid').innerHTML = html;
+      document.getElementById('resultsWrapper').style.display = 'block';
+
+      // Store for JSON export
+      window.lastResults = {
+        symbol,
+        timestamp: new Date().toISOString(),
+        metrics: {
+          revenueYoY: revenueScore,
+          netIncome: netIncomeScore,
+          eps: epsScore,
+          profitMargin: marginScore,
+          debtToEquity: deScore,
+          interestCoverage: interestScore,
+          freeCashFlow: fcfScore,
+        },
+        rawData: data,
+      };
+    }
+
+    function copyResultsJSON() {
+      if (!window.lastResults) return;
+
+      const json = JSON.stringify(window.lastResults, null, 2);
+      navigator.clipboard.writeText(json).then(() => {
+        alert('Results copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy. Please try again.');
+      });
+    }
+
+    // ============ UI HELPERS ============
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function showError(msg) {
+      const errorEl = document.getElementById('error');
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+
+    function quickPick(ticker) {
+      document.getElementById('tickerInput').value = ticker;
+      analyzeStock();
+    }
+
+    // ============ DEBOUNCE ============
+    let debounceTimer;
+    document.getElementById('tickerInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        clearTimeout(debounceTimer);
+        analyzeStock();
+      }
+    });
+
+    // ============ INITIALIZATION ============
+    checkAPIKeys();
+  </script>
+</body>
+</html>
