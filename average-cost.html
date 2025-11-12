@@ -29,7 +29,45 @@
     
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .currency-toggle {
+      display: flex;
+      gap: 10px;
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 10px;
+      padding: 5px;
+    }
+
+    .currency-btn {
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: #ffd700;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .currency-btn.active {
+      background: #ffd700;
+      color: #000;
+      box-shadow: 0 4px 10px rgba(255,215,0,0.3);
+    }
+
+    .currency-btn:hover {
+      transform: scale(1.05);
     }
     
     h1 {
@@ -85,6 +123,34 @@
       font-weight: 600;
       font-size: 1.1em;
     }
+
+    .input-type-toggle {
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 15px;
+    }
+
+    .input-type-btn {
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: #daa520;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 6px;
+      font-size: 0.9em;
+      transition: all 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .input-type-btn.active {
+      background: rgba(255,215,0,0.2);
+      color: #ffd700;
+    }
     
     .remove-btn {
       background: rgba(255,68,68,0.2);
@@ -131,9 +197,19 @@
       border-color: #ffd700;
       box-shadow: 0 0 15px rgba(255,215,0,0.3);
     }
+
+    input:disabled {
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.4);
+      border-color: rgba(255,215,0,0.1);
+    }
     
     input::placeholder {
       color: rgba(255,255,255,0.3);
+    }
+
+    .input-hidden {
+      display: none;
     }
     
     .btn {
@@ -228,6 +304,67 @@
       font-weight: 700;
     }
     
+    .profit-section {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 15px;
+      border: 2px solid rgba(76,175,80,0.3);
+      background: rgba(76,175,80,0.08);
+    }
+    
+    .profit-section.loss {
+      border-color: rgba(244,67,54,0.3);
+      background: rgba(244,67,54,0.08);
+    }
+    
+    .profit-label {
+      color: #4CAF50;
+      font-size: 0.9em;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .profit-section.loss .profit-label {
+      color: #F44336;
+    }
+    
+    .profit-value {
+      font-size: 2.2em;
+      color: #4CAF50;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .profit-section.loss .profit-value {
+      color: #F44336;
+    }
+    
+    .profit-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .profit-detail-item {
+      background: rgba(255,255,255,0.05);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .profit-detail-label {
+      color: #bbb;
+      font-size: 0.85em;
+      margin-bottom: 6px;
+    }
+    
+    .profit-detail-value {
+      color: #fff;
+      font-size: 1.4em;
+      font-weight: 700;
+    }
+    
     .tip-box {
       background: rgba(255,215,0,0.08);
       border: 1px solid rgba(255,215,0,0.2);
@@ -246,6 +383,14 @@
       margin-top: 10px;
     }
     
+    .current-price-section {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
     @media (max-width: 768px) {
       h1 {
         font-size: 2em;
@@ -258,14 +403,36 @@
       .result-details {
         grid-template-columns: 1fr;
       }
+      
+      .profit-value {
+        font-size: 1.8em;
+      }
+
+      .header-top {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .currency-toggle {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>💰 คำนวณต้นทุนเฉลี่ย</h1>
-      <p class="subtitle">Average Down Calculator</p>
+      <div class="header-top">
+        <div>
+          <h1>💰 คำนวณต้นทุนเฉลี่ย</h1>
+          <p class="subtitle">Average Down Calculator</p>
+        </div>
+        <div class="currency-toggle">
+          <button class="currency-btn active" onclick="changeCurrency('THB')">฿ THB</button>
+          <button class="currency-btn" onclick="changeCurrency('USD')">$ USD</button>
+        </div>
+      </div>
     </div>
     
     <div class="card">
@@ -274,13 +441,29 @@
           <div class="purchase-header">
             <span class="purchase-label">การซื้อครั้งที่ 1</span>
           </div>
-          <div class="input-group">
-            <label>💵 ราคาซื้อ (บาท/หุ้น)</label>
+          <div class="input-type-toggle">
+            <button class="input-type-btn active" onclick="toggleInputType(this, 'shares')">จำนวนหุ้น</button>
+            <button class="input-type-btn" onclick="toggleInputType(this, 'amount')">จำนวนเงิน</button>
+          </div>
+          <div class="input-group shares-input">
+            <label>💵 ราคาซื้อ (<span class="currency">฿</span>/หุ้น)</label>
             <input type="number" placeholder="เช่น 50.00" class="price" step="0.01" min="0">
           </div>
-          <div class="input-group">
+          <div class="input-group shares-input">
             <label>📊 จำนวนหุ้น</label>
             <input type="number" placeholder="เช่น 100" class="shares" min="0">
+          </div>
+          <div class="input-group amount-input input-hidden">
+            <label>💵 ราคาซื้อ (<span class="currency">฿</span>/หุ้น)</label>
+            <input type="number" placeholder="เช่น 50.00" class="price-amount" step="0.01" min="0">
+          </div>
+          <div class="input-group amount-input input-hidden">
+            <label>💰 จำนวนเงินที่ต้องการลงทุน (<span class="currency">฿</span>)</label>
+            <input type="number" placeholder="เช่น 5000" class="amount" step="0.01" min="0" oninput="updateSharesFromAmount(this)">
+          </div>
+          <div class="input-group amount-input input-hidden" style="display: none;">
+            <label>📊 จำนวนหุ้นที่คำนวณได้</label>
+            <input type="number" class="shares-calculated" disabled style="background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6);">
           </div>
         </div>
       </div>
@@ -292,7 +475,7 @@
     <div class="result" id="result">
       <h2>📈 ผลการคำนวณ</h2>
       <div style="color: #c9a136; margin-bottom: 10px;">ต้นทุนเฉลี่ยต่อหุ้น</div>
-      <div class="result-price" id="avgCost">0.00 ฿</div>
+      <div class="result-price" id="avgCost">0.00 <span class="currency">฿</span></div>
       
       <div class="result-details">
         <div class="detail-item">
@@ -301,19 +484,102 @@
         </div>
         <div class="detail-item">
           <div class="detail-label">เงินลงทุนรวม</div>
-          <div class="detail-value" id="totalCost">0.00 ฿</div>
+          <div class="detail-value" id="totalCost">0.00 <span class="currency">฿</span></div>
+        </div>
+      </div>
+
+      <div class="current-price-section">
+        <div class="input-group">
+          <label>📊 ราคาปัจจุบัน (<span class="currency">฿</span>/หุ้น)</label>
+          <input type="number" placeholder="เช่น 55.50" id="currentPrice" class="current-price" step="0.01" min="0" oninput="updateProfitCalculation()">
+        </div>
+      </div>
+
+      <div id="profitSection" style="display: none;">
+        <div class="profit-section" id="profitBox">
+          <div class="profit-label">💹 กำไร / ขาดทุน</div>
+          <div class="profit-value" id="profitPercent">0%</div>
+          
+          <div class="profit-details">
+            <div class="profit-detail-item">
+              <div class="profit-detail-label">กำไร/ขาดทุนต่อหุ้น</div>
+              <div class="profit-detail-value" id="profitPerShare">0.00 <span class="currency">฿</span></div>
+            </div>
+            <div class="profit-detail-item">
+              <div class="profit-detail-label">กำไร/ขาดทุนรวม</div>
+              <div class="profit-detail-value" id="profitTotal">0.00 <span class="currency">฿</span></div>
+            </div>
+          </div>
         </div>
       </div>
       
       <div class="tip-box">
         <strong>💡 เคล็ดลับ:</strong>
-        <p>ถ้าต้นทุนเฉลี่ยต่อหุ้นลดลง แสดงว่าคุณ "เก็บหุ้นเพิ่ม" ในราคาที่ต่ำกว่าเดิม ช่วยปรับลดต้นทุนได้</p>
+        <p>กรอกราคาปัจจุบัน เพื่อดูว่าหากคุณขายตอนนี้จะได้กำไรหรือขาดทุนกี่เปอร์เซ็นต์</p>
       </div>
     </div>
   </div>
 
   <script>
     let purchaseCount = 1;
+    let currentCurrency = 'THB';
+    const currencySymbol = {
+      'THB': '฿',
+      'USD': '$'
+    };
+
+    function changeCurrency(currency) {
+      currentCurrency = currency;
+      
+      // อัปเดตปุ่ม
+      document.querySelectorAll('.currency-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // อัปเดตสัญลักษณ์ทั่วทั้งหน้า
+      document.querySelectorAll('.currency').forEach(el => {
+        el.textContent = currencySymbol[currency];
+      });
+
+      // คำนวณใหม่หากมีข้อมูล
+      if (window.avgCostValue) {
+        calculate();
+      }
+    }
+
+    function toggleInputType(btn, type) {
+      const parent = btn.closest('.purchase-item');
+      const sharesInputs = parent.querySelectorAll('.shares-input');
+      const amountInputs = parent.querySelectorAll('.amount-input');
+      
+      parent.querySelectorAll('.input-type-btn').forEach(b => {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+
+      if (type === 'shares') {
+        sharesInputs.forEach(el => el.classList.remove('input-hidden'));
+        amountInputs.forEach(el => el.classList.add('input-hidden'));
+        parent.querySelector('.shares').value = '';
+      } else {
+        sharesInputs.forEach(el => el.classList.add('input-hidden'));
+        amountInputs.forEach(el => el.classList.remove('input-hidden'));
+        parent.querySelector('.amount').value = '';
+        parent.querySelector('.shares-calculated').parentElement.style.display = 'block';
+      }
+    }
+
+    function updateSharesFromAmount(input) {
+      const parent = input.closest('.purchase-item');
+      const priceAmount = parseFloat(parent.querySelector('.price-amount').value) || 0;
+      const amount = parseFloat(input.value) || 0;
+      
+      if (priceAmount > 0) {
+        const shares = amount / priceAmount;
+        parent.querySelector('.shares-calculated').value = shares.toFixed(2);
+      }
+    }
 
     function addPurchase() {
       purchaseCount++;
@@ -325,13 +591,29 @@
           <span class="purchase-label">การซื้อครั้งที่ ${purchaseCount}</span>
           <button class="remove-btn" onclick="removePurchase(this)">🗑️ ลบ</button>
         </div>
-        <div class="input-group">
-          <label>💵 ราคาซื้อ (บาท/หุ้น)</label>
+        <div class="input-type-toggle">
+          <button class="input-type-btn active" onclick="toggleInputType(this, 'shares')">จำนวนหุ้น</button>
+          <button class="input-type-btn" onclick="toggleInputType(this, 'amount')">จำนวนเงิน</button>
+        </div>
+        <div class="input-group shares-input">
+          <label>💵 ราคาซื้อ (<span class="currency">${currencySymbol[currentCurrency]}</span>/หุ้น)</label>
           <input type="number" placeholder="เช่น 45.00" class="price" step="0.01" min="0">
         </div>
-        <div class="input-group">
+        <div class="input-group shares-input">
           <label>📊 จำนวนหุ้น</label>
           <input type="number" placeholder="เช่น 200" class="shares" min="0">
+        </div>
+        <div class="input-group amount-input input-hidden">
+          <label>💵 ราคาซื้อ (<span class="currency">${currencySymbol[currentCurrency]}</span>/หุ้น)</label>
+          <input type="number" placeholder="เช่น 45.00" class="price-amount" step="0.01" min="0">
+        </div>
+        <div class="input-group amount-input input-hidden">
+          <label>💰 จำนวนเงินที่ต้องการลงทุน (<span class="currency">${currencySymbol[currentCurrency]}</span>)</label>
+          <input type="number" placeholder="เช่น 9000" class="amount" step="0.01" min="0" oninput="updateSharesFromAmount(this)">
+        </div>
+        <div class="input-group amount-input input-hidden" style="display: none;">
+          <label>📊 จำนวนหุ้นที่คำนวณได้</label>
+          <input type="number" class="shares-calculated" disabled style="background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6);">
         </div>
       `;
       document.getElementById('purchases').appendChild(div);
@@ -354,23 +636,38 @@
     }
 
     function calculate() {
-      const prices = document.querySelectorAll('.price');
-      const shares = document.querySelectorAll('.shares');
+      const purchaseItems = document.querySelectorAll('.purchase-item');
       
       let totalCost = 0;
       let totalShares = 0;
       let hasData = false;
 
-      for (let i = 0; i < prices.length; i++) {
-        const price = parseFloat(prices[i].value) || 0;
-        const share = parseFloat(shares[i].value) || 0;
+      purchaseItems.forEach(item => {
+        let price = 0;
+        let shares = 0;
+
+        // ตรวจสอบว่าใช้โหมดไหน
+        const inputTypeBtn = item.querySelector('.input-type-btn.active');
         
-        if (price > 0 && share > 0) {
-          totalCost += price * share;
-          totalShares += share;
+        if (inputTypeBtn.textContent.includes('จำนวนหุ้น')) {
+          // โหมดจำนวนหุ้น
+          price = parseFloat(item.querySelector('.price').value) || 0;
+          shares = parseFloat(item.querySelector('.shares').value) || 0;
+        } else {
+          // โหมดจำนวนเงิน
+          price = parseFloat(item.querySelector('.price-amount').value) || 0;
+          const amount = parseFloat(item.querySelector('.amount').value) || 0;
+          if (price > 0) {
+            shares = amount / price;
+          }
+        }
+
+        if (price > 0 && shares > 0) {
+          totalCost += price * shares;
+          totalShares += shares;
           hasData = true;
         }
-      }
+      });
 
       if (!hasData) {
         alert('⚠️ กรุณากรอกข้อมูลอย่างน้อย 1 รายการ');
@@ -380,18 +677,65 @@
       const avgCost = totalShares > 0 ? totalCost / totalShares : 0;
 
       // แสดงผลลัพธ์
-      document.getElementById('avgCost').textContent = avgCost.toFixed(2) + ' ฿';
+      document.getElementById('avgCost').textContent = avgCost.toFixed(2) + ' ' + currencySymbol[currentCurrency];
       document.getElementById('totalShares').textContent = totalShares.toLocaleString();
       document.getElementById('totalCost').textContent = totalCost.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      }) + ' ฿';
+      }) + ' ' + currencySymbol[currentCurrency];
+      
+      // เก็บค่าไว้สำหรับคำนวณกำไร
+      window.totalCostValue = totalCost;
+      window.totalSharesValue = totalShares;
+      window.avgCostValue = avgCost;
       
       const resultDiv = document.getElementById('result');
       resultDiv.style.display = 'block';
       
+      // ล้างราคาปัจจุบัน
+      document.getElementById('currentPrice').value = '';
+      document.getElementById('profitSection').style.display = 'none';
+      
       // Scroll ไปที่ผลลัพธ์
       resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function updateProfitCalculation() {
+      const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 0;
+      
+      if (!window.avgCostValue || currentPrice === 0) {
+        document.getElementById('profitSection').style.display = 'none';
+        return;
+      }
+
+      const profitPerShare = currentPrice - window.avgCostValue;
+      const profitPercent = ((profitPerShare / window.avgCostValue) * 100).toFixed(2);
+      const profitTotal = profitPerShare * window.totalSharesValue;
+
+      // แสดงส่วนกำไร
+      document.getElementById('profitSection').style.display = 'block';
+      
+      const profitBox = document.getElementById('profitBox');
+      const profitLabel = profitBox.querySelector('.profit-label');
+      const profitValue = profitBox.querySelector('.profit-value');
+
+      // ตัวกำหนดสีตามกำไร/ขาดทุน
+      if (profitPercent >= 0) {
+        profitBox.classList.remove('loss');
+        profitLabel.textContent = '💹 กำไร';
+        profitValue.textContent = '+' + profitPercent + '%';
+      } else {
+        profitBox.classList.add('loss');
+        profitLabel.textContent = '📉 ขาดทุน';
+        profitValue.textContent = profitPercent + '%';
+      }
+
+      // อัปเดตรายละเอียด
+      document.getElementById('profitPerShare').textContent = (profitPerShare >= 0 ? '+' : '') + profitPerShare.toFixed(2) + ' ' + currencySymbol[currentCurrency];
+      document.getElementById('profitTotal').textContent = (profitTotal >= 0 ? '+' : '') + profitTotal.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + ' ' + currencySymbol[currentCurrency];
     }
 
     // เพิ่ม Enter key support
