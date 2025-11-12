@@ -725,6 +725,8 @@
       };
     }
 
+    const TWELVE_DATA_API_KEY = '45525278cf3f4b90945d38fbde12630a';
+
     async function analyzeStock() {
       const symbol = document.getElementById('stockInput').value.trim().toUpperCase();
       
@@ -743,46 +745,35 @@
       try {
         console.log('🔍 ดึงข้อมูล:', symbol);
 
-        // ใช้ Cloudflare Worker เป็น Proxy
-        const workerUrl = 'https://stock-proxy.gowitamnuay.workers.dev/';
-        
         // ดึงข้อมูลราคาปัจจุบัน
-        const yfinanceUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price,summaryDetail,financialData`;
-        const quoteRes = await fetch(`${workerUrl}?url=${encodeURIComponent(yfinanceUrl)}`);
+        const quoteUrl = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${TWELVE_DATA_API_KEY}`;
+        const quoteRes = await fetch(quoteUrl);
         const quoteData = await quoteRes.json();
 
-        if (!quoteData.quoteSummary || quoteData.quoteSummary.result.length === 0) {
+        if (quoteData.status === 'error' || !quoteData.close) {
           throw new Error(`ไม่พบข้อมูล ${symbol} - กรุณาตรวจสอบสัญลักษณ์หรือลองใหม่`);
         }
 
-        const result = quoteData.quoteSummary.result[0];
-        const priceData = result.price;
-
-        if (!priceData) {
-          throw new Error('ไม่สามารถดึงข้อมูลราคา');
-        }
-
-        // ดึงข้อมูลราคาประวัติ
-        const historyUrl = `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?interval=1d&range=3mo`;
-        const historyRes = await fetch(`${workerUrl}?url=${encodeURIComponent(historyUrl)}`);
+        // ดึงข้อมูลราคาประวัติ (90 วัน)
+        const historyUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=90&apikey=${TWELVE_DATA_API_KEY}`;
+        const historyRes = await fetch(historyUrl);
         const historyData = await historyRes.json();
 
-        if (!historyData.chart.result[0]) {
+        if (historyData.status === 'error' || !historyData.values) {
           throw new Error('ไม่สามารถดึงข้อมูลราคาประวัติ');
         }
 
-        const chart = historyData.chart.result[0];
-        const prices = chart.indicators.quote[0].close.filter(p => p !== null);
-        const timestamps = chart.timestamp;
-
-        const dates = timestamps.map(ts => {
-          const date = new Date(ts * 1000);
+        // แปลงข้อมูล
+        const values = historyData.values.reverse(); // เรียงจากเก่าไปใหม่
+        const prices = values.map(v => parseFloat(v.close));
+        const dates = values.map(v => {
+          const date = new Date(v.datetime);
           return date.toLocaleDateString('th-TH');
         });
 
         // ข้อมูลปัจจุบัน
-        const currentPrice = priceData.regularMarketPrice.raw;
-        const previousClose = priceData.regularMarketPreviousClose.raw;
+        const currentPrice = parseFloat(quoteData.close);
+        const previousClose = parseFloat(quoteData.previous_close) || currentPrice;
         const change = currentPrice - previousClose;
         const changePercent = (change / previousClose) * 100;
 
@@ -795,28 +786,11 @@
         generateRecommendations(levels, currentPrice);
 
         showAnalysisData();
-        showSuccess(`✅ ดึงข้อมูลจริงสำเร็จ! (${prices.length} วันย้อนหลัง) 🎯`);
+        showSuccess(`✅ ดึงข้อมูลจริงสำเร็จ! (${prices.length} วันย้อนหลัง) - Twelve Data 🎯`);
 
       } catch (error) {
         console.error('❌ Error:', error);
-        showError('❌ ' + error.message + '\n\n💡 ลองใช้ Mock data แทนได้ - ผมจะสร้างให้อัตโนมัติ');
-        
-        // Fallback ไป Mock data ถ้า API fail
-        try {
-          setTimeout(() => {
-            console.log('🧪 Fallback ไป Mock data...');
-            const mockData = generateMockData(symbol);
-            displayStockInfo(mockData.symbol, mockData.currentPrice, mockData.change, mockData.changePercent);
-            const levels = calculateSupportResistance(mockData.prices);
-            drawChart(mockData.prices, mockData.dates, levels);
-            displayLevels(levels, mockData.currentPrice);
-            generateRecommendations(levels, mockData.currentPrice);
-            showAnalysisData();
-            showSuccess(`⚠️ ใช้ Mock data แทน (ไม่สามารถเชื่อมต่อ API จริง) - 🧪`);
-          }, 500);
-        } catch(e) {
-          console.error('Mock fallback error:', e);
-        }
+        showError('❌ ' + error.message);
       } finally {
         showLoading(false);
       }
