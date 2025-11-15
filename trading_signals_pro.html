@@ -8,31 +8,65 @@
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
             color: #e2e8f0;
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
-        .wrapper { max-width: 1400px; margin: 0 auto; }
+        
+        .wrapper { 
+            max-width: 1400px; 
+            margin: 0 auto;
+            width: 100%;
+            overflow-x: hidden;
+        }
         h1 { text-align: center; margin-bottom: 10px; color: #06b6d4; font-size: 2.5rem; }
         .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 1.1rem; }
         
         .search-section {
             background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-            padding: 24px; margin-bottom: 24px;
+            padding: 20px; margin-bottom: 24px;
         }
-        .search-box { display: flex; gap: 12px; margin-bottom: 15px; }
+        .search-box { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
         input {
-            flex: 1; padding: 14px; border: 2px solid #334155; background: #0f172a;
-            color: #e2e8f0; border-radius: 8px; font-size: 1.1rem;
+            flex: 1; 
+            min-width: 200px;
+            padding: 14px; 
+            border: 2px solid #334155; 
+            background: #0f172a;
+            color: #e2e8f0; 
+            border-radius: 8px; 
+            font-size: 1rem;
         }
         input:focus { outline: none; border-color: #06b6d4; }
         button {
-            padding: 14px 30px; background: linear-gradient(135deg, #06b6d4, #0891b2);
-            color: white; border: none; border-radius: 8px; cursor: pointer;
-            font-weight: bold; font-size: 1.1rem; transition: 0.3s;
+            padding: 14px 24px; 
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-weight: bold; 
+            font-size: 1rem; 
+            transition: 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(6,182,212,0.4); }
         .quick-btn {
@@ -274,7 +308,45 @@
         
         @media (max-width: 768px) {
             .levels-grid, .strategy-grid, .classification-grid { grid-template-columns: 1fr; }
-            h1 { font-size: 2rem; }
+            h1 { font-size: 1.8rem; }
+            .subtitle { font-size: 1rem; }
+            .search-section { padding: 16px; }
+            .search-box { 
+                flex-direction: column; 
+                gap: 10px;
+            }
+            input {
+                width: 100%;
+                min-width: unset;
+                font-size: 1rem;
+                padding: 12px;
+            }
+            button {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            .quick-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+                margin: 0 4px 8px 0;
+            }
+            .price-value { font-size: 1.5rem; }
+            .card { padding: 16px; }
+            .tradingview-widget-container,
+            #tradingview_chart {
+                min-height: 400px;
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 { font-size: 1.5rem; }
+            .subtitle { font-size: 0.9rem; }
+            .price-value { font-size: 1.3rem; }
+            .search-section { padding: 12px; }
+            input { padding: 10px; }
+            button { padding: 10px 16px; }
         }
     </style>
 </head>
