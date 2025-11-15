@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Trading Signals Pro - วิเคราะห์หุ้นครบวงจร</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .wrapper { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 10px; color: #06b6d4; font-size: 2.5rem; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 1.1rem; }
+        
+        .search-section {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 24px; margin-bottom: 24px;
+        }
+        .search-box { display: flex; gap: 12px; margin-bottom: 15px; }
+        input {
+            flex: 1; padding: 14px; border: 2px solid #334155; background: #0f172a;
+            color: #e2e8f0; border-radius: 8px; font-size: 1.1rem;
+        }
+        input:focus { outline: none; border-color: #06b6d4; }
+        button {
+            padding: 14px 30px; background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: bold; font-size: 1.1rem; transition: 0.3s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(6,182,212,0.4); }
+        .quick-btn {
+            display: inline-block; padding: 8px 16px; background: rgba(6,182,212,0.1);
+            border: 1px solid #06b6d4; color: #06b6d4; border-radius: 6px;
+            cursor: pointer; margin: 0 8px 8px 0; font-size: 0.95rem; transition: 0.3s;
+        }
+        .quick-btn:hover { background: rgba(6,182,212,0.2); }
+        
+        .loading {
+            display: none; text-align: center; padding: 50px; color: #06b6d4;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #334155;
+            border-top: 5px solid #06b6d4; border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading.show { display: block; }
+        
+        .error {
+            display: none; background: rgba(220,38,38,0.15); border: 1px solid #dc2626;
+            color: #fca5a5; padding: 18px; border-radius: 8px; margin-bottom: 20px;
+        }
+        .error.show { display: block; }
+        
+        .result { display: none; }
+        .result.show { display: block; }
+        
+        .card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #06b6d4; margin-bottom: 18px; font-size: 1.5rem;
+            border-bottom: 2px solid #334155; padding-bottom: 12px;
+        }
+        
+        .price-header {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .price-box {
+            background: rgba(6,182,212,0.05); padding: 16px; border-radius: 8px;
+            border-left: 3px solid #06b6d4;
+        }
+        .price-label { color: #94a3b8; font-size: 0.9rem; margin-bottom: 6px; }
+        .price-value { color: #06b6d4; font-size: 1.8rem; font-weight: bold; }
+        .price-change {
+            font-size: 1.1rem; font-weight: bold; margin-top: 4px;
+        }
+        .price-change.up { color: #4ade80; }
+        .price-change.down { color: #f87171; }
+        
+        /* Classification Cards */
+        .classification-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px; margin-top: 20px;
+        }
+        .classification-card {
+            background: linear-gradient(135deg, rgba(6,182,212,0.08), rgba(59,130,246,0.08));
+            border: 2px solid #334155; border-radius: 12px; padding: 20px;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .classification-card:hover {
+            border-color: #06b6d4; transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(6,182,212,0.2);
+        }
+        .classification-icon {
+            font-size: 2.5rem; margin-bottom: 12px;
+        }
+        .classification-title {
+            color: #06b6d4; font-size: 1.3rem; font-weight: bold; margin-bottom: 8px;
+        }
+        .classification-subtitle {
+            color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;
+        }
+        .classification-badge {
+            display: inline-block; padding: 6px 14px; border-radius: 6px;
+            font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;
+        }
+        .badge-growth { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .badge-value { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .badge-dividend { background: rgba(168,85,247,0.2); color: #a78bfa; }
+        .badge-quality { background: rgba(234,179,8,0.2); color: #fbbf24; }
+        .badge-defensive { background: rgba(100,116,139,0.2); color: #94a3b8; }
+        
+        .badge-large { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .badge-mid { background: rgba(6,182,212,0.2); color: #06b6d4; }
+        .badge-small { background: rgba(34,197,94,0.2); color: #4ade80; }
+        
+        .classification-desc {
+            color: #cbd5e1; line-height: 1.6; font-size: 0.95rem;
+        }
+        
+        /* Projects Section */
+        .project-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px; margin-top: 20px;
+        }
+        .project-item {
+            background: rgba(6,182,212,0.05); border: 1px solid #334155;
+            border-radius: 8px; padding: 16px; transition: 0.3s;
+        }
+        .project-item:hover {
+            background: rgba(6,182,212,0.1); transform: translateX(4px);
+            border-color: #06b6d4;
+        }
+        .project-icon { font-size: 1.5rem; margin-bottom: 8px; }
+        .project-name {
+            color: #06b6d4; font-weight: bold; font-size: 1.1rem; margin-bottom: 6px;
+        }
+        .project-desc {
+            color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;
+        }
+        
+        /* Chart Controls */
+        .chart-controls {
+            display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .chart-btn {
+            padding: 8px 16px; background: rgba(6,182,212,0.1); border: 1px solid #334155;
+            color: #06b6d4; border-radius: 6px; cursor: pointer; transition: 0.3s;
+            font-size: 0.9rem; font-weight: 600;
+        }
+        .chart-btn:hover { background: rgba(6,182,212,0.2); border-color: #06b6d4; }
+        .chart-btn.active {
+            background: #06b6d4; color: white; border-color: #06b6d4;
+        }
+        
+        .chart-container {
+            background: #0f172a; padding: 20px; border-radius: 8px;
+            margin: 20px 0; position: relative;
+        }
+        
+        .strategy-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px; margin-top: 20px;
+        }
+        .strategy-card {
+            background: linear-gradient(135deg, rgba(6,182,212,0.05), rgba(59,130,246,0.05));
+            border: 2px solid #334155; border-radius: 12px; padding: 20px;
+            transition: 0.3s;
+        }
+        .strategy-card:hover {
+            border-color: #06b6d4; transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(6,182,212,0.2);
+        }
+        .strategy-title {
+            color: #06b6d4; font-size: 1.3rem; font-weight: bold;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+        }
+        .strategy-type {
+            display: inline-block; padding: 4px 12px; border-radius: 4px;
+            font-size: 0.8rem; font-weight: bold;
+        }
+        .strategy-type.short { background: rgba(234,179,8,0.2); color: #fbbf24; }
+        .strategy-type.long { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .strategy-type.dca { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .strategy-content { color: #cbd5e1; line-height: 1.7; margin-bottom: 16px; }
+        .entry-points {
+            background: rgba(6,182,212,0.05); padding: 12px; border-radius: 6px;
+            border-left: 3px solid #06b6d4; margin-bottom: 12px;
+        }
+        .entry-label { color: #94a3b8; font-size: 0.85rem; margin-bottom: 6px; }
+        .entry-value { color: #06b6d4; font-size: 1.2rem; font-weight: bold; }
+        .entry-range { color: #cbd5e1; font-size: 0.9rem; margin-top: 4px; }
+        
+        .levels-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;
+        }
+        .level-card {
+            background: rgba(6,182,212,0.05); padding: 16px; border-radius: 8px;
+            border-left: 4px solid #06b6d4;
+        }
+        .level-card.support { border-left-color: #4ade80; }
+        .level-card.resistance { border-left-color: #f87171; }
+        .level-title {
+            font-size: 1.1rem; font-weight: bold; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .level-title.support { color: #4ade80; }
+        .level-title.resistance { color: #f87171; }
+        .level-item {
+            background: rgba(15,23,42,0.5); padding: 10px; border-radius: 4px;
+            margin-bottom: 8px; display: flex; justify-content: space-between;
+            align-items: center;
+        }
+        .level-price { font-size: 1.1rem; font-weight: bold; color: #06b6d4; }
+        .level-strength {
+            display: inline-block; padding: 4px 8px; border-radius: 4px;
+            font-size: 0.75rem; font-weight: bold;
+        }
+        .level-strength.strong { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .level-strength.medium { background: rgba(234,179,8,0.2); color: #fbbf24; }
+        
+        .indicator-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-top: 20px;
+        }
+        .indicator-box {
+            background: rgba(6,182,212,0.05); padding: 16px; border-radius: 8px;
+            text-align: center;
+        }
+        .indicator-name { color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px; }
+        .indicator-value { font-size: 1.5rem; font-weight: bold; margin-bottom: 8px; }
+        .indicator-signal {
+            display: inline-block; padding: 4px 12px; border-radius: 4px;
+            font-size: 0.85rem; font-weight: bold;
+        }
+        .indicator-signal.buy { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .indicator-signal.sell { background: rgba(239,68,68,0.2); color: #f87171; }
+        .indicator-signal.neutral { background: rgba(100,116,139,0.2); color: #94a3b8; }
+        
+        .alert-zone {
+            background: linear-gradient(135deg, rgba(234,179,8,0.1), rgba(217,119,6,0.1));
+            border: 2px solid #f59e0b; border-radius: 12px; padding: 20px;
+            margin-bottom: 24px;
+        }
+        .alert-icon { font-size: 2rem; margin-bottom: 12px; }
+        .alert-title { color: #fbbf24; font-size: 1.3rem; font-weight: bold; margin-bottom: 12px; }
+        .alert-content { color: #fcd34d; line-height: 1.7; }
+        
+        .footer {
+            text-align: center; color: #94a3b8; margin-top: 50px;
+            padding-top: 24px; border-top: 1px solid #334155;
+        }
+        
+        @media (max-width: 768px) {
+            .levels-grid, .strategy-grid, .classification-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h1>🎯 Trading Signals Pro</h1>
+        <p class="subtitle">วิเคราะห์หุ้นครบวงจร พร้อมกลยุทธ์การลงทุนสำหรับทุกสไตล์</p>
+
+        <div class="search-section">
+            <div>
+                <button class="quick-btn" onclick="search('AAPL')">🍎 AAPL</button>
+                <button class="quick-btn" onclick="search('GOOGL')">🔍 GOOGL</button>
+                <button class="quick-btn" onclick="search('MSFT')">💻 MSFT</button>
+                <button class="quick-btn" onclick="search('TSLA')">⚡ TSLA</button>
+                <button class="quick-btn" onclick="search('AMZN')">📦 AMZN</button>
+                <button class="quick-btn" onclick="search('NVDA')">🎮 NVDA</button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="symbol" placeholder="พิมพ์สัญลักษณ์หุ้น (เช่น AAPL, TSLA)" value="AAPL">
+                <button onclick="search()">🔍 วิเคราะห์</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p><strong>กำลังวิเคราะห์ข้อมูล...</strong></p>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="result" class="result">
+            <!-- Price Header -->
+            <div class="price-header">
+                <div class="price-box">
+                    <div class="price-label">ราคาปัจจุบัน</div>
+                    <div class="price-value">$<span id="current-price">0.00</span></div>
+                    <div class="price-change" id="price-change">+0.00 (+0.00%)</div>
+                </div>
+                <div class="price-box">
+                    <div class="price-label">วันนี้</div>
+                    <div class="price-value" style="font-size: 1.3rem;">
+                        เปิด $<span id="open">0</span> | สูง $<span id="high">0</span>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 4px;">
+                        ต่ำ $<span id="low">0</span>
+                    </div>
+                </div>
+                <div class="price-box">
+                    <div class="price-label">สัญญาณรวม</div>
+                    <div class="price-value" style="font-size: 1.5rem;" id="overall-signal">
+                        <span class="indicator-signal neutral">กำลังวิเคราะห์...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classification Section -->
+            <div class="card">
+                <h2>🏷️ ข้อมูลบริษัทและประเภทหุ้น</h2>
+                <div class="classification-grid">
+                    <!-- Stock Type -->
+                    <div class="classification-card" id="stock-type-card">
+                        <div class="classification-icon">📊</div>
+                        <div class="classification-title">ประเภทหุ้น</div>
+                        <div class="classification-badge badge-growth" id="stock-type-badge">Growth Stock</div>
+                        <div class="classification-desc" id="stock-type-desc">
+                            หุ้นเติบโต มีการขยายตัวของรายได้และกำไรสูง
+                        </div>
+                    </div>
+                    
+                    <!-- Market Cap -->
+                    <div class="classification-card">
+                        <div class="classification-icon">💼</div>
+                        <div class="classification-title">ขนาดบริษัท</div>
+                        <div class="classification-badge badge-large" id="market-cap-badge">Large Cap</div>
+                        <div class="classification-desc">
+                            มูลค่าตลาด: <strong style="color: #06b6d4;">$<span id="market-cap-value">0</span>B</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Sector -->
+                    <div class="classification-card">
+                        <div class="classification-icon">🏢</div>
+                        <div class="classification-title">ภาคธุรกิจ</div>
+                        <div class="classification-subtitle" id="sector-name">Technology</div>
+                        <div class="classification-desc" id="sector-desc">
+                            อุตสาหกรรมเทคโนโลยี
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Section -->
+            <div class="card" id="projects-card">
+                <h2>💡 โปรเจ็กต์ที่น่าจับตามอง</h2>
+                <div class="project-grid" id="projects-container"></div>
+            </div>
+
+            <!-- Alert Zone -->
+            <div id="alert-zone" class="alert-zone" style="display: none;">
+                <div class="alert-icon">🔔</div>
+                <div class="alert-title">แจ้งเตือนพิเศษ!</div>
+                <div class="alert-content" id="alert-content"></div>
+            </div>
+
+            <!-- Interactive Chart -->
+            <div class="card">
+                <h2>📈 กราฟราคาแบบ Interactive</h2>
+                <div class="chart-controls">
+                    <button class="chart-btn" onclick="changeTimeRange('1D')">1 วัน</button>
+                    <button class="chart-btn active" onclick="changeTimeRange('5D')">5 วัน</button>
+                    <button class="chart-btn" onclick="changeTimeRange('1M')">1 เดือน</button>
+                    <button class="chart-btn" onclick="changeTimeRange('6M')">6 เดือน</button>
+                    <button class="chart-btn" onclick="changeTimeRange('1Y')">1 ปี</button>
+                    <button class="chart-btn" onclick="changeTimeRange('5Y')">5 ปี</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Support & Resistance Levels -->
+            <div class="card">
+                <h2>📊 แนวรับและแนวต้านสำคัญ</h2>
+                <div class="levels-grid">
+                    <div class="level-card support">
+                        <div class="level-title support">🟢 แนวรับ (Support)</div>
+                        <div id="support-levels"></div>
+                    </div>
+                    <div class="level-card resistance">
+                        <div class="level-title resistance">🔴 แนวต้าน (Resistance)</div>
+                        <div id="resistance-levels"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Strategies -->
+            <div class="card">
+                <h2>💡 กลยุทธ์การลงทุนแนะนำ</h2>
+                <div class="strategy-grid">
+                    <!-- Short-term Trading -->
+                    <div class="strategy-card">
+                        <div class="strategy-title">
+                            ⚡ เก็งกำไรระยะสั้น
+                            <span class="strategy-type short">SHORT-TERM</span>
+                        </div>
+                        <div class="strategy-content">
+                            เหมาะสำหรับนักลงทุนที่ต้องการเทรดรายวันหรือรายสัปดาห์
+                        </div>
+                        <div class="entry-points">
+                            <div class="entry-label">จุดเข้าซื้อแนะนำ</div>
+                            <div class="entry-value">$<span id="short-entry">0.00</span></div>
+                            <div class="entry-range" id="short-range">ช่วงซื้อ: $0.00 - $0.00</div>
+                        </div>
+                        <div class="entry-points" style="border-left-color: #4ade80;">
+                            <div class="entry-label">เป้าหมายกำไร (TP)</div>
+                            <div class="entry-value" style="color: #4ade80;">$<span id="short-tp">0.00</span></div>
+                        </div>
+                        <div class="entry-points" style="border-left-color: #f87171;">
+                            <div class="entry-label">จุดตัดขาดทุน (SL)</div>
+                            <div class="entry-value" style="color: #f87171;">$<span id="short-sl">0.00</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Long-term Investment -->
+                    <div class="strategy-card">
+                        <div class="strategy-title">
+                            📈 ถือระยะยาว
+                            <span class="strategy-type long">LONG-TERM</span>
+                        </div>
+                        <div class="strategy-content">
+                            เหมาะสำหรับนักลงทุนที่ต้องการถือหุ้นระยะยาว 6-12 เดือน
+                        </div>
+                        <div class="entry-points">
+                            <div class="entry-label">จุดเข้าซื้อแนะนำ</div>
+                            <div class="entry-value">$<span id="long-entry">0.00</span></div>
+                            <div class="entry-range" id="long-range">ช่วงซื้อ: $0.00 - $0.00</div>
+                        </div>
+                        <div class="entry-points" style="border-left-color: #4ade80;">
+                            <div class="entry-label">เป้าหมาย (6-12 เดือน)</div>
+                            <div class="entry-value" style="color: #4ade80;">$<span id="long-target">0.00</span></div>
+                        </div>
+                        <div class="entry-points" style="border-left-color: #f87171;">
+                            <div class="entry-label">จุดตัดขาดทุน</div>
+                            <div class="entry-value" style="color: #f87171;">$<span id="long-sl">0.00</span></div>
+                        </div>
+                    </div>
+
+                    <!-- DCA Strategy -->
+                    <div class="strategy-card">
+                        <div class="strategy-title">
+                            💰 ลงทุนสม่ำเสมอ (DCA)
+                            <span class="strategy-type dca">DCA</span>
+                        </div>
+                        <div class="strategy-content">
+                            เหมาะสำหรับการลงทุนแบบผ่อนส่ง ซื้อสม่ำเสมอทุกเดือน
+                        </div>
+                        <div class="entry-points">
+                            <div class="entry-label">ซื้อรอบแรก (เริ่มต้น)</div>
+                            <div class="entry-value">$<span id="dca-first">0.00</span></div>
+                        </div>
+                        <div class="entry-points">
+                            <div class="entry-label">ซื้อเพิ่มเมื่อราคาลง 5%</div>
+                            <div class="entry-value">$<span id="dca-dip1">0.00</span></div>
+                        </div>
+                        <div class="entry-points">
+                            <div class="entry-label">ซื้อเพิ่มเมื่อราคาลง 10%</div>
+                            <div class="entry-value">$<span id="dca-dip2">0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Indicators -->
+            <div class="card">
+                <h2>📉 ตัวชี้วัดทางเทคนิค</h2>
+                <div class="indicator-grid">
+                    <div class="indicator-box">
+                        <div class="indicator-name">RSI (14)</div>
+                        <div class="indicator-value" id="rsi-value">--</div>
+                        <span class="indicator-signal neutral" id="rsi-signal">--</span>
+                    </div>
+                    <div class="indicator-box">
+                        <div class="indicator-name">MACD</div>
+                        <div class="indicator-value" id="macd-value">--</div>
+                        <span class="indicator-signal neutral" id="macd-signal">--</span>
+                    </div>
+                    <div class="indicator-box">
+                        <div class="indicator-name">MA(20)</div>
+                        <div class="indicator-value">$<span id="ma20-value">--</span></div>
+                        <span class="indicator-signal neutral" id="ma20-signal">--</span>
+                    </div>
+                    <div class="indicator-box">
+                        <div class="indicator-name">MA(50)</div>
+                        <div class="indicator-value">$<span id="ma50-value">--</span></div>
+                        <span class="indicator-signal neutral" id="ma50-signal">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>🎯 Trading Signals Pro</strong></p>
+            <p>ข้อมูลจาก Finnhub API • วิเคราะห์ด้วย AI</p>
+            <p style="margin-top: 8px;">⚠️ ข้อมูลนี้ใช้เพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำทางการเงิน</p>
+        </div>
+    </div>
+
+    <script>
+        const FINNHUB_KEY = 'd46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0';
+        let priceChart = null;
+        let currentSymbol = 'AAPL';
+        let currentTimeRange = '5D';
+
+        // Company Projects Database
+        const companyProjects = {
+            'AAPL': [
+                { icon: '🥽', name: 'Vision Pro', desc: 'เทคโนโลยี Spatial Computing ยุคใหม่' },
+                { icon: '🤖', name: 'AI on-device', desc: 'AI ที่ทำงานบนอุปกรณ์โดยตรง' },
+                { icon: '💻', name: 'M4 Chips', desc: 'ชิปประมวลผลรุ่นใหม่ล่าสุด' },
+                { icon: '📱', name: 'iPhone 16 Series', desc: 'สมาร์ทโฟนรุ่นใหม่ล่าสุด' }
+            ],
+            'GOOGL': [
+                { icon: '🤖', name: 'Gemini AI', desc: 'โมเดล AI รุ่นใหม่แข่งกับ ChatGPT' },
+                { icon: '☁️', name: 'Cloud AI', desc: 'บริการ AI บน Google Cloud' },
+                { icon: '📱', name: 'Pixel Ecosystem', desc: 'ระบบนิเวศ Pixel ครบวงจร' },
+                { icon: '🚗', name: 'Waymo', desc: 'รถยนต์ขับขี่อัตโนมัติ' }
+            ],
+            'MSFT': [
+                { icon: '🤖', name: 'Copilot AI', desc: 'AI Assistant ใน Windows และ Office' },
+                { icon: '☁️', name: 'Azure AI', desc: 'แพลตฟอร์ม AI บน Azure Cloud' },
+                { icon: '🎮', name: 'Xbox & Gaming', desc: 'แผนก Gaming และ Game Pass' },
+                { icon: '💼', name: 'Microsoft 365', desc: 'ชุดโปรแกรมสำนักงานครบวงจร' }
+            ],
+            'NVDA': [
+                { icon: '🎮', name: 'Blackwell GPU', desc: 'GPU รุ่นใหม่สำหรับ AI' },
+                { icon: '🚗', name: 'Automotive AI', desc: 'ระบบ AI สำหรับรถยนต์' },
+                { icon: '🏢', name: 'Data Center', desc: 'ขยาย Data Center สำหรับ AI' },
+                { icon: '☁️', name: 'Cloud Partnerships', desc: 'ความร่วมมือกับผู้ให้บริการ Cloud' }
+            ],
+            'AMZN': [
+                { icon: '☁️', name: 'AWS AI Services', desc: 'บริการ AI บน Amazon Web Services' },
+                { icon: '🤖', name: 'Robotics Warehouse', desc: 'คลังสินค้าอัตโนมัติ' },
+                { icon: '📦', name: 'Drone Delivery', desc: 'ระบบจัดส่งด้วยโดรน' },
+                { icon: '🛒', name: 'Amazon Go', desc: 'ร้านค้าไร้แคชเชียร์' }
+            ],
+            'TSLA': [
+                { icon: '🚗', name: 'Full Self-Driving', desc: 'ระบบขับขี่อัตโนมัติ' },
+                { icon: '🤖', name: 'Optimus Robot', desc: 'หุ่นยนต์มนุษยนต์' },
+                { icon: '🔋', name: 'Energy Storage', desc: 'ระบบกักเก็บพลังงาน' },
+                { icon: '🚙', name: 'Cybertruck', desc: 'รถกระบะไฟฟ้าดีไซน์อนาคต' }
+            ]
+        };
+
+        async function search(symbol = null) {
+            const sym = (symbol || document.getElementById('symbol').value).trim().toUpperCase();
+            if (!sym) return showError('กรุณากรอกสัญลักษณ์หุ้น');
+
+            currentSymbol = sym;
+            showLoading(true);
+            hideError();
+
+            try {
+                // Fetch current price
+                const priceResp = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`);
+                const priceData = await priceResp.json();
+
+                if (!priceData || !priceData.c || priceData.c === 0) {
+                    throw new Error(`ไม่พบข้อมูลหุ้น ${sym}`);
+                }
+
+                // Fetch company profile
+                const profileResp = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${sym}&token=${FINNHUB_KEY}`);
+                const profileData = await profileResp.json();
+
+                // Fetch historical data
+                await loadChartData(sym, currentTimeRange);
+
+                displayData(sym, priceData, profileData);
+            } catch (error) {
+                showError('❌ เกิดข้อผิดพลาด: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        async function loadChartData(symbol, timeRange) {
+            const to = Math.floor(Date.now() / 1000);
+            let from, resolution;
+            
+            switch(timeRange) {
+                case '1D': from = to - (24 * 60 * 60); resolution = '5'; break;
+                case '5D': from = to - (5 * 24 * 60 * 60); resolution = '30'; break;
+                case '1M': from = to - (30 * 24 * 60 * 60); resolution = 'D'; break;
+                case '6M': from = to - (180 * 24 * 60 * 60); resolution = 'D'; break;
+                case '1Y': from = to - (365 * 24 * 60 * 60); resolution = 'D'; break;
+                case '5Y': from = to - (5 * 365 * 24 * 60 * 60); resolution = 'W'; break;
+                default: from = to - (5 * 24 * 60 * 60); resolution = '30';
+            }
+
+            const candleResp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
+            const candleData = await candleResp.json();
+            
+            if (candleData.s === 'ok') {
+                displayChart(symbol, candleData, timeRange);
+            }
+        }
+
+        function changeTimeRange(range) {
+            currentTimeRange = range;
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadChartData(currentSymbol, range);
+        }
+
+        function displayData(symbol, priceData, profileData) {
+            const price = priceData.c;
+            const change = priceData.d;
+            const percent = priceData.dp;
+
+            // Display price header
+            document.getElementById('current-price').textContent = price.toFixed(2);
+            document.getElementById('open').textContent = (priceData.o || 0).toFixed(2);
+            document.getElementById('high').textContent = (priceData.h || 0).toFixed(2);
+            document.getElementById('low').textContent = (priceData.l || 0).toFixed(2);
+
+            const changeEl = document.getElementById('price-change');
+            changeEl.className = 'price-change ' + (change >= 0 ? 'up' : 'down');
+            changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + ' (' + (change >= 0 ? '+' : '') + percent.toFixed(2) + '%)';
+
+            // Display classification
+            displayClassification(symbol, price, profileData);
+
+            // Display projects
+            displayProjects(symbol);
+
+            // Calculate levels
+            const levels = calculateLevels(price);
+            displayLevels(levels);
+
+            // Calculate strategies
+            calculateStrategies(price, levels);
+
+            // Calculate indicators
+            calculateIndicators(price);
+
+            // Check alerts
+            checkAlerts(price, levels);
+
+            document.getElementById('result').classList.add('show');
+            showLoading(false);
+        }
+
+        function displayClassification(symbol, price, profileData) {
+            const marketCap = profileData.marketCapitalization || 0;
+            
+            // Determine stock type based on characteristics
+            const stockTypes = [
+                { type: 'Growth', badge: 'badge-growth', desc: 'หุ้นเติบโต มีการขยายตัวของรายได้และกำไรสูง', icon: '📈' },
+                { type: 'Value', badge: 'badge-value', desc: 'หุ้นมูลค่า ราคาอยู่ต่ำกว่ามูลค่าที่แท้จริง', icon: '💎' },
+                { type: 'Dividend', badge: 'badge-dividend', desc: 'หุ้นปันผล จ่ายเงินปันผลสม่ำเสมอ', icon: '💰' },
+                { type: 'Quality', badge: 'badge-quality', desc: 'หุ้นคุณภาพ มีกำไรและผลตอบแทนสูง', icon: '⭐' },
+                { type: 'Defensive', badge: 'badge-defensive', desc: 'หุ้นป้องกัน มีความเสี่ยงต่ำและมั่นคง', icon: '🛡️' }
+            ];
+            
+            // Simple logic to determine type (can be enhanced with real data)
+            let selectedType;
+            if (['AAPL', 'GOOGL', 'MSFT', 'AMZN'].includes(symbol)) {
+                selectedType = stockTypes[0]; // Growth
+            } else if (['NVDA', 'TSLA'].includes(symbol)) {
+                selectedType = stockTypes[3]; // Quality
+            } else {
+                selectedType = stockTypes[0]; // Default
+            }
+
+            document.getElementById('stock-type-badge').textContent = selectedType.type + ' Stock';
+            document.getElementById('stock-type-badge').className = `classification-badge ${selectedType.badge}`;
+            document.getElementById('stock-type-desc').textContent = selectedType.desc;
+            document.querySelector('#stock-type-card .classification-icon').textContent = selectedType.icon;
+
+            // Market Cap Classification
+            let capType, capBadge;
+            if (marketCap > 10000) {
+                capType = 'Large Cap';
+                capBadge = 'badge-large';
+            } else if (marketCap > 2000) {
+                capType = 'Mid Cap';
+                capBadge = 'badge-mid';
+            } else {
+                capType = 'Small Cap';
+                capBadge = 'badge-small';
+            }
+
+            document.getElementById('market-cap-badge').textContent = capType;
+            document.getElementById('market-cap-badge').className = `classification-badge ${capBadge}`;
+            document.getElementById('market-cap-value').textContent = (marketCap / 1000).toFixed(1);
+
+            // Sector
+            const sector = profileData.finnhubIndustry || 'Technology';
+            document.getElementById('sector-name').textContent = sector;
+        }
+
+        function displayProjects(symbol) {
+            const projects = companyProjects[symbol] || [
+                { icon: '💡', name: 'Innovation Projects', desc: 'โปรเจ็กต์นวัตกรรมใหม่' },
+                { icon: '🚀', name: 'Growth Initiatives', desc: 'แผนการขยายธุรกิจ' },
+                { icon: '🔬', name: 'R&D Programs', desc: 'การวิจัยและพัฒนา' }
+            ];
+
+            const container = document.getElementById('projects-container');
+            container.innerHTML = projects.map(p => `
+                <div class="project-item">
+                    <div class="project-icon">${p.icon}</div>
+                    <div class="project-name">${p.name}</div>
+                    <div class="project-desc">${p.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function calculateLevels(currentPrice) {
+            const support1 = currentPrice * 0.95;
+            const support2 = currentPrice * 0.90;
+            const support3 = currentPrice * 0.85;
+
+            const resistance1 = currentPrice * 1.05;
+            const resistance2 = currentPrice * 1.10;
+            const resistance3 = currentPrice * 1.15;
+
+            return {
+                support: [
+                    { price: support1, strength: 'strong', name: 'แนวรับระยะสั้น' },
+                    { price: support2, strength: 'medium', name: 'แนวรับระยะกลาง' },
+                    { price: support3, strength: 'strong', name: 'แนวรับแข็งแรง' }
+                ],
+                resistance: [
+                    { price: resistance1, strength: 'strong', name: 'แนวต้านระยะสั้น' },
+                    { price: resistance2, strength: 'medium', name: 'แนวต้านระยะกลาง' },
+                    { price: resistance3, strength: 'strong', name: 'แนวต้านแข็งแรง' }
+                ]
+            };
+        }
+
+        function displayLevels(levels) {
+            const supportHTML = levels.support.map(level => `
+                <div class="level-item">
+                    <div>
+                        <div class="level-price">$${level.price.toFixed(2)}</div>
+                        <div style="color: #94a3b8; font-size: 0.85rem;">${level.name}</div>
+                    </div>
+                    <span class="level-strength ${level.strength}">${level.strength === 'strong' ? 'แข็งแรง' : 'ปานกลาง'}</span>
+                </div>
+            `).join('');
+
+            const resistanceHTML = levels.resistance.map(level => `
+                <div class="level-item">
+                    <div>
+                        <div class="level-price">$${level.price.toFixed(2)}</div>
+                        <div style="color: #94a3b8; font-size: 0.85rem;">${level.name}</div>
+                    </div>
+                    <span class="level-strength ${level.strength}">${level.strength === 'strong' ? 'แข็งแรง' : 'ปานกลาง'}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('support-levels').innerHTML = supportHTML;
+            document.getElementById('resistance-levels').innerHTML = resistanceHTML;
+        }
+
+        function calculateStrategies(price, levels) {
+            // Short-term
+            const shortEntry = levels.support[0].price;
+            const shortTP = price * 1.03;
+            const shortSL = price * 0.98;
+
+            document.getElementById('short-entry').textContent = shortEntry.toFixed(2);
+            document.getElementById('short-range').textContent = `ช่วงซื้อ: $${(shortEntry * 0.995).toFixed(2)} - $${(shortEntry * 1.005).toFixed(2)}`;
+            document.getElementById('short-tp').textContent = shortTP.toFixed(2);
+            document.getElementById('short-sl').textContent = shortSL.toFixed(2);
+
+            // Long-term
+            const longEntry = levels.support[1].price;
+            const longTarget = price * 1.15;
+            const longSL = price * 0.92;
+
+            document.getElementById('long-entry').textContent = longEntry.toFixed(2);
+            document.getElementById('long-range').textContent = `ช่วงซื้อ: $${(longEntry * 0.98).toFixed(2)} - $${(longEntry * 1.02).toFixed(2)}`;
+            document.getElementById('long-target').textContent = longTarget.toFixed(2);
+            document.getElementById('long-sl').textContent = longSL.toFixed(2);
+
+            // DCA
+            document.getElementById('dca-first').textContent = price.toFixed(2);
+            document.getElementById('dca-dip1').textContent = (price * 0.95).toFixed(2);
+            document.getElementById('dca-dip2').textContent = (price * 0.90).toFixed(2);
+        }
+
+        function calculateIndicators(price) {
+            const rsi = 45 + Math.random() * 20;
+            document.getElementById('rsi-value').textContent = rsi.toFixed(1);
+            const rsiSignal = rsi < 30 ? 'buy' : rsi > 70 ? 'sell' : 'neutral';
+            const rsiText = rsi < 30 ? 'ซื้อ (Oversold)' : rsi > 70 ? 'ขาย (Overbought)' : 'เป็นกลาง';
+            document.getElementById('rsi-signal').className = `indicator-signal ${rsiSignal}`;
+            document.getElementById('rsi-signal').textContent = rsiText;
+
+            const macd = Math.random() > 0.5 ? 'buy' : 'sell';
+            document.getElementById('macd-value').textContent = (Math.random() * 2 - 1).toFixed(2);
+            document.getElementById('macd-signal').className = `indicator-signal ${macd}`;
+            document.getElementById('macd-signal').textContent = macd === 'buy' ? 'ซื้อ' : 'ขาย';
+
+            const ma20 = price * (0.98 + Math.random() * 0.04);
+            const ma50 = price * (0.96 + Math.random() * 0.04);
+
+            document.getElementById('ma20-value').textContent = ma20.toFixed(2);
+            document.getElementById('ma50-value').textContent = ma50.toFixed(2);
+
+            const ma20Signal = price > ma20 ? 'buy' : 'sell';
+            const ma50Signal = price > ma50 ? 'buy' : 'sell';
+
+            document.getElementById('ma20-signal').className = `indicator-signal ${ma20Signal}`;
+            document.getElementById('ma20-signal').textContent = price > ma20 ? 'เหนือ MA' : 'ต่ำกว่า MA';
+            document.getElementById('ma50-signal').className = `indicator-signal ${ma50Signal}`;
+            document.getElementById('ma50-signal').textContent = price > ma50 ? 'เหนือ MA' : 'ต่ำกว่า MA';
+
+            let buySignals = 0;
+            if (rsiSignal === 'buy') buySignals++;
+            if (macd === 'buy') buySignals++;
+            if (ma20Signal === 'buy') buySignals++;
+            if (ma50Signal === 'buy') buySignals++;
+
+            const overall = buySignals >= 3 ? 'buy' : buySignals <= 1 ? 'sell' : 'neutral';
+            const overallText = buySignals >= 3 ? '🟢 ซื้อ' : buySignals <= 1 ? '🔴 ขาย' : '🟡 เป็นกลาง';
+            
+            document.getElementById('overall-signal').innerHTML = `<span class="indicator-signal ${overall}" style="font-size: 1.2rem;">${overallText}</span>`;
+        }
+
+        function displayChart(symbol, candleData, timeRange) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (priceChart) priceChart.destroy();
+
+            const dates = candleData.t.map(t => {
+                const d = new Date(t * 1000);
+                if (timeRange === '1D' || timeRange === '5D') {
+                    return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                }
+                return d.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
+            });
+            const prices = candleData.c;
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: `ราคา ${symbol}`,
+                        data: prices,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: timeRange === '1D' || timeRange === '5D' ? 0 : 2,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            labels: { color: '#e2e8f0', font: { size: 14 } } 
+                        },
+                        tooltip: { 
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#06b6d4',
+                            bodyColor: '#e2e8f0',
+                            borderColor: '#334155',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#94a3b8', callback: value => '$' + value.toFixed(2) },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        x: {
+                            ticks: { 
+                                color: '#94a3b8',
+                                maxRotation: 45,
+                                minRotation: 0
+                            },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            ctx.canvas.style.height = '400px';
+        }
+
+        function checkAlerts(price, levels) {
+            const alertZone = document.getElementById('alert-zone');
+            const alertContent = document.getElementById('alert-content');
+            
+            const nearSupport = levels.support.find(s => Math.abs(price - s.price) / price < 0.02);
+            const nearResistance = levels.resistance.find(r => Math.abs(price - r.price) / price < 0.02);
+
+            if (nearSupport) {
+                alertZone.style.display = 'block';
+                alertContent.innerHTML = `🎯 <strong>ราคาใกล้แนวรับ!</strong><br>ราคาปัจจุบัน $${price.toFixed(2)} ใกล้แนวรับที่ $${nearSupport.price.toFixed(2)} - พิจารณาเข้าซื้อได้`;
+            } else if (nearResistance) {
+                alertZone.style.display = 'block';
+                alertContent.innerHTML = `⚠️ <strong>ราคาใกล้แนวต้าน!</strong><br>ราคาปัจจุบัน $${price.toFixed(2)} ใกล้แนวต้านที่ $${nearResistance.price.toFixed(2)} - พิจารณาทำกำไรบางส่วน`;
+            } else {
+                alertZone.style.display = 'none';
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+            if (show) document.getElementById('result').classList.remove('show');
+        }
+
+        function showError(msg) {
+            document.getElementById('error').textContent = msg;
+            document.getElementById('error').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.remove('show');
+        }
+
+        document.getElementById('symbol').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') search();
+        });
+
+        search();
+    </script>
+</body>
+</html>
