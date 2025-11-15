@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎯 Trading Signals Pro - วิเคราะห์หุ้นครบวงจร</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -163,8 +164,19 @@
         }
         
         .chart-container {
-            background: #0f172a; padding: 20px; border-radius: 8px;
-            margin: 20px 0; position: relative;
+            background: #0f172a; padding: 0; border-radius: 8px;
+            margin: 20px 0; position: relative; overflow: hidden;
+            min-height: 500px;
+        }
+        
+        #tradingview_chart {
+            width: 100%;
+            min-height: 500px;
+        }
+        
+        .tradingview-widget-container {
+            width: 100%;
+            height: 500px;
         }
         
         .strategy-grid {
@@ -367,19 +379,15 @@
                 <div class="alert-content" id="alert-content"></div>
             </div>
 
-            <!-- Interactive Chart -->
+            <!-- Interactive Chart - TradingView -->
             <div class="card">
-                <h2>📈 กราฟราคาแบบ Interactive</h2>
-                <div class="chart-controls">
-                    <button class="chart-btn" onclick="changeTimeRange('1D')">1 วัน</button>
-                    <button class="chart-btn active" onclick="changeTimeRange('5D')">5 วัน</button>
-                    <button class="chart-btn" onclick="changeTimeRange('1M')">1 เดือน</button>
-                    <button class="chart-btn" onclick="changeTimeRange('6M')">6 เดือน</button>
-                    <button class="chart-btn" onclick="changeTimeRange('1Y')">1 ปี</button>
-                    <button class="chart-btn" onclick="changeTimeRange('5Y')">5 ปี</button>
-                </div>
-                <div class="chart-container">
-                    <canvas id="priceChart"></canvas>
+                <h2>📈 กราฟราคาแบบ Interactive (TradingView)</h2>
+                <div class="chart-container" style="background: transparent; padding: 0;">
+                    <!-- TradingView Widget BEGIN -->
+                    <div class="tradingview-widget-container" id="tradingview-chart">
+                        <div id="tradingview_chart"></div>
+                    </div>
+                    <!-- TradingView Widget END -->
                 </div>
             </div>
 
@@ -512,9 +520,43 @@
 
     <script>
         const FINNHUB_KEY = 'd46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0';
-        let priceChart = null;
         let currentSymbol = 'AAPL';
-        let currentTimeRange = '5D';
+        let tradingViewWidget = null;
+
+        // Initialize TradingView Chart
+        function initTradingViewChart(symbol) {
+            if (tradingViewWidget) {
+                tradingViewWidget.remove();
+            }
+
+            tradingViewWidget = new TradingView.widget({
+                "width": "100%",
+                "height": 500,
+                "symbol": symbol,
+                "interval": "D",
+                "timezone": "Asia/Bangkok",
+                "theme": "dark",
+                "style": "1",
+                "locale": "th_TH",
+                "toolbar_bg": "#0f172a",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "details": true,
+                "hotlist": true,
+                "calendar": true,
+                "studies": [
+                    "RSI@tv-basicstudies",
+                    "MACD@tv-basicstudies",
+                    "MASimple@tv-basicstudies"
+                ],
+                "container_id": "tradingview_chart",
+                "backgroundColor": "#0f172a",
+                "gridColor": "rgba(148, 163, 184, 0.1)",
+                "hide_top_toolbar": false,
+                "save_image": false
+            });
+        }
 
         // Company Projects Database
         const companyProjects = {
@@ -577,43 +619,14 @@
                 const profileResp = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${sym}&token=${FINNHUB_KEY}`);
                 const profileData = await profileResp.json();
 
-                // Fetch historical data
-                await loadChartData(sym, currentTimeRange);
+                // Load TradingView Chart
+                initTradingViewChart(sym);
 
                 displayData(sym, priceData, profileData);
             } catch (error) {
                 showError('❌ เกิดข้อผิดพลาด: ' + error.message);
                 showLoading(false);
             }
-        }
-
-        async function loadChartData(symbol, timeRange) {
-            const to = Math.floor(Date.now() / 1000);
-            let from, resolution;
-            
-            switch(timeRange) {
-                case '1D': from = to - (24 * 60 * 60); resolution = '5'; break;
-                case '5D': from = to - (5 * 24 * 60 * 60); resolution = '30'; break;
-                case '1M': from = to - (30 * 24 * 60 * 60); resolution = 'D'; break;
-                case '6M': from = to - (180 * 24 * 60 * 60); resolution = 'D'; break;
-                case '1Y': from = to - (365 * 24 * 60 * 60); resolution = 'D'; break;
-                case '5Y': from = to - (5 * 365 * 24 * 60 * 60); resolution = 'W'; break;
-                default: from = to - (5 * 24 * 60 * 60); resolution = '30';
-            }
-
-            const candleResp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
-            const candleData = await candleResp.json();
-            
-            if (candleData.s === 'ok') {
-                displayChart(symbol, candleData, timeRange);
-            }
-        }
-
-        function changeTimeRange(range) {
-            currentTimeRange = range;
-            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            loadChartData(currentSymbol, range);
         }
 
         function displayData(symbol, priceData, profileData) {
@@ -832,73 +845,6 @@
             const overallText = buySignals >= 3 ? '🟢 ซื้อ' : buySignals <= 1 ? '🔴 ขาย' : '🟡 เป็นกลาง';
             
             document.getElementById('overall-signal').innerHTML = `<span class="indicator-signal ${overall}" style="font-size: 1.2rem;">${overallText}</span>`;
-        }
-
-        function displayChart(symbol, candleData, timeRange) {
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            
-            if (priceChart) priceChart.destroy();
-
-            const dates = candleData.t.map(t => {
-                const d = new Date(t * 1000);
-                if (timeRange === '1D' || timeRange === '5D') {
-                    return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                }
-                return d.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
-            });
-            const prices = candleData.c;
-
-            priceChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: `ราคา ${symbol}`,
-                        data: prices,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: timeRange === '1D' || timeRange === '5D' ? 0 : 2,
-                        pointHoverRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            labels: { color: '#e2e8f0', font: { size: 14 } } 
-                        },
-                        tooltip: { 
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                            titleColor: '#06b6d4',
-                            bodyColor: '#e2e8f0',
-                            borderColor: '#334155',
-                            borderWidth: 1
-                        }
-                    },
-                    scales: {
-                        y: {
-                            ticks: { color: '#94a3b8', callback: value => '$' + value.toFixed(2) },
-                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
-                        },
-                        x: {
-                            ticks: { 
-                                color: '#94a3b8',
-                                maxRotation: 45,
-                                minRotation: 0
-                            },
-                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
-                        }
-                    }
-                }
-            });
-
-            ctx.canvas.style.height = '400px';
         }
 
         function checkAlerts(price, levels) {
