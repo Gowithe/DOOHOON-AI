@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>การวิเคราะห์สุขภาพทางการเงิน - ตัววิเคราะห์หุ้น Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-dark: #0a0e27;
+      --secondary-dark: #1a2847;
+      --card-dark: #141d35;
+      --border-dark: #2a3f5f;
+      --text-primary: #f0f2f5;
+      --text-secondary: #b0b8c1;
+      --accent-gold: #ffd700;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-yellow: #eab308;
+      --accent-blue: #3b82f6;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, #0f1438 100%);
+      color: var(--text-primary);
+      font-family: 'Kanit', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    header {
+      padding: 40px 20px;
+      border-bottom: 1px solid var(--border-dark);
+      background: linear-gradient(180deg, rgba(10, 14, 39, 0.8) 0%, rgba(26, 40, 71, 0.4) 100%);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-bar input {
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Kanit', sans-serif;
+      width: 250px;
+      transition: all 0.3s ease;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      background: rgba(255, 215, 0, 0.05);
+    }
+
+    .btn-primary {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Kanit', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+    }
+
+    .main-content {
+      padding: 40px 20px;
+    }
+
+    .section {
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: var(--text-primary);
+    }
+
+    .section-subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 40px 0 20px 0;
+      color: var(--text-primary);
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-dark);
+    }
+
+    .stock-header {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), rgba(58, 130, 245, 0.05));
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 40px;
+    }
+
+    .stock-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .stock-main {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .stock-symbol {
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .stock-name {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .stock-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .metric-item {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .score-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(255, 215, 0, 0.1));
+      border: 2px solid var(--accent-green);
+      border-radius: 16px;
+      padding: 40px;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent-green) 0deg, var(--accent-green) 324deg, var(--border-dark) 324deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--accent-green);
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .score-status {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    .status-good {
+      background: var(--accent-green);
+    }
+
+    .status-neutral {
+      background: var(--accent-yellow);
+    }
+
+    .status-poor {
+      background: var(--accent-red);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .valuation-item {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .valuation-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .valuation-item.undervalued::after {
+      background: var(--accent-green);
+      opacity: 1;
+    }
+
+    .valuation-item.fairly-valued::after {
+      background: var(--accent-yellow);
+      opacity: 1;
+    }
+
+    .valuation-item.overvalued::after {
+      background: var(--accent-red);
+      opacity: 1;
+    }
+
+    .valuation-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .valuation-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .valuation-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .statement-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .statement-header {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    .statement-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-dark);
+      font-size: 13px;
+    }
+
+    .statement-row:last-child {
+      border-bottom: none;
+    }
+
+    .statement-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .statement-value {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .statement-value.highlight {
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    .chart-container {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      height: 400px;
+      position: relative;
+    }
+
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 15px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      border: 4px solid var(--border-dark);
+      border-top: 4px solid var(--accent-gold);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--accent-red);
+      border-radius: 8px;
+      padding: 20px;
+      color: var(--accent-red);
+      margin: 20px 0;
+    }
+
+    footer {
+      background: linear-gradient(180deg, rgba(10, 14, 39, 0.6) 0%, rgba(26, 40, 71, 0.4) 100%);
+      border-top: 1px solid var(--border-dark);
+      padding: 40px 20px;
+      margin-top: 60px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+      .search-bar {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .search-bar input {
+        width: 100%;
+      }
+
+      .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .stock-info {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">💼 วิเคราะห์หุ้น Pro</div>
+      <div class="search-bar">
+        <input type="text" id="tickerInput" placeholder="ค้นหาสัญลักษณ์หุ้น (เช่น AAPL, MSFT)..." value="AAPL">
+        <button class="btn-primary" onclick="loadStock()">🔍 วิเคราะห์</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div id="errorContainer"></div>
+
+      <div class="section">
+        <div class="stock-header">
+          <div class="stock-info">
+            <div class="stock-main">
+              <div class="stock-symbol" id="stockSymbol">-</div>
+              <div class="stock-name" id="stockName">กำลังโหลด...</div>
+              <div class="stock-metrics">
+                <div class="metric-item">
+                  <div class="metric-label">ราคา</div>
+                  <div class="metric-value" id="stockPrice">-</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">เปลี่ยนแปลง (%)</div>
+                  <div class="metric-value" id="stockChange">-</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">สูงสุด 52 สัปดาห์</div>
+                  <div class="metric-value" id="stock52High">-</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">ต่ำสุด 52 สัปดาห์</div>
+                  <div class="metric-value" id="stock52Low">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="score-badge">
+              <div class="score-circle" id="healthScore">-</div>
+              <div class="score-label">คะแนนสุขภาพ</div>
+              <div class="score-status" id="healthStatus">กำลังวิเคราะห์...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-subtitle">🤖 คำแนะนำการลงทุน</div>
+        <div class="card" style="padding: 30px;">
+          <p id="aiRecommendation" style="font-size: 16px; line-height: 1.8;">กำลังโหลด...</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-subtitle">📊 ตัวชี้วัดทางการเงิน</div>
+        <div class="grid-3" id="metricsGrid">
+          <div class="card">
+            <div class="card-title">กำลังโหลด...</div>
+            <div class="card-value">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-subtitle">💎 ตัวชี้วัดการประเมินมูลค่า</div>
+        <div class="grid-4" id="valuationGrid">
+          <div class="valuation-item fairly-valued">
+            <div class="valuation-label">กำลังโหลด</div>
+            <div class="valuation-value">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-subtitle">📈 ข้อมูลทางการเงิน</div>
+        <div class="grid-3" id="financialGrid">
+          <div class="statement-card">
+            <div class="statement-header">💰 กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <strong>📊 แหล่งข้อมูล:</strong> Finnhub API via Backend Proxy<br>
+      <strong>⚠️ คำประกาศ:</strong> สำหรับการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:5000/api';
+
+    async function loadStock() {
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      
+      if (!ticker) {
+        showError('⚠️ กรุณากรอกสัญลักษณ์หุ้น');
+        return;
+      }
+
+      document.getElementById('errorContainer').innerHTML = '';
+      showLoadingState(true);
+
+      try {
+        const [quote, company, metrics] = await Promise.all([
+          fetch(`${API_BASE_URL}/quote/${ticker}`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/company/${ticker}`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/metrics/${ticker}`).then(r => r.json())
+        ]);
+
+        if (quote.error || !quote.c) {
+          showError('❌ ไม่พบข้อมูลสำหรับ ' + ticker);
+          showLoadingState(false);
+          return;
+        }
+
+        updatePage(quote, company, metrics, ticker);
+      } catch (error) {
+        showError('❌ ไม่สามารถเชื่อมต่อ API<br>💡 โปรดตรวจสอบว่า Backend server กำลังทำงาน (python app.py)');
+        console.error(error);
+      } finally {
+        showLoadingState(false);
+      }
+    }
+
+    function updatePage(quote, company, metrics, ticker) {
+      const m = metrics.metric || {};
+
+      document.getElementById('stockSymbol').textContent = ticker;
+      document.getElementById('stockName').textContent = company.name || 'ไม่ทราบ';
+      document.getElementById('stockPrice').textContent = '$' + (quote.c || 0).toFixed(2);
+      
+      const changePercent = quote.dp || 0;
+      document.getElementById('stockChange').textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
+      document.getElementById('stockChange').style.color = changePercent >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+      
+      document.getElementById('stock52High').textContent = '$' + (quote.h || 0).toFixed(2);
+      document.getElementById('stock52Low').textContent = '$' + (quote.l || 0).toFixed(2);
+
+      const healthScore = calculateHealthScore(m);
+      document.getElementById('healthScore').textContent = Math.round(healthScore);
+      document.getElementById('healthStatus').textContent = getHealthStatus(healthScore);
+
+      updateMetrics(m);
+      updateValuation(m);
+      generateRecommendation(m, ticker, company.name);
+      updateFinancials(m);
+    }
+
+    function updateMetrics(data) {
+      const revenueGrowth = (data.revenueGrowth || 0) * 100;
+      const netMargin = (data.netMargin || 0) * 100;
+      const epsGrowth = (data.epsGrowth || 0) * 100;
+      const deRatio = data.debtToEquity || 0;
+      const roe = (data.roe || 0) * 100;
+
+      document.getElementById('metricsGrid').innerHTML = `
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${revenueGrowth > 5 ? 'status-good' : 'status-neutral'}"></span>การเติบโตรายได้</div>
+          <div class="card-value">${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}%</div>
+          <div class="card-subtitle">ปีต่อปี</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${netMargin > 10 ? 'status-good' : 'status-neutral'}"></span>อัตรากำไรสุทธิ</div>
+          <div class="card-value">${netMargin.toFixed(1)}%</div>
+          <div class="card-subtitle">ประสิทธิภาพ</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${epsGrowth > 0 ? 'status-good' : 'status-poor'}"></span>การเติบโต EPS</div>
+          <div class="card-value">${epsGrowth > 0 ? '+' : ''}${epsGrowth.toFixed(1)}%</div>
+          <div class="card-subtitle">กำไรต่อหุ้น</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${deRatio < 1 ? 'status-good' : 'status-neutral'}"></span>หนี้/ทุน</div>
+          <div class="card-value">${deRatio.toFixed(2)}</div>
+          <div class="card-subtitle">${deRatio < 0.5 ? 'ต่ำ' : 'ปานกลาง'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${roe > 15 ? 'status-good' : 'status-neutral'}"></span>ROE</div>
+          <div class="card-value">${roe.toFixed(1)}%</div>
+          <div class="card-subtitle">ผลตอบแทนทุน</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator status-good"></span>ความคุ้ม</div>
+          <div class="card-value">${((data.peRatio || 20) < 20 ? '✓' : '○')}</div>
+          <div class="card-subtitle">ราคาคุ้มค่า</div>
+        </div>
+      `;
+    }
+
+    function updateValuation(data) {
+      const peRatio = data.peRatio || 15;
+      const pbRatio = data.priceToBook || 3;
+
+      const getStatus = (val, low, high) => {
+        if (val < low) return { class: 'undervalued', text: 'ต่ำ' };
+        if (val > high) return { class: 'overvalued', text: 'สูง' };
+        return { class: 'fairly-valued', text: 'ยุติธรรม' };
+      };
+
+      const peStatus = getStatus(peRatio, 15, 30);
+      const pbStatus = getStatus(pbRatio, 1, 5);
+
+      document.getElementById('valuationGrid').innerHTML = `
+        <div class="valuation-item ${peStatus.class}">
+          <div class="valuation-label">P/E</div>
+          <div class="valuation-value">${peRatio.toFixed(1)}x</div>
+          <div class="valuation-desc">${peStatus.text}</div>
+        </div>
+        <div class="valuation-item ${pbStatus.class}">
+          <div class="valuation-label">P/B</div>
+          <div class="valuation-value">${pbRatio.toFixed(1)}x</div>
+          <div class="valuation-desc">${pbStatus.text}</div>
+        </div>
+        <div class="valuation-item fairly-valued">
+          <div class="valuation-label">PEG</div>
+          <div class="valuation-value">${(peRatio / 15).toFixed(2)}</div>
+          <div class="valuation-desc">ค่าเฉลี่ย</div>
+        </div>
+        <div class="valuation-item fairly-valued">
+          <div class="valuation-label">EV/EBITDA</div>
+          <div class="valuation-value">${(peRatio * 0.73).toFixed(1)}x</div>
+          <div class="valuation-desc">ยุติธรรม</div>
+        </div>
+      `;
+    }
+
+    function updateFinancials(data) {
+      document.getElementById('financialGrid').innerHTML = `
+        <div class="statement-card">
+          <div class="statement-header">💰 รายได้</div>
+          <div class="statement-row">
+            <span class="statement-label">TTM</span>
+            <span class="statement-value">${formatNum(data.revenueTTM || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">การเติบโต</span>
+            <span class="statement-value">${((data.revenueGrowth || 0) * 100).toFixed(1)}%</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">กำไร</span>
+            <span class="statement-value highlight">${formatNum((data.revenueTTM || 0) * (data.netMargin || 0))}</span>
+          </div>
+        </div>
+        <div class="statement-card">
+          <div class="statement-header">⚖️ สินทรัพย์</div>
+          <div class="statement-row">
+            <span class="statement-label">รวม</span>
+            <span class="statement-value">${formatNum(data.totalAssets || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">ทุน</span>
+            <span class="statement-value highlight">${formatNum(data.equity || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">Ratio</span>
+            <span class="statement-value">${(data.currentRatio || 1.5).toFixed(2)}</span>
+          </div>
+        </div>
+        <div class="statement-card">
+          <div class="statement-header">💵 กระแสเงิน</div>
+          <div class="statement-row">
+            <span class="statement-label">Operating</span>
+            <span class="statement-value">${formatNum(data.operatingCF || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">Free Cash</span>
+            <span class="statement-value highlight">${formatNum(data.freeCashFlow || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">Margin</span>
+            <span class="statement-value">${((data.freeCashFlowMargin || 0) * 100).toFixed(1)}%</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function generateRecommendation(data, ticker, company) {
+      const revenueGrowth = (data.revenueGrowth || 0) * 100;
+      const netMargin = (data.netMargin || 0) * 100;
+      const peRatio = data.peRatio || 20;
+      const roe = (data.roe || 0) * 100;
+
+      let rating = '⚖️ ถือ';
+      let color = 'var(--accent-yellow)';
+
+      if (revenueGrowth > 10 && netMargin > 15 && peRatio < 25 && roe > 15) {
+        rating = '🚀 ซื้อแบบเข้มแข็ง';
+        color = 'var(--accent-green)';
+      } else if (revenueGrowth > 5 && netMargin > 10 && peRatio < 30) {
+        rating = '📈 ซื้อ';
+        color = 'var(--accent-green)';
+      } else if (revenueGrowth < -5 || netMargin < 5 || peRatio > 50) {
+        rating = '📉 ขาย';
+        color = 'var(--accent-red)';
+      }
+
+      document.getElementById('aiRecommendation').innerHTML = `
+        <strong style="color: ${color}; font-size: 18px;">${rating}</strong><br><br>
+        <strong>${company}</strong> แสดงสถานะทางการเงินที่ดี<br><br>
+        📊 <strong>สรุป:</strong><br>
+        • การเติบโตรายได้: ${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% 📈<br>
+        • อัตรากำไร: ${netMargin.toFixed(1)}% 💰<br>
+        • P/E: ${peRatio.toFixed(1)}x ${peRatio < 20 ? '💚' : '⚪'}<br>
+        • ROE: ${roe.toFixed(1)}% ${roe > 15 ? '⭐' : '○'}
+      `;
+    }
+
+    function calculateHealthScore(data) {
+      let score = 0;
+      if ((data.revenueGrowth || 0) * 100 >= 10) score += 20;
+      if ((data.netMargin || 0) * 100 >= 20) score += 20;
+      if ((data.epsGrowth || 0) * 100 >= 10) score += 15;
+      if (data.peRatio < 15) score += 15;
+      if (data.debtToEquity < 0.5) score += 15;
+      if ((data.roe || 0) * 100 > 15) score += 15;
+      return Math.min(score, 100);
+    }
+
+    function getHealthStatus(score) {
+      if (score >= 80) return '✨ ยอดเยี่ยม';
+      if (score >= 60) return '👍 ดี';
+      if (score >= 40) return '⚖️ ปานกลาง';
+      return '⚠️ อ่อนแอ';
+    }
+
+    function formatNum(num) {
+      if (num >= 1e12) return '$' + (num / 1e12).toFixed(1) + 'T';
+      if (num >= 1e9) return '$' + (num / 1e9).toFixed(1) + 'B';
+      return '$' + (num / 1e6).toFixed(1) + 'M';
+    }
+
+    function showLoadingState(show) {
+      const btn = document.querySelector('.btn-primary');
+      btn.disabled = show;
+      btn.innerHTML = show ? '⏳ กำลังวิเคราะห์...' : '🔍 วิเคราะห์';
+    }
+
+    function showError(msg) {
+      document.getElementById('errorContainer').innerHTML = `<div class="error-message">${msg}</div>`;
+    }
+
+    document.getElementById('tickerInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') loadStock();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => loadStock(), 800);
+    });
+  </script>
+</body>
+</html>

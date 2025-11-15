@@ -1,212 +1,256 @@
-[README.md](https://github.com/user-attachments/files/23469706/README.md)
-# 📈 Professional Stock Analyzer
+# 💼 ตัววิเคราะห์หุ้น Pro - Stock Analyzer
 
-วิเคราะห์หุ้นอย่างมืออาชีพด้วยพลังของ AI และข้อมูลการตลาดแบบเรียลไทม์
+ตัววิเคราะห์หุ้นด้วย AI ที่อ่านข้อมูลจาก **Finnhub API** และแสดงผลการวิเคราะห์ทางการเงินแบบเรียลไทม์
 
-## 🌟 คุณสมบัติหลัก
+## ✨ คุณสมบัติ
 
-- 🤖 **วิเคราะห์ด้วย AI** - ใช้ OpenAI GPT-4 ในการวิเคราะห์
-- 📊 **ข้อมูลแบบเรียลไทม์** - ดึงราคาจาก Finnhub API
-- 🔍 **ค้นหาได้ง่าย** - ค้นหาหุ้นใดก็ได้ (AAPL, GOOGL, MSFT, TSLA ฯลฯ)
-- 📈 **ข้อมูลครบถ้วน** - ราคา, แนวโน้ม, ความเสี่ยง, คำแนะนำ
-- 🎨 **ดีไซน์สุดทันสมัย** - Dark Mode, Responsive Design
-- 🔐 **ปลอดภัย** - ใช้ .env เพื่อจัดการ API keys
-
-## 📋 ข้อกำหนดระบบ
-
-- PHP 7.4 หรือสูงกว่า
-- Composer (ถ้าต้องการ)
-- API Keys จาก:
-  - [OpenAI](https://platform.openai.com/account/api-keys)
-  - [Finnhub](https://finnhub.io/)
-
-## 🚀 การติดตั้ง
-
-### ขั้นตอนที่ 1: ตั้งค่า API Keys
-
-**ใช้ Setup Wizard (ง่ายที่สุด):**
-1. เปิด `setup_wizard.html` ในเบราว์เซอร์
-2. ตามขั้นตอนและป้อน API keys
-3. คัดลอกไฟล์ .env ที่สร้าง
-4. สร้างไฟล์ `.env` ในโฟลเดอร์โครงการ
-5. วาง content ที่คัดลอก
-
-**หรือตั้งค่าด้วยตัวเอง:**
-1. ดูไฟล์ `.env.example`
-2. สร้างไฟล์ `.env` ใหม่
-3. แทนที่ค่าตัวแปร:
-   ```
-   OPENAI_API_KEY=sk-your-actual-key
-   OPENAI_PROJECT_ID=proj_your-project-id
-   OPENAI_ORG_ID=org-your-organization-id
-   FINNHUB_API_KEY=your-finnhub-key
-   ```
-
-### ขั้นตอนที่ 2: อัปโหลดไฟล์
-
-อัปโหลดไฟล์เหล่านี้ไปเซิร์ฟเวอร์ของคุณ:
-
-```
-stock_analyzer.html       ← Frontend UI
-stock_analyzer_api.php    ← Backend API
-config.php               ← Configuration loader
-.env                     ← API Keys (KEEP SECURE!)
-```
-
-### ขั้นตอนที่ 3: ทดสอบการตั้งค่า
-
-เปิด browser ไปที่:
-```
-http://your-domain/stock_analyzer.html
-```
-
-ลองค้นหาหุ้น เช่น "AAPL" หรือ "GOOGL"
-
-## 📁 โครงสร้างไฟล์
-
-```
-your-project/
-├── stock_analyzer.html         ✅ Frontend (HTML/CSS/JS)
-├── stock_analyzer_api.php      ✅ Backend API
-├── config.php                  ✅ Configuration loader
-├── .env                        🔐 API Keys (SECRET!)
-├── .env.example               📋 Template
-├── .gitignore                 🔒 Git ignore rules
-├── setup_wizard.html          🧙 Setup helper
-└── README.md                  📖 This file
-```
-
-## 🔐 ความปลอดภัย
-
-### ⚠️ สิ่งที่ต้องระวัง
-
-**ไม่ควรทำ:**
-- ❌ ไม่ให้ API keys ใครเลย
-- ❌ ไม่ commit .env ไป GitHub
-- ❌ ไม่ hardcode keys ในโค้ด
-- ❌ ไม่แชร์ keys ผ่าน email/chat
-
-**ควรทำ:**
-- ✅ ใช้ .env เพื่อจัดการ keys
-- ✅ Add .env ใน .gitignore
-- ✅ ตั้งสิทธิ์ไฟล์ (chmod 600 .env)
-- ✅ Rotate keys อย่างสม่ำเสมอ
-
-### ถ้า API Key รั่วไหล
-
-1. 🔴 ไปที่ OpenAI Dashboard ทันที
-2. ✂️ ลบ API key เก่า
-3. 🔑 สร้าง API key ใหม่
-4. 🔄 อัปเดตไฟล์ .env
-
-## 📖 การใช้งาน
-
-### ค้นหาหุ้น
-1. พิมพ์สัญลักษณ์หุ้น (เช่น AAPL)
-2. คลิก "วิเคราะห์" หรือกด Enter
-3. รอการวิเคราะห์จาก AI
-
-### ข้อมูลที่แสดง
-- 📊 **ราคาปัจจุบัน** - ราคา, การเปลี่ยนแปลง
-- 📈 **แนวโน้ม** - ระยะสั้น, กลาง, ยาว
-- ⚠️ **ความเสี่ยง** - ปัจจัยเสี่ยงที่ต้องระวัง
-- 🎯 **ระดับราคา** - Support/Resistance levels
-- 💡 **คำแนะนำ** - ซื้อ/ถือ/ขาย พร้อมเหตุผล
-
-## 🛠️ Troubleshooting
-
-### ปัญหา: "ไฟล์ .env ไม่พบ"
-**วิธีแก้:**
-- ตรวจสอบว่าไฟล์ .env อยู่ในโฟลเดอร์เดียวกับ stock_analyzer_api.php
-- ตรวจสอบชื่อไฟล์ (ต้องเป็น .env พอดี ไม่มี .txt)
-
-### ปัญหา: "API key ไม่ถูกต้อง"
-**วิธีแก้:**
-- ตรวจสอบ API keys ใน .env ถูกต้องหรือไม่
-- ตรวจสอบ key ยังใช้งานได้หรือไม่ (ยังไม่หมดอายุ)
-- ตรวจสอบใครยังไม่ disable key
-
-### ปัญหา: "ไม่สามารถเชื่อมต่อ Finnhub API"
-**วิธีแก้:**
-- ตรวจสอบ internet connection
-- ตรวจสอบ Finnhub API status
-- ลองใหม่อีกครั้ง
-
-### ปัญหา: "Browser console มีข้อผิดพลาด"
-**วิธีแก้:**
-- เปิด Browser DevTools (F12)
-- ดูข้อความแสดงข้อผิดพลาด
-- ตรวจสอบ Network tab เพื่อดูรายละเอียด
-
-## 📚 API Reference
-
-### GET /stock_analyzer_api.php
-
-**Query Parameters:**
-```
-?symbol=AAPL
-```
-
-**Response:**
-```json
-{
-  "symbol": "AAPL",
-  "timestamp": "2024-11-11 12:00:00",
-  "price_data": {
-    "currentPrice": 150.50,
-    "change": 2.50,
-    "percent": 1.65,
-    "high": 151.20,
-    "low": 149.80,
-    "volume": 1000000
-  },
-  "analysis": {
-    "summary": "สรุปบริษัท...",
-    "keypoints": ["จุดสำคัญ 1", "จุดสำคัญ 2"],
-    "recommendation": "ซื้อ",
-    "target_price": "155.00"
-  }
-}
-```
-
-## 🤝 Suggestions API
-
-**Suggested Symbols:**
-- 🍎 Apple (AAPL)
-- 🔍 Google (GOOGL)
-- 💻 Microsoft (MSFT)
-- ⚡ Tesla (TSLA)
-- 📦 Amazon (AMZN)
-- 🎮 NVIDIA (NVDA)
-
-## 📄 License
-
-ใช้งานได้อย่างอิสระสำหรับการศึกษาและการใช้งานส่วนตัว
-
-## ⚠️ Disclaimer
-
-- ข้อมูลนี้ใช้เพื่อการศึกษาเท่านั้น
-- ไม่ใช่คำแนะนำทางการเงิน
-- ตรวจสอบข้อมูลจริงก่อนตัดสินใจลงทุน
-- AI อาจให้ข้อมูลที่ไม่ถูกต้องบ้าง
-- ลงทุนเสี่ยงได้สูญหายหนด
-
-## 📞 ติดต่อ & ปัญหา
-
-หากมีปัญหา:
-1. ตรวจสอบ Browser Console (F12)
-2. ตรวจสอบ PHP Error Logs
-3. ตรวจสอบไฟล์ .env
-4. ลองใหม่จากไฟล์ Setup Wizard
-
-## 🎓 ศึกษาเพิ่มเติม
-
-- [OpenAI API Docs](https://platform.openai.com/docs)
-- [Finnhub API Docs](https://finnhub.io/docs)
-- [PHP Best Practices](https://www.php.net/manual/)
+- 🔍 ค้นหาหุ้นจากสัญลักษณ์ (AAPL, MSFT, TSLA ฯลฯ)
+- 📊 ตัวชี้วัดทางการเงินจริง (P/E, ROE, Revenue Growth ฯลฯ)
+- 🎲 คะแนนสุขภาพทางการเงิน 0-100
+- 🤖 คำแนะนำการลงทุน (ซื้อ/ถือ/ขาย)
+- 💎 ตัวชี้วัดการประเมินมูลค่า
+- 📈 ข้อมูลสินทรัพย์และกระแสเงินสด
+- 🌐 ภาษาไทย 100%
 
 ---
 
-**สร้างด้วย ❤️ เพื่อนักลงทุนไทย**
+## 🚀 การติดตั้งและการใช้งาน
 
-Version 2.0 | Last Updated: 2024-11-11
+### 1️⃣ ติดตั้ง Python Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2️⃣ เริ่มต้น Backend Server
+
+```bash
+python app.py
+```
+
+**ผลลัพธ์ที่ควรจะเห็น:**
+```
+╔══════════════════════════════════════════════════╗
+║   Stock Analyzer Backend - API Proxy Server      ║
+║   🚀 กำลังทำงาน http://localhost:5000            ║
+║   ✅ ถ้าเห็นข้อความนี้ให้เปิดไฟล์ HTML ที่สร้างขึ้น ║
+╚══════════════════════════════════════════════════╝
+```
+
+### 3️⃣ เปิดไฟล์ HTML
+
+**วิธี A - ใช้ Browser:**
+1. เปิด `stock_analyzer.html` ในเบราว์เซอร์
+2. ค้นหาสัญลักษณ์หุ้น (เช่น AAPL)
+3. คลิก "🔍 วิเคราะห์"
+
+**วิธี B - ใช้ Live Server (VS Code):**
+1. Install extension "Live Server"
+2. คลิกขวาบน `stock_analyzer.html` → "Open with Live Server"
+
+---
+
+## 📝 โครงสร้างไฟล์
+
+```
+📁 ตัววิเคราะห์หุ้น
+├── 📄 app.py                      ← Backend (Flask API Proxy)
+├── 📄 stock_analyzer.html          ← Frontend (HTML + JavaScript)
+├── 📄 requirements.txt             ← Python Dependencies
+└── 📄 README.md                    ← คำแนะนำนี้
+```
+
+---
+
+## 🔧 Architecture
+
+```
+Browser (HTML/JS)
+    ↓
+    └─→ http://localhost:5000 (Flask Backend)
+             ↓
+             └─→ https://finnhub.io/api/v1 (Finnhub API)
+                      ↓
+                      └─→ Real Financial Data ✅
+```
+
+**ทำไมต้องใช้ Backend?**
+- 🔒 CORS Protection: ป้องกันการเรียก API โดยตรงจาก Browser
+- 🔐 API Key Security: ไม่เปิดเผย API key ในฟ้อนต์เอนด์
+- ⚡ Performance: สามารถ cache และ rate limit ได้
+
+---
+
+## 📊 ข้อมูลที่สามารถดู
+
+### ตัวชี้วัดหลัก
+- **ราคาปัจจุบัน** - ราคาจรจัดในตลาด
+- **เปลี่ยนแปลง %** - เพิ่มขึ้น/ลดลงในวันนี้
+- **52 สัปดาห์** - สูงสุด/ต่ำสุด
+
+### ตัวชี้วัดการเงิน
+- **P/E Ratio** - อัตราส่วนราคา/กำไร
+- **P/B Ratio** - ราคา/มูลค่าทางบัญชี
+- **ROE** - ผลตอบแทนต่อส่วนของผู้ถือหุ้น
+- **ROA** - ผลตอบแทนต่อสินทรัพย์
+- **Debt/Equity** - สัดส่วนหนี้ต่อทุน
+- **Revenue Growth** - การเติบโตรายได้
+- **Profit Margin** - อัตรากำไร
+
+### คะแนนสุขภาพ
+- **80-100**: ✨ ยอดเยี่ยม
+- **60-79**: 👍 ดี
+- **40-59**: ⚖️ ปานกลาง
+- **<40**: ⚠️ อ่อนแอ
+
+---
+
+## 🤖 การตีความคำแนะนำ
+
+### 🚀 ซื้อแบบเข้มแข็ง
+- ✓ รายได้เติบโต > 10% ต่อปี
+- ✓ อัตรากำไร > 15%
+- ✓ P/E < 25x
+- ✓ ROE > 15%
+
+### 📈 ซื้อ
+- ✓ รายได้เติบโต > 5% ต่อปี
+- ✓ อัตรากำไร > 10%
+- ✓ P/E < 30x
+
+### ⚖️ ถือ
+- ○ สถานะปานกลาง
+- ○ รอการพัฒนาที่ชัดเจน
+
+### 📉 ขาย
+- ✗ รายได้ลดลง
+- ✗ อัตรากำไร < 5%
+- ✗ P/E > 50x
+
+---
+
+## ⚙️ การตั้งค่า API Key
+
+ถ้าต้องการเปลี่ยน API Key:
+
+**ไฟล์ app.py:**
+```python
+FINNHUB_API_KEY = 'คีย์ของคุณ'  # บรรทัดที่ 9
+```
+
+**ไฟล์ stock_analyzer.html:**
+```javascript
+const API_BASE_URL = 'http://localhost:5000/api';  // บรรทัดที่ 350
+```
+
+---
+
+## 🐛 การแก้ไขปัญหา
+
+### ❌ "ไม่สามารถเชื่อมต่อ API"
+**วิธีแก้:**
+1. ตรวจสอบว่า Backend server กำลังทำงาน (python app.py)
+2. ตรวจสอบ port 5000 ไม่ถูกยึด
+3. ลอง: `curl http://localhost:5000/health`
+
+### ❌ "ModuleNotFoundError: No module named 'flask'"
+**วิธีแก้:**
+```bash
+pip install -r requirements.txt
+```
+
+### ❌ "Address already in use"
+**วิธีแก้:**
+```bash
+# Windows
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
+
+# Mac/Linux
+lsof -i :5000
+kill -9 <PID>
+```
+
+### ❌ "อัตรา API ถูกจำกัด"
+**เหตุผล:** Finnhub API มี limit ~60 requests/นาที
+**วิธีแก้:** รอสักครู่แล้วลองอีกครั้ง
+
+---
+
+## 📌 ข้อมูลสำคัญ
+
+### 💡 หมายเหตุ
+- ข้อมูลมีการปรับปรุงแบบเรียลไทม์
+- ไม่ใช่คำแนะนำการลงทุน - สำหรับการศึกษาเท่านั้น
+- โปรดปรึกษาผู้เชี่ยวชาญทางการเงินก่อนลงทุน
+
+### 🔒 ความปลอดภัย
+- API Key ได้รับการป้องกันในฝั่ง Backend
+- ไม่มีการจัดเก็บข้อมูลส่วนตัวใด ๆ
+- แต่ละ request ทำงานอย่างอิสระ
+
+---
+
+## 🌐 API Endpoints
+
+```
+GET http://localhost:5000/health                    ← ตรวจสอบสถานะ
+GET http://localhost:5000/api/quote/<ticker>       ← ราคา
+GET http://localhost:5000/api/company/<ticker>     ← ข้อมูลบริษัท
+GET http://localhost:5000/api/metrics/<ticker>     ← ตัวชี้วัด
+GET http://localhost:5000/api/recommendation/<ticker> ← คำแนะนำ
+```
+
+---
+
+## 📚 ทดสอบ Ticker ยอดนิยม
+
+```
+AAPL  - Apple
+MSFT  - Microsoft
+GOOGL - Google
+AMZN  - Amazon
+TSLA  - Tesla
+META  - Facebook
+NVDA  - NVIDIA
+AMD   - Advanced Micro Devices
+JPM   - JPMorgan Chase
+V     - Visa
+```
+
+---
+
+## 📝 License
+
+สำหรับการศึกษาและใช้งานส่วนตัว
+
+---
+
+## 💬 คำถามที่พบบ่อย
+
+**Q: ทำไมต้องรัน Backend?**
+A: เพื่อหลีกเลี่ยงปัญหา CORS และเก็บ API Key ไว้ปลอดภัย
+
+**Q: สามารถใช้งานบนโปรแกรมขนาดเล็กได้ไหม?**
+A: ได้ ใช้งานได้ยาว ตราบใดที่ Backend กำลังทำงาน
+
+**Q: ข้อมูลแม่นยำแค่ไหน?**
+A: ข้อมูลมาจาก Finnhub API ซึ่งมีความแม่นยำสูง
+
+**Q: สามารถ Deploy ออนไลน์ได้ไหม?**
+A: ได้ เช่น Heroku, Railway, Replit
+
+---
+
+## 🚀 อัพเกรดในอนาคต
+
+- [ ] เพิ่มกราฟแนวโน้มราคา
+- [ ] บันทึกโปรดให้ Favorites
+- [ ] เปรียบเทียบหุ้นหลายตัว
+- [ ] ส่วน Market Overview
+- [ ] Notification เมื่อราคาเปลี่ยน
+
+---
+
+**สร้างโดย:** AI Stock Analyzer Team ✨
+**ปรับปรุงล่าสุด:** 2024
