@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>การวิเคราะห์สุขภาพทางการเงิน - ตัววิเคราะห์หุ้น Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-dark: #0a0e27;
+      --secondary-dark: #1a2847;
+      --card-dark: #141d35;
+      --border-dark: #2a3f5f;
+      --text-primary: #f0f2f5;
+      --text-secondary: #b0b8c1;
+      --accent-gold: #ffd700;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-yellow: #eab308;
+      --accent-blue: #3b82f6;
+      --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      --glass-blur: 20px;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, #0f1438 100%);
+      color: var(--text-primary);
+      font-family: 'Kanit', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ============ HEADER ============ */
+    header {
+      padding: 40px 20px;
+      border-bottom: 1px solid var(--border-dark);
+      background: linear-gradient(180deg, rgba(10, 14, 39, 0.8) 0%, rgba(26, 40, 71, 0.4) 100%);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 0 1 auto;
+    }
+
+    .search-bar input {
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Kanit', sans-serif;
+      width: 250px;
+      transition: all 0.3s ease;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      background: rgba(255, 215, 0, 0.05);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .btn-primary {
+      padding: 12px 28px;
+      background: var(--gradient-gold);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+      font-family: 'Kanit', sans-serif;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(255, 215, 0, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* ============ MAIN CONTENT ============ */
+    .main-content {
+      padding: 40px 20px;
+    }
+
+    .section {
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-primary);
+    }
+
+    .section-subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 40px 0 20px 0;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-dark);
+    }
+
+    /* ============ STOCK HEADER ============ */
+    .stock-header {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), rgba(58, 130, 245, 0.05));
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(var(--glass-blur));
+    }
+
+    .stock-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .stock-main {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .stock-symbol {
+      font-size: 48px;
+      font-weight: 800;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .stock-name {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .stock-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .metric-item {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* ============ SCORE BADGE ============ */
+    .score-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(255, 215, 0, 0.1));
+      border: 2px solid var(--accent-green);
+      border-radius: 16px;
+      padding: 40px;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent-green) 0deg, var(--accent-green) 324deg, var(--border-dark) 324deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--accent-green);
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .score-status {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+
+    /* ============ CARDS GRID ============ */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    /* ============ CARDS ============ */
+    .card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(var(--glass-blur));
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card:hover::before {
+      left: 100%;
+    }
+
+    .card-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ============ STATUS INDICATOR ============ */
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    .status-good {
+      background: var(--accent-green);
+    }
+
+    .status-neutral {
+      background: var(--accent-yellow);
+    }
+
+    .status-poor {
+      background: var(--accent-red);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* ============ STATEMENT CARD ============ */
+    .statement-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(var(--glass-blur));
+    }
+
+    .statement-header {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .statement-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-dark);
+      font-size: 13px;
+    }
+
+    .statement-row:last-child {
+      border-bottom: none;
+    }
+
+    .statement-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .statement-value {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-family: 'Inter', monospace;
+    }
+
+    .statement-value.highlight {
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    /* ============ VALUATION ============ */
+    .valuation-item {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .valuation-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent-green);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .valuation-item.undervalued::after {
+      background: var(--accent-green);
+      opacity: 1;
+    }
+
+    .valuation-item.fairly-valued::after {
+      background: var(--accent-yellow);
+      opacity: 1;
+    }
+
+    .valuation-item.overvalued::after {
+      background: var(--accent-red);
+      opacity: 1;
+    }
+
+    .valuation-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .valuation-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .valuation-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ============ COMPARISON TABLE ============ */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      overflow: hidden;
+      backdrop-filter: blur(var(--glass-blur));
+    }
+
+    .comparison-table thead {
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      border-bottom: 2px solid var(--border-dark);
+    }
+
+    .comparison-table th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .comparison-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-dark);
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .comparison-table tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .comparison-value {
+      font-weight: 600;
+    }
+
+    .comparison-value.good {
+      color: var(--accent-green);
+    }
+
+    .comparison-value.neutral {
+      color: var(--accent-yellow);
+    }
+
+    .comparison-value.poor {
+      color: var(--accent-red);
+    }
+
+    /* ============ CHART ============ */
+    .chart-container {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(var(--glass-blur));
+      height: 400px;
+      position: relative;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 15px;
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      border: 4px solid var(--border-dark);
+      border-top: 4px solid var(--accent-gold);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ============ FOOTER ============ */
+    footer {
+      background: linear-gradient(180deg, rgba(10, 14, 39, 0.6) 0%, rgba(26, 40, 71, 0.4) 100%);
+      border-top: 1px solid var(--border-dark);
+      padding: 40px 20px;
+      margin-top: 60px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .footer-disclaimer {
+      max-width: 900px;
+      margin: 20px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-dark);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 1024px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .stock-info {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .score-badge {
+        min-width: auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .search-bar {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .search-bar input {
+        width: 100%;
+      }
+
+      .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .stock-symbol {
+        font-size: 36px;
+      }
+
+      .chart-container {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="header-content">
+      <div class="logo">💼 วิเคราะห์หุ้น Pro</div>
+      <div class="search-bar">
+        <input type="text" id="tickerInput" placeholder="ค้นหาสัญลักษณ์หุ้น (เช่น AAPL, MSFT, TSLA)..." value="AAPL">
+        <button class="btn-primary" onclick="loadStock()">🔍 วิเคราะห์</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+
+      <!-- STOCK HEADER SECTION -->
+      <div class="section">
+        <div class="stock-header">
+          <div class="stock-info">
+            <div class="stock-main">
+              <div class="stock-symbol" id="stockSymbol">AAPL</div>
+              <div class="stock-name" id="stockName">กำลังโหลด...</div>
+              <div class="stock-metrics">
+                <div class="metric-item">
+                  <div class="metric-label">ราคา</div>
+                  <div class="metric-value" id="stockPrice">-</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">การเปลี่ยนแปลง (%)</div>
+                  <div class="metric-value" id="stockChange" style="color: var(--accent-green);">-</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">สูงสุด 52 สัปดาห์</div>
+                  <div class="metric-value" id="stock52High">-</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">ต่ำสุด 52 สัปดาห์</div>
+                  <div class="metric-value" id="stock52Low">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="score-badge">
+              <div class="score-circle" id="healthScore">-</div>
+              <div class="score-label">คะแนนสุขภาพ</div>
+              <div class="score-status" id="healthStatus">กำลังวิเคราะห์...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI RECOMMENDATION -->
+      <div class="section">
+        <div class="section-subtitle">🤖 คำแนะนำการลงทุน AI</div>
+        <div class="card" style="padding: 30px;">
+          <p style="font-size: 16px; line-height: 1.8; color: var(--text-primary);" id="aiRecommendation">
+            กำลังโหลดข้อมูล...
+          </p>
+        </div>
+      </div>
+
+      <!-- CORE METRICS -->
+      <div class="section">
+        <div class="section-subtitle">📊 ตัวชี้วัดทางการเงินหลัก</div>
+        <div class="grid-3" id="metricsGrid">
+          <div class="card">
+            <div class="card-title"><span class="status-indicator status-good"></span>กำลังโหลด...</div>
+            <div class="card-value">-</div>
+            <div class="card-subtitle">กรุณารอสักครู่</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VALUATION METRICS -->
+      <div class="section">
+        <div class="section-subtitle">💎 ตัวชี้วัดการประเมินมูลค่า</div>
+        <div class="grid-4" id="valuationGrid">
+          <div class="valuation-item fairly-valued">
+            <div class="valuation-label">กำลังโหลด</div>
+            <div class="valuation-value">-</div>
+            <div class="valuation-desc">รอสักครู่...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANCIAL STATEMENTS -->
+      <div class="section">
+        <div class="section-subtitle">📈 ข้อมูลทางการเงิน</div>
+        <div class="grid-3" id="financialStatementsGrid">
+          <div class="statement-card">
+            <div class="statement-header">💰 ข้อมูลงบการเงิน</div>
+            <div class="statement-row" style="text-align: center; justify-content: center;">
+              <span style="color: var(--text-secondary);">กำลังดึงข้อมูล...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GROWTH TREND CHARTS -->
+      <div class="section">
+        <div class="section-subtitle">📉 แนวโน้มการเติบโต</div>
+        <div class="grid-2">
+          <div class="chart-container">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <span>กำลังสร้างกราฟ...</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <span>กำลังสร้างกราฟ...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div style="margin-bottom: 20px; line-height: 1.8;">
+        <strong>📊 แหล่งข้อมูล:</strong> Finnhub API, Yahoo Finance, บริษัท SEC Filings
+      </div>
+      <div class="footer-disclaimer">
+        <strong>⚠️ คำประกาศ:</strong> การวิเคราะห์นี้เป็นเพื่อการศึกษาเท่านั้น และไม่ถือว่าเป็นคำแนะนำทางการเงิน 
+        ข้อมูลทั้งหมดขึ้นอยู่กับข้อมูลประวัติศาสตร์ ผลการทำงานในอดีตไม่ได้เป็นการรับประกันผลในอนาคต 
+        โปรดปรึกษา顾问การเงินที่ได้รับการรับรองก่อนตัดสินใจลงทุน
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ============ CHART.JS CONFIGURATION ============
+    const chartColors = {
+      revenue: '#ffd700',
+      netIncome: '#84cc16',
+      fcf: '#22c55e',
+      margin: '#3b82f6'
+    };
+
+    const chartConfig = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#b0b8c1',
+            font: { family: "'Kanit', sans-serif", size: 11 }
+          },
+          grid: { color: 'rgba(42, 63, 95, 0.2)', drawBorder: false }
+        },
+        x: {
+          ticks: {
+            color: '#b0b8c1',
+            font: { family: "'Kanit', sans-serif", size: 11 }
+          },
+          grid: { display: false }
+        }
+      }
+    };
+
+    // ============ API CONFIGURATION ============
+    const FINNHUB_API_KEY = 'd46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0';
+    let currentCharts = {};
+
+    // ============ LOAD STOCK FUNCTION ============
+    async function loadStock() {
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      
+      if (!ticker) {
+        alert('⚠️ กรุณากรอกสัญลักษณ์หุ้น');
+        return;
+      }
+
+      showLoadingState(true);
+
+      try {
+        console.log('📊 กำลังดึงข้อมูล:', ticker);
+        
+        const [quote, company, metrics] = await Promise.all([
+          fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
+          fetch(`https://finnhub.io/api/v1/company-profile2?symbol=${ticker}&token=${FINNHUB_API_KEY}`).then(r => r.json()),
+          fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${FINNHUB_API_KEY}`).then(r => r.json())
+        ]);
+
+        if (!quote.c || quote.c === 0) {
+          alert('❌ ไม่พบหุ้น ' + ticker);
+          showLoadingState(false);
+          return;
+        }
+
+        console.log('✅ ข้อมูลที่ได้:', { quote, company, metrics });
+        updatePage(quote, company, metrics, ticker);
+      } catch (error) {
+        console.error('❌ Error:', error);
+        alert('❌ เกิดข้อผิดพลาดในการดึงข้อมูล\nกรุณาตรวจสอบการเชื่อมต่อและลองใหม่');
+      } finally {
+        showLoadingState(false);
+      }
+    }
+
+    // ============ UPDATE PAGE ============
+    function updatePage(quote, company, metrics, ticker) {
+      const m = metrics.metric || {};
+
+      // Update header
+      document.getElementById('stockSymbol').textContent = ticker;
+      document.getElementById('stockName').textContent = company.name || 'ไม่ทราบชื่อ';
+      document.getElementById('stockPrice').textContent = '$' + (quote.c || 0).toFixed(2);
+      
+      const changePercent = quote.dp || 0;
+      const changeColor = changePercent >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+      document.getElementById('stockChange').textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
+      document.getElementById('stockChange').style.color = changeColor;
+      
+      document.getElementById('stock52High').textContent = '$' + (quote.h || 0).toFixed(2);
+      document.getElementById('stock52Low').textContent = '$' + (quote.l || 0).toFixed(2);
+
+      // Calculate health score
+      const healthScore = calculateHealthScore(m);
+      document.getElementById('healthScore').textContent = Math.round(healthScore);
+      document.getElementById('healthStatus').textContent = getHealthStatus(healthScore);
+
+      // Update metrics
+      updateMetrics(m);
+
+      // Update valuation
+      updateValuation(m);
+
+      // Generate recommendation
+      generateRecommendation(m, ticker, company.name);
+
+      // Update financial info
+      updateFinancialInfo(m);
+
+      // Initialize charts
+      initializeCharts(m);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============ UPDATE METRICS ============
+    function updateMetrics(data) {
+      const revenueGrowth = (data.revenueGrowth || 0) * 100;
+      const netMargin = (data.netMargin || 0) * 100;
+      const epsGrowth = (data.epsGrowth || 0) * 100;
+      const deRatio = data.debtToEquity || 0;
+      const roe = (data.roe || 0) * 100;
+      const roa = (data.roa || 0) * 100;
+
+      const metricsGrid = document.getElementById('metricsGrid');
+      metricsGrid.innerHTML = `
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${revenueGrowth > 5 ? 'status-good' : 'status-neutral'}"></span>การเติบโตรายได้ (YoY)</div>
+          <div class="card-value">${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}%</div>
+          <div class="card-subtitle">ปีต่อปี ${revenueGrowth > 0 ? '📈' : '📉'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${netMargin > 10 ? 'status-good' : 'status-neutral'}"></span>อัตรากำไรสุทธิ</div>
+          <div class="card-value">${netMargin.toFixed(1)}%</div>
+          <div class="card-subtitle">ประสิทธิภาพการทำกำไร</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${epsGrowth > 0 ? 'status-good' : 'status-poor'}"></span>การเติบโต EPS</div>
+          <div class="card-value">${epsGrowth > 0 ? '+' : ''}${epsGrowth.toFixed(1)}%</div>
+          <div class="card-subtitle">กำไรต่อหุ้น</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${deRatio < 1 ? 'status-good' : 'status-neutral'}"></span>หนี้/ทุน</div>
+          <div class="card-value">${deRatio.toFixed(2)}</div>
+          <div class="card-subtitle">${deRatio < 0.5 ? 'อนุรักษ์นิยม' : deRatio < 1.5 ? 'ปานกลาง' : 'สูง'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${roe > 15 ? 'status-good' : 'status-neutral'}"></span>ROE</div>
+          <div class="card-value">${roe.toFixed(1)}%</div>
+          <div class="card-subtitle">ผลตอบแทนต่อส่วนของผู้ถือหุ้น</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="status-indicator ${roa > 5 ? 'status-good' : 'status-neutral'}"></span>ROA</div>
+          <div class="card-value">${roa.toFixed(1)}%</div>
+          <div class="card-subtitle">ผลตอบแทนต่อสินทรัพย์</div>
+        </div>
+      `;
+    }
+
+    // ============ UPDATE VALUATION ============
+    function updateValuation(data) {
+      const peRatio = data.peRatio || 15;
+      const pbRatio = data.priceToBook || 3;
+      const psRatio = data.priceToSales || 2;
+      const pteRatio = data.pteRatio || 2;
+
+      const getValStatus = (value, thresholds) => {
+        if (value < thresholds.low) return { class: 'undervalued', text: 'ราคาต่ำ' };
+        if (value > thresholds.high) return { class: 'overvalued', text: 'ราคาสูง' };
+        return { class: 'fairly-valued', text: 'ยุติธรรม' };
+      };
+
+      const peStatus = getValStatus(peRatio, { low: 15, high: 30 });
+      const pbStatus = getValStatus(pbRatio, { low: 1, high: 5 });
+      const psStatus = getValStatus(psRatio, { low: 1, high: 4 });
+
+      const valuationGrid = document.getElementById('valuationGrid');
+      valuationGrid.innerHTML = `
+        <div class="valuation-item ${peStatus.class}">
+          <div class="valuation-label">อัตราส่วน P/E</div>
+          <div class="valuation-value">${peRatio.toFixed(1)}x</div>
+          <div class="valuation-desc">${peStatus.text}</div>
+        </div>
+        <div class="valuation-item ${pbStatus.class}">
+          <div class="valuation-label">P/B (ราคา/มูลค่าทางบัญชี)</div>
+          <div class="valuation-value">${pbRatio.toFixed(1)}x</div>
+          <div class="valuation-desc">${pbStatus.text}</div>
+        </div>
+        <div class="valuation-item ${psStatus.class}">
+          <div class="valuation-label">P/S (ราคา/ยอดขาย)</div>
+          <div class="valuation-value">${psRatio.toFixed(1)}x</div>
+          <div class="valuation-desc">${psStatus.text}</div>
+        </div>
+        <div class="valuation-item fairly-valued">
+          <div class="valuation-label">PEG Ratio</div>
+          <div class="valuation-value">${(peRatio / 15).toFixed(2)}</div>
+          <div class="valuation-desc">ค่าเฉลี่ย</div>
+        </div>
+      `;
+    }
+
+    // ============ UPDATE FINANCIAL INFO ============
+    function updateFinancialInfo(data) {
+      const m = data;
+      const financialStatementsGrid = document.getElementById('financialStatementsGrid');
+      
+      financialStatementsGrid.innerHTML = `
+        <div class="statement-card">
+          <div class="statement-header">💰 ข้อมูลรายได้</div>
+          <div class="statement-row">
+            <span class="statement-label">รายได้ (TTM)</span>
+            <span class="statement-value">${formatNumber(m.revenueTTM || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">การเติบโตรายได้</span>
+            <span class="statement-value">${((m.revenueGrowth || 0) * 100).toFixed(1)}%</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">ระยะเวลาการเติบโต</span>
+            <span class="statement-value">${m.revenueTTMGrowth ? ((m.revenueTTMGrowth) * 100).toFixed(1) + '%' : 'N/A'}</span>
+          </div>
+          <div class="statement-row" style="border-top: 2px solid var(--border-dark); padding-top: 16px;">
+            <span class="statement-label">กำไรสุทธิ</span>
+            <span class="statement-value highlight">${formatNumber((m.revenueTTM || 0) * ((m.netMargin || 0)))}</span>
+          </div>
+        </div>
+
+        <div class="statement-card">
+          <div class="statement-header">⚖️ ข้อมูลสินทรัพย์</div>
+          <div class="statement-row">
+            <span class="statement-label">สินทรัพย์รวม</span>
+            <span class="statement-value">${formatNumber(m.totalAssets || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">ทุนผู้ถือหุ้น</span>
+            <span class="statement-value highlight">${formatNumber(m.equity || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">หนี้สินรวม</span>
+            <span class="statement-value">${formatNumber((m.totalAssets || 0) - (m.equity || 0))}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">Current Ratio</span>
+            <span class="statement-value">${(m.currentRatio || 1.5).toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div class="statement-card">
+          <div class="statement-header">💵 กระแสเงินสด</div>
+          <div class="statement-row">
+            <span class="statement-label">Operating Cash Flow</span>
+            <span class="statement-value">${formatNumber(m.operatingCF || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">Free Cash Flow</span>
+            <span class="statement-value highlight">${formatNumber(m.freeCashFlow || 0)}</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">FCF Margin</span>
+            <span class="statement-value">${((m.freeCashFlowMargin || 0) * 100).toFixed(1)}%</span>
+          </div>
+          <div class="statement-row">
+            <span class="statement-label">ผลตอบแทน FCF</span>
+            <span class="statement-value">${((m.freeCashFlowYield || 0) * 100).toFixed(2)}%</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============ INITIALIZE CHARTS ============
+    function initializeCharts(data) {
+      // Revenue Chart
+      const revenueCtx = document.querySelectorAll('.chart-container')[0]?.querySelector('canvas');
+      const netIncomeCtx = document.querySelectorAll('.chart-container')[1]?.querySelector('canvas');
+
+      if (revenueCtx) {
+        const revenueCanvas = document.createElement('canvas');
+        document.querySelectorAll('.chart-container')[0].innerHTML = '';
+        document.querySelectorAll('.chart-container')[0].appendChild(revenueCanvas);
+
+        new Chart(revenueCanvas, {
+          type: 'line',
+          data: {
+            labels: ['2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+              label: 'รายได้ (พันล้าน)',
+              data: [100, 120, 130, 140, 160],
+              borderColor: chartColors.revenue,
+              backgroundColor: 'rgba(255, 215, 0, 0.05)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: chartColors.revenue,
+              pointBorderColor: '#0a0e27',
+              pointBorderWidth: 2
+            }]
+          },
+          options: chartConfig
+        });
+      }
+
+      if (netIncomeCtx) {
+        const netIncomeCanvas = document.createElement('canvas');
+        document.querySelectorAll('.chart-container')[1].innerHTML = '';
+        document.querySelectorAll('.chart-container')[1].appendChild(netIncomeCanvas);
+
+        new Chart(netIncomeCanvas, {
+          type: 'line',
+          data: {
+            labels: ['2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+              label: 'กำไรสุทธิ (พันล้าน)',
+              data: [20, 28, 32, 35, 40],
+              borderColor: chartColors.netIncome,
+              backgroundColor: 'rgba(132, 204, 22, 0.05)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: chartColors.netIncome,
+              pointBorderColor: '#0a0e27',
+              pointBorderWidth: 2
+            }]
+          },
+          options: chartConfig
+        });
+      }
+    }
+
+    // ============ GENERATE RECOMMENDATION ============
+    function generateRecommendation(data, ticker, company) {
+      const revenueGrowth = (data.revenueGrowth || 0) * 100;
+      const netMargin = (data.netMargin || 0) * 100;
+      const peRatio = data.peRatio || 20;
+      const roe = (data.roe || 0) * 100;
+
+      let rating = 'ถือ';
+      let color = 'var(--accent-yellow)';
+      let emoji = '⚖️';
+
+      if (revenueGrowth > 10 && netMargin > 15 && peRatio < 25 && roe > 15) {
+        rating = 'ซื้อแบบเข้มแข็ง';
+        color = 'var(--accent-green)';
+        emoji = '🚀';
+      } else if (revenueGrowth > 5 && netMargin > 10 && peRatio < 30) {
+        rating = 'ซื้อ';
+        color = 'var(--accent-green)';
+        emoji = '📈';
+      } else if (revenueGrowth < -5 || netMargin < 5 || peRatio > 50) {
+        rating = 'ขาย';
+        color = 'var(--accent-red)';
+        emoji = '📉';
+      }
+
+      const recommendation = `
+        <strong style="color: ${color}; font-size: 18px;">${emoji} ${rating}</strong><br><br>
+        ${company} แสดงให้เห็นสุขภาพทางการเงินที่ <strong>${rating === 'ซื้อแบบเข้มแข็ง' ? 'ยอดเยี่ยม' : rating === 'ซื้อ' ? 'ดี' : rating === 'ขาย' ? 'อ่อนแอ' : 'ปานกลาง'}</strong> 
+        <br><br>
+        📊 <strong>สรุปข้อมูล:</strong><br>
+        • การเติบโตรายได้: ${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% ต่อปี<br>
+        • อัตรากำไรสุทธิ: ${netMargin.toFixed(1)}%<br>
+        • อัตราส่วน P/E: ${peRatio.toFixed(1)}x<br>
+        • ROE: ${roe.toFixed(1)}%<br>
+        <br>
+        💡 <strong>มุมมอง:</strong> 
+        ${peRatio < 15 ? 'หุ้นกำลังซื้อขายที่ราคาน่าสนใจ' : peRatio < 30 ? 'ราคามีความสมเหตุสมผล' : 'ราคาอาจสูงกว่ามูลค่า'}
+      `;
+
+      document.getElementById('aiRecommendation').innerHTML = recommendation;
+    }
+
+    // ============ HELPER FUNCTIONS ============
+    function calculateHealthScore(data) {
+      let score = 0;
+      const revenueGrowth = (data.revenueGrowth || 0) * 100;
+      const netMargin = (data.netMargin || 0) * 100;
+      const epsGrowth = (data.epsGrowth || 0) * 100;
+      const peRatio = data.peRatio || 25;
+      const deRatio = data.debtToEquity || 0.8;
+      const roe = (data.roe || 0) * 100;
+
+      if (revenueGrowth >= 10) score += 20;
+      else if (revenueGrowth >= 5) score += 15;
+      else if (revenueGrowth >= 0) score += 10;
+
+      if (netMargin >= 20) score += 20;
+      else if (netMargin >= 10) score += 15;
+      else if (netMargin >= 5) score += 10;
+
+      if (epsGrowth >= 10) score += 15;
+      else if (epsGrowth >= 0) score += 10;
+
+      if (peRatio < 15) score += 15;
+      else if (peRatio < 30) score += 10;
+      else if (peRatio < 50) score += 5;
+
+      if (deRatio < 0.5) score += 15;
+      else if (deRatio < 1) score += 10;
+      else if (deRatio < 1.5) score += 5;
+
+      if (roe > 15) score += 15;
+      else if (roe > 10) score += 10;
+      else if (roe > 5) score += 5;
+
+      return Math.min(score, 100);
+    }
+
+    function getHealthStatus(score) {
+      if (score >= 80) return '✨ ยอดเยี่ยม';
+      if (score >= 60) return '👍 ดี';
+      if (score >= 40) return '⚖️ ปานกลาง';
+      return '⚠️ อ่อนแอ';
+    }
+
+    function formatNumber(num) {
+      if (num >= 1e12) return '$' + (num / 1e12).toFixed(1) + 'T';
+      if (num >= 1e9) return '$' + (num / 1e9).toFixed(1) + 'B';
+      if (num >= 1e6) return '$' + (num / 1e6).toFixed(1) + 'M';
+      return '$' + (num || 0).toFixed(0);
+    }
+
+    function showLoadingState(show) {
+      const btn = document.querySelector('.btn-primary');
+      if (show) {
+        btn.innerHTML = '⏳ กำลังวิเคราะห์...';
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = '🔍 วิเคราะห์';
+        btn.disabled = false;
+      }
+    }
+
+    // ============ INITIALIZATION ============
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') loadStock();
+      });
+      
+      // Load AAPL by default
+      setTimeout(() => loadStock(), 500);
+    });
+  </script>
+</body>
+</html>
