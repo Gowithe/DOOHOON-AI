@@ -183,6 +183,93 @@
             color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;
         }
         
+        /* News Section */
+        .news-grid {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .news-item {
+            background: rgba(6,182,212,0.05);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .news-item:hover {
+            background: rgba(6,182,212,0.1);
+            transform: translateX(4px);
+            border-color: #06b6d4;
+        }
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+        .news-source {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(6,182,212,0.2);
+            color: #06b6d4;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .news-date {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .news-headline {
+            color: #06b6d4;
+            font-weight: bold;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .news-summary {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .news-link {
+            color: #06b6d4;
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .news-link:hover {
+            text-decoration: underline;
+        }
+        .news-sentiment {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .news-sentiment.positive {
+            background: rgba(34,197,94,0.2);
+            color: #4ade80;
+        }
+        .news-sentiment.negative {
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+        }
+        .news-sentiment.neutral {
+            background: rgba(100,116,139,0.2);
+            color: #94a3b8;
+        }
+        
         /* Chart Controls */
         .chart-controls {
             display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
@@ -338,6 +425,17 @@
                 min-height: 400px;
                 height: 400px;
             }
+            .news-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .news-headline {
+                font-size: 1rem;
+            }
+            .news-summary {
+                font-size: 0.85rem;
+            }
         }
         
         @media (max-width: 480px) {
@@ -347,6 +445,8 @@
             .search-section { padding: 12px; }
             input { padding: 10px; }
             button { padding: 10px 16px; }
+            .news-headline { font-size: 0.95rem; }
+            .news-summary { font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -442,6 +542,16 @@
             <div class="card" id="projects-card">
                 <h2>💡 โปรเจ็กต์ที่น่าจับตามอง</h2>
                 <div class="project-grid" id="projects-container"></div>
+            </div>
+
+            <!-- News Section -->
+            <div class="card">
+                <h2>📰 ข่าวล่าสุด (7 วันที่ผ่านมา)</h2>
+                <div id="news-loading" style="text-align: center; padding: 20px; color: #06b6d4; display: none;">
+                    <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid #334155; border-top: 3px solid #06b6d4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 10px;">กำลังโหลดและแปลข่าว...</p>
+                </div>
+                <div id="news-container"></div>
             </div>
 
             <!-- Alert Zone -->
@@ -630,6 +740,116 @@
             });
         }
 
+        // Translate text to Thai
+        async function translateText(text, targetLang = 'th') {
+            if (!text || text.length === 0) return text;
+            
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data[0]) {
+                    return data[0].map(item => item[0]).join('');
+                }
+                return text;
+            } catch (error) {
+                console.error('Translation error:', error);
+                return text;
+            }
+        }
+
+        // Load and display news
+        async function loadNews(symbol) {
+            const newsContainer = document.getElementById('news-container');
+            const newsLoading = document.getElementById('news-loading');
+            
+            newsLoading.style.display = 'block';
+            newsContainer.innerHTML = '';
+
+            try {
+                const from = new Date();
+                from.setDate(from.getDate() - 7);
+                const to = new Date();
+                
+                const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from.toISOString().split('T')[0]}&to=${to.toISOString().split('T')[0]}&token=${FINNHUB_KEY}`;
+                const response = await fetch(url);
+                const news = await response.json();
+
+                if (!news || news.length === 0) {
+                    newsContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 20px;">ไม่มีข่าวในช่วง 7 วันที่ผ่านมา</p>';
+                    newsLoading.style.display = 'none';
+                    return;
+                }
+
+                const newsToShow = news.slice(0, 5);
+                const newsGrid = document.createElement('div');
+                newsGrid.className = 'news-grid';
+
+                for (const item of newsToShow) {
+                    const newsCard = document.createElement('div');
+                    newsCard.className = 'news-item';
+                    
+                    const date = new Date(item.datetime * 1000).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Sentiment indicator
+                    let sentimentClass = 'neutral';
+                    let sentimentText = 'เป็นกลาง';
+                    if (item.sentiment && item.sentiment > 0.2) {
+                        sentimentClass = 'positive';
+                        sentimentText = 'บวก';
+                    } else if (item.sentiment && item.sentiment < -0.2) {
+                        sentimentClass = 'negative';
+                        sentimentText = 'ลบ';
+                    }
+
+                    const headline = item.headline || 'ไม่มีหัวข้อ';
+                    const summary = item.summary || 'ไม่มีสรุป';
+
+                    // Display with English first
+                    newsCard.innerHTML = `
+                        <div class="news-header">
+                            <span class="news-source">${item.source || 'N/A'}</span>
+                            <span class="news-date">${date}</span>
+                        </div>
+                        <div class="news-headline">${headline}</div>
+                        <div class="news-summary">${summary}</div>
+                        <div>
+                            <a href="${item.url}" target="_blank" class="news-link">
+                                อ่านต่อ →
+                            </a>
+                            <span class="news-sentiment ${sentimentClass}">${sentimentText}</span>
+                        </div>
+                    `;
+                    
+                    newsGrid.appendChild(newsCard);
+
+                    // Translate headline and summary
+                    translateText(headline).then(translatedHeadline => {
+                        newsCard.querySelector('.news-headline').textContent = translatedHeadline;
+                    });
+
+                    translateText(summary).then(translatedSummary => {
+                        newsCard.querySelector('.news-summary').textContent = translatedSummary;
+                    });
+                }
+
+                newsContainer.appendChild(newsGrid);
+                newsLoading.style.display = 'none';
+
+            } catch (error) {
+                console.error('News loading error:', error);
+                newsContainer.innerHTML = '<p style="color: #f87171; text-align: center; padding: 20px;">❌ ไม่สามารถโหลดข่าวได้</p>';
+                newsLoading.style.display = 'none';
+            }
+        }
+
         // Company Projects Database
         const companyProjects = {
             'AAPL': [
@@ -721,6 +941,9 @@
 
             // Display projects
             displayProjects(symbol);
+
+            // Load news
+            loadNews(symbol);
 
             // Calculate levels
             const levels = calculateLevels(price);
